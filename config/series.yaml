@@ -1,0 +1,36 @@
+PAYEMS:
+  name: All Employees, Total Nonfarm
+  short_name: Nonfarm Payrolls
+  category: labor
+  frequency: monthly
+  unit: thousands of persons
+  transformations:
+    - monthly_change
+    - moving_average_3m
+    - moving_average_6m
+  revision_tracking: true
+
+UNRATE:
+  name: Unemployment Rate
+  short_name: Unemployment Rate
+  category: labor
+  frequency: monthly
+  unit: percent
+  transformations:
+    - level
+    - change_3m
+    - change_6m
+    - moving_average_3m
+  revision_tracking: true
+
+ICSA:
+  name: Initial Claims
+  short_name: Initial Jobless Claims
+  category: labor
+  frequency: weekly
+  unit: number
+  transformations:
+    - moving_average_4w
+    - moving_average_13w
+    - yoy
+  revision_tracking: true

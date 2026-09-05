@@ -4,7 +4,8 @@ __pycache__/
 
 .env
 
-data/raw/
+data/raw/**
+!data/raw/.gitkeep
 
 .vscode/
 .idea/
