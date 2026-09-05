@@ -1,2 +1,2 @@
-# MacroLens Python dependencies will be added incrementally.
-# Keep this file minimal until each project milestone introduces a concrete dependency.
+psycopg[binary]
+python-dotenv
