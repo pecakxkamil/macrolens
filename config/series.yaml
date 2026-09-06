@@ -34,3 +34,53 @@ ICSA:
     - moving_average_13w
     - yoy
   revision_tracking: true
+
+CCSA:
+  name: Continued Claims (Insured Unemployment)
+  short_name: Continuing Jobless Claims
+  category: labor
+  frequency: weekly
+  unit: number
+  transformations:
+    - moving_average_4w
+    - moving_average_13w
+    - yoy
+  revision_tracking: true
+
+JTSJOL:
+  name: "Job Openings: Total Nonfarm"
+  short_name: JOLTS Job Openings
+  category: labor
+  frequency: monthly
+  unit: thousands
+  transformations:
+    - level
+    - change_3m
+    - change_6m
+    - yoy
+  revision_tracking: true
+
+CIVPART:
+  name: Labor Force Participation Rate
+  short_name: Labor Force Participation Rate
+  category: labor
+  frequency: monthly
+  unit: percent
+  transformations:
+    - level
+    - change_3m
+    - change_6m
+    - moving_average_3m
+  revision_tracking: true
+
+CES0500000003:
+  name: Average Hourly Earnings of All Employees, Total Private
+  short_name: Average Hourly Earnings
+  category: labor
+  frequency: monthly
+  unit: dollars per hour
+  transformations:
+    - mom
+    - yoy
+    - annualized_3m
+  revision_tracking: true

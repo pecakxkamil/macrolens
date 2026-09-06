@@ -25,6 +25,32 @@ Methodology version: `v1`
 - `moving_average_13w`: arithmetic mean of current and previous 12 observations
 - `yoy`: ((current value / value 52 observations earlier) - 1) * 100
 
+## CCSA
+
+- `moving_average_4w`: arithmetic mean of current and previous 3 observations
+- `moving_average_13w`: arithmetic mean of current and previous 12 observations
+- `yoy`: ((current value / value 52 observations earlier) - 1) * 100
+
+## JTSJOL
+
+- `level`: current value
+- `change_3m`: current value - value 3 observations earlier
+- `change_6m`: current value - value 6 observations earlier
+- `yoy`: ((current value / value 12 observations earlier) - 1) * 100
+
+## CIVPART
+
+- `level`: current value
+- `change_3m`: current value - value 3 observations earlier
+- `change_6m`: current value - value 6 observations earlier
+- `moving_average_3m`: arithmetic mean of current and previous 2 observations
+
+## CES0500000003
+
+- `mom`: ((current value / previous observation) - 1) * 100
+- `yoy`: ((current value / value 12 observations earlier) - 1) * 100
+- `annualized_3m`: ((current value / value 3 observations earlier) ** 4 - 1) * 100
+
 ## Labor Market Momentum
 
 This is momentum classification only. It is not an absolute strong/weak labor-market classification, it is not an investment signal, and there is no numeric labor score yet.

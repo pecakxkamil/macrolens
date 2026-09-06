@@ -9,3 +9,7 @@ Initial configured labor market series:
 | PAYEMS | All Employees, Total Nonfarm | Monthly | Thousands of persons |
 | UNRATE | Unemployment Rate | Monthly | Percent |
 | ICSA | Initial Claims | Weekly | Number |
+| CCSA | Continued Claims (Insured Unemployment) | Weekly | Number |
+| JTSJOL | Job Openings: Total Nonfarm | Monthly | Thousands |
+| CIVPART | Labor Force Participation Rate | Monthly | Percent |
+| CES0500000003 | Average Hourly Earnings of All Employees, Total Private | Monthly | Dollars per hour |
