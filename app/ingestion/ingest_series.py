@@ -11,6 +11,7 @@ import yaml
 from app.database.connection import get_connection
 from app.ingestion.fred import fetch_series_observations
 from app.ingestion.raw_storage import save_raw_response
+from app.validation.fred_observations import validate_fred_observations
 
 
 CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "series.yaml"
@@ -76,6 +77,7 @@ def ingest_series(series_id: str) -> dict:
 
         response_data = fetch_series_observations(series_id)
         raw_file_path = save_raw_response(series_id, response_data)
+        validation_summary = validate_fred_observations(response_data)
 
         observations = response_data["observations"]
         parsed_observations = []
@@ -96,10 +98,17 @@ def ingest_series(series_id: str) -> dict:
             "raw_file_path": raw_file_path,
             "observations_received": len(observations),
             "valid_observations_processed": len(parsed_observations),
+            "validation": validation_summary,
         }
 
         print(f"Series ID: {series_id}")
         print(f"RAW file: {raw_file_path}")
+        print(
+            "Validation summary: "
+            f"total={validation_summary['total_observations']}, "
+            f"numeric={validation_summary['numeric_observations']}, "
+            f"missing={validation_summary['missing_observations']}"
+        )
         print(f"Observations received: {summary['observations_received']}")
         print(
             "Valid observations processed: "
