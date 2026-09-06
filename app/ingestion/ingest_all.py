@@ -38,9 +38,10 @@ def main() -> int:
         print(f"Processing series: {series_id}")
         try:
             ingest_series(series_id)
-            successful_series.append(series_id)
         except Exception as error:
             failed_series.append((series_id, str(error)))
+        else:
+            successful_series.append(series_id)
 
     print("Batch ingestion completed.")
     print(f"Successful: {len(successful_series)}")
@@ -50,9 +51,10 @@ def main() -> int:
     for series_id in successful_series:
         print(f"- {series_id}")
 
-    print("Failed series:")
-    for series_id, error_message in failed_series:
-        print(f"- {series_id}: {error_message}")
+    if failed_series:
+        print("Failed series:")
+        for series_id, error_message in failed_series:
+            print(f"- {series_id}: {error_message}")
 
     return 1 if failed_series else 0
 
