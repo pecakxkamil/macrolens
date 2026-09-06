@@ -24,3 +24,43 @@ Methodology version: `v1`
 - `moving_average_4w`: arithmetic mean of current and previous 3 observations
 - `moving_average_13w`: arithmetic mean of current and previous 12 observations
 - `yoy`: ((current value / value 52 observations earlier) - 1) * 100
+
+## Labor Market Momentum
+
+This is momentum classification only. It is not an absolute strong/weak labor-market classification, it is not an investment signal, and there is no numeric labor score yet.
+
+Methodology version: `v1`
+
+### Payroll Momentum
+
+Compare `monthly_change_ma_3m` with `monthly_change_ma_6m`.
+
+- `monthly_change_ma_3m` > `monthly_change_ma_6m`: `improving`
+- `monthly_change_ma_3m` < `monthly_change_ma_6m`: `weakening`
+- Equal values: `stable`
+
+Rationale: the recent average pace of job creation is compared with the longer six-month average.
+
+### Unemployment Momentum
+
+Use `change_3m`.
+
+- `change_3m` < 0: `improving`
+- `change_3m` > 0: `weakening`
+- `change_3m` == 0: `stable`
+
+### Claims Momentum
+
+Compare `moving_average_4w` with `moving_average_13w`.
+
+- `moving_average_4w` < `moving_average_13w`: `improving`
+- `moving_average_4w` > `moving_average_13w`: `weakening`
+- Equal values: `stable`
+
+### Overall Labor Momentum
+
+Using payroll, unemployment, and claims component classifications:
+
+- At least 2 `improving`: `improving`
+- At least 2 `weakening`: `weakening`
+- Otherwise: `mixed`

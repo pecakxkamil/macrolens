@@ -8,7 +8,7 @@ import pandas as pd
 METHODOLOGY_VERSION = "v1"
 
 FEATURES_BY_SERIES = {
-    "PAYEMS": ("monthly_change", "moving_average_3m", "moving_average_6m"),
+    "PAYEMS": ("monthly_change", "monthly_change_ma_3m", "monthly_change_ma_6m"),
     "UNRATE": ("level", "change_3m", "change_6m", "moving_average_3m"),
     "ICSA": ("moving_average_4w", "moving_average_13w", "yoy"),
 }
@@ -42,9 +42,10 @@ def calculate_features(
     values = frame["value"]
 
     if series_id == "PAYEMS":
-        calculated["monthly_change"] = values.diff(1)
-        calculated["moving_average_3m"] = values.rolling(window=3).mean()
-        calculated["moving_average_6m"] = values.rolling(window=6).mean()
+        monthly_change = values.diff(1)
+        calculated["monthly_change"] = monthly_change
+        calculated["monthly_change_ma_3m"] = monthly_change.rolling(window=3).mean()
+        calculated["monthly_change_ma_6m"] = monthly_change.rolling(window=6).mean()
     elif series_id == "UNRATE":
         calculated["level"] = values
         calculated["change_3m"] = values.diff(3)
