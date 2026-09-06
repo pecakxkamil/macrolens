@@ -6,8 +6,8 @@ PAYEMS:
   unit: thousands of persons
   transformations:
     - monthly_change
-    - moving_average_3m
-    - moving_average_6m
+    - monthly_change_ma_3m
+    - monthly_change_ma_6m
   revision_tracking: true
 
 UNRATE:

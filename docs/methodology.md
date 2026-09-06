@@ -8,9 +8,9 @@ Methodology version: `v1`
 
 ## PAYEMS
 
-- `monthly_change`: current value - previous month's value
-- `moving_average_3m`: arithmetic mean of current and previous 2 observations
-- `moving_average_6m`: arithmetic mean of current and previous 5 observations
+- `monthly_change`: value[t] - value[t-1]
+- `monthly_change_ma_3m`: arithmetic mean of the latest 3 valid `monthly_change` values
+- `monthly_change_ma_6m`: arithmetic mean of the latest 6 valid `monthly_change` values
 
 ## UNRATE
 

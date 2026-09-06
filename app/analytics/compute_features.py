@@ -68,6 +68,13 @@ ON CONFLICT (
     computed_at = CURRENT_TIMESTAMP;
 """
 
+DELETE_OBSOLETE_PAYEMS_FEATURES_SQL = """
+DELETE FROM computed_features
+WHERE series_id = 'PAYEMS'
+  AND methodology_version = %s
+  AND feature_name IN ('moving_average_3m', 'moving_average_6m');
+"""
+
 
 def _load_series_config() -> dict:
     if not CONFIG_PATH.exists():
@@ -145,6 +152,12 @@ def compute_features(series_id: str, as_of_date: Optional[date] = None) -> dict:
         features = calculate_features(series_id, snapshot, feature_names)
 
         with connection.cursor() as cursor:
+            if series_id == "PAYEMS":
+                cursor.execute(
+                    DELETE_OBSOLETE_PAYEMS_FEATURES_SQL,
+                    (METHODOLOGY_VERSION,),
+                )
+
             for feature in features.to_dict("records"):
                 cursor.execute(
                     UPSERT_FEATURE_SQL,

@@ -34,11 +34,21 @@ def test_payems_monthly_change():
 def test_payems_3m_moving_average():
     features = calculate_features(
         "PAYEMS",
-        observations([100, 110, 120, 130]),
-        ["moving_average_3m"],
+        observations([100, 110, 130, 160]),
+        ["monthly_change_ma_3m"],
     )
 
-    assert feature_values(features, "moving_average_3m") == [110.0, 120.0]
+    assert feature_values(features, "monthly_change_ma_3m") == [20.0]
+
+
+def test_payems_6m_moving_average():
+    features = calculate_features(
+        "PAYEMS",
+        observations([100, 110, 125, 145, 170, 200, 235]),
+        ["monthly_change_ma_6m"],
+    )
+
+    assert feature_values(features, "monthly_change_ma_6m") == [22.5]
 
 
 def test_unrate_3m_change():
@@ -86,7 +96,12 @@ def test_insufficient_rolling_history_produces_no_premature_values():
     payems_features = calculate_features(
         "PAYEMS",
         observations([100, 110]),
-        ["moving_average_3m"],
+        ["monthly_change_ma_3m"],
+    )
+    payems_6m_features = calculate_features(
+        "PAYEMS",
+        observations([100, 110, 125, 145, 170, 200]),
+        ["monthly_change_ma_6m"],
     )
     icsa_features = calculate_features(
         "ICSA",
@@ -95,4 +110,5 @@ def test_insufficient_rolling_history_produces_no_premature_values():
     )
 
     assert payems_features.empty
+    assert payems_6m_features.empty
     assert icsa_features.empty
