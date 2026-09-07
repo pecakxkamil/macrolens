@@ -2,7 +2,7 @@
 
 This document will describe economic series, fields, units, frequencies, transformations, and derived metrics as they are added to MacroLens.
 
-Initial configured labor market series:
+Configured economic series:
 
 | Series ID | Name | Frequency | Unit |
 | --- | --- | --- | --- |
@@ -13,3 +13,8 @@ Initial configured labor market series:
 | JTSJOL | Job Openings: Total Nonfarm | Monthly | Thousands |
 | CIVPART | Labor Force Participation Rate | Monthly | Percent |
 | CES0500000003 | Average Hourly Earnings of All Employees, Total Private | Monthly | Dollars per hour |
+| CPIAUCSL | Consumer Price Index for All Urban Consumers: All Items | Monthly | Index |
+| CPILFESL | Consumer Price Index for All Urban Consumers: All Items Less Food and Energy | Monthly | Index |
+| PCEPI | Personal Consumption Expenditures: Chain-type Price Index | Monthly | Index |
+| PCEPILFE | Personal Consumption Expenditures Excluding Food and Energy | Monthly | Index |
+| ECIALLCIV | Employment Cost Index: Total compensation: All Civilian | Quarterly | Index |

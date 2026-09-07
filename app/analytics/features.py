@@ -15,6 +15,11 @@ FEATURES_BY_SERIES = {
     "JTSJOL": ("level", "change_3m", "change_6m", "yoy"),
     "CIVPART": ("level", "change_3m", "change_6m", "moving_average_3m"),
     "CES0500000003": ("mom", "yoy", "annualized_3m"),
+    "CPIAUCSL": ("mom", "yoy", "annualized_3m"),
+    "CPILFESL": ("mom", "yoy", "annualized_3m"),
+    "PCEPI": ("mom", "yoy", "annualized_3m"),
+    "PCEPILFE": ("mom", "yoy", "annualized_3m"),
+    "ECIALLCIV": ("qoq", "yoy"),
 }
 
 YOY_LAG_BY_SERIES = {
@@ -22,6 +27,11 @@ YOY_LAG_BY_SERIES = {
     "CCSA": 52,
     "JTSJOL": 12,
     "CES0500000003": 12,
+    "CPIAUCSL": 12,
+    "CPILFESL": 12,
+    "PCEPI": 12,
+    "PCEPILFE": 12,
+    "ECIALLCIV": 4,
 }
 
 
@@ -75,6 +85,8 @@ def calculate_features(
         calculated["yoy"] = ((values / values.shift(lag)) - 1) * 100
     if "mom" in feature_names:
         calculated["mom"] = ((values / values.shift(1)) - 1) * 100
+    if "qoq" in feature_names:
+        calculated["qoq"] = ((values / values.shift(1)) - 1) * 100
     if "annualized_3m" in feature_names:
         calculated["annualized_3m"] = ((values / values.shift(3)) ** 4 - 1) * 100
 

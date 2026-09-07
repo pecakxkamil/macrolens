@@ -149,6 +149,79 @@ def test_ces_average_hourly_earnings_annualized_3m():
     assert feature_values(features, "annualized_3m") == pytest.approx([expected])
 
 
+def test_monthly_yoy_inflation_calculation():
+    features = calculate_features(
+        "CPIAUCSL",
+        observations([300.0] * 12 + [312.0]),
+        ["yoy"],
+    )
+
+    assert feature_values(features, "yoy") == pytest.approx([4.0])
+
+
+def test_monthly_mom_inflation_calculation():
+    features = calculate_features(
+        "CPILFESL",
+        observations([300.0, 303.0]),
+        ["mom"],
+    )
+
+    assert feature_values(features, "mom") == pytest.approx([1.0])
+
+
+def test_inflation_annualized_3m_calculation():
+    features = calculate_features(
+        "PCEPI",
+        observations([120.0, 121.0, 122.0, 123.0]),
+        ["annualized_3m"],
+    )
+
+    expected = ((123.0 / 120.0) ** 4 - 1) * 100
+    assert feature_values(features, "annualized_3m") == pytest.approx([expected])
+
+
+def test_quarterly_qoq_calculation():
+    features = calculate_features(
+        "ECIALLCIV",
+        observations([160.0, 162.0], frequency="QS"),
+        ["qoq"],
+    )
+
+    assert feature_values(features, "qoq") == pytest.approx([1.25])
+
+
+def test_quarterly_yoy_calculation():
+    features = calculate_features(
+        "ECIALLCIV",
+        observations([160.0, 161.0, 162.0, 163.0, 168.0], frequency="QS"),
+        ["yoy"],
+    )
+
+    assert feature_values(features, "yoy") == pytest.approx([5.0])
+
+
+def test_existing_labor_feature_behavior_is_preserved():
+    payems_features = calculate_features(
+        "PAYEMS",
+        observations([100, 110, 130, 160]),
+        ["monthly_change_ma_3m"],
+    )
+    unrate_features = calculate_features(
+        "UNRATE",
+        observations([4.0, 4.1, 4.2, 4.5]),
+        ["change_3m"],
+    )
+    icsa_features = calculate_features(
+        "ICSA",
+        observations([100] * 52 + [110], frequency="W-FRI"),
+        ["yoy"],
+    )
+
+    assert feature_values(payems_features, "monthly_change_ma_3m") == [20.0]
+    assert feature_values(unrate_features, "change_3m") == pytest.approx([0.5])
+    assert feature_values(icsa_features, "yoy") == pytest.approx([10.0])
+
+
 def test_insufficient_rolling_history_produces_no_premature_values():
     payems_features = calculate_features(
         "PAYEMS",
@@ -191,3 +264,19 @@ def test_insufficient_growth_history_produces_no_premature_values():
     assert monthly_yoy_features.empty
     assert mom_features.empty
     assert annualized_features.empty
+
+
+def test_insufficient_quarterly_growth_history_produces_no_premature_values():
+    quarterly_yoy_features = calculate_features(
+        "ECIALLCIV",
+        observations([160.0, 161.0, 162.0, 163.0], frequency="QS"),
+        ["yoy"],
+    )
+    qoq_features = calculate_features(
+        "ECIALLCIV",
+        observations([160.0], frequency="QS"),
+        ["qoq"],
+    )
+
+    assert quarterly_yoy_features.empty
+    assert qoq_features.empty

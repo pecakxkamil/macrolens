@@ -84,3 +84,62 @@ CES0500000003:
     - yoy
     - annualized_3m
   revision_tracking: true
+
+CPIAUCSL:
+  name: "Consumer Price Index for All Urban Consumers: All Items"
+  short_name: CPI
+  category: inflation
+  frequency: monthly
+  unit: index
+  transformations:
+    - mom
+    - yoy
+    - annualized_3m
+  revision_tracking: true
+
+CPILFESL:
+  name: "Consumer Price Index for All Urban Consumers: All Items Less Food and Energy"
+  short_name: Core CPI
+  category: inflation
+  frequency: monthly
+  unit: index
+  transformations:
+    - mom
+    - yoy
+    - annualized_3m
+  revision_tracking: true
+
+PCEPI:
+  name: "Personal Consumption Expenditures: Chain-type Price Index"
+  short_name: PCE Price Index
+  category: inflation
+  frequency: monthly
+  unit: index
+  transformations:
+    - mom
+    - yoy
+    - annualized_3m
+  revision_tracking: true
+
+PCEPILFE:
+  name: Personal Consumption Expenditures Excluding Food and Energy
+  short_name: Core PCE Price Index
+  category: inflation
+  frequency: monthly
+  unit: index
+  transformations:
+    - mom
+    - yoy
+    - annualized_3m
+  revision_tracking: true
+
+ECIALLCIV:
+  name: "Employment Cost Index: Total compensation: All Civilian"
+  short_name: Employment Cost Index
+  category: inflation
+  frequency: quarterly
+  unit: index
+  transformations:
+    - qoq
+    - yoy
+  revision_tracking: true

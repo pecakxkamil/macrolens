@@ -51,6 +51,37 @@ Methodology version: `v1`
 - `yoy`: ((current value / value 12 observations earlier) - 1) * 100
 - `annualized_3m`: ((current value / value 3 observations earlier) ** 4 - 1) * 100
 
+## CPIAUCSL
+
+- `mom`: ((current value / previous observation) - 1) * 100
+- `yoy`: ((current value / value 12 observations earlier) - 1) * 100
+- `annualized_3m`: ((current value / value 3 observations earlier) ** 4 - 1) * 100
+
+## CPILFESL
+
+- `mom`: ((current value / previous observation) - 1) * 100
+- `yoy`: ((current value / value 12 observations earlier) - 1) * 100
+- `annualized_3m`: ((current value / value 3 observations earlier) ** 4 - 1) * 100
+
+## PCEPI
+
+- `mom`: ((current value / previous observation) - 1) * 100
+- `yoy`: ((current value / value 12 observations earlier) - 1) * 100
+- `annualized_3m`: ((current value / value 3 observations earlier) ** 4 - 1) * 100
+
+## PCEPILFE
+
+- `mom`: ((current value / previous observation) - 1) * 100
+- `yoy`: ((current value / value 12 observations earlier) - 1) * 100
+- `annualized_3m`: ((current value / value 3 observations earlier) ** 4 - 1) * 100
+
+## ECIALLCIV
+
+- `qoq`: ((current value / previous observation) - 1) * 100
+- `yoy`: ((current value / value 4 observations earlier) - 1) * 100
+
+Inflation state, hot/cold classification, and inflation scoring are not designed yet.
+
 ## Labor Market Momentum
 
 This is momentum classification only. It is not an absolute strong/weak labor-market classification, it is not an investment signal, and there is no numeric labor score yet.
