@@ -82,6 +82,29 @@ Methodology version: `v1`
 
 Inflation state, hot/cold classification, and inflation scoring are not designed yet.
 
+## Inflation Snapshot
+
+The Inflation Snapshot is a transparent current-state view using existing computed features. It does not create an overall inflation score, does not classify inflation as hot/cold/high/low, does not compare inflation to a policy target, and does not create investment or trading signals.
+
+Each snapshot component includes `observation_date` and `feature_as_of_date` so data freshness is visible.
+
+### Price Index Momentum
+
+Headline CPI, Core CPI, Headline PCE, and Core PCE use the same mechanical momentum rule:
+
+- `annualized_3m` > `yoy`: `accelerating`
+- `annualized_3m` < `yoy`: `decelerating`
+- Equal values: `stable`
+
+### Snapshot Components
+
+- CPIAUCSL: Headline CPI includes `mom`, `yoy`, `annualized_3m`, and price-index momentum.
+- CPILFESL: Core CPI includes `mom`, `yoy`, `annualized_3m`, and price-index momentum.
+- PCEPI: Headline PCE includes `mom`, `yoy`, `annualized_3m`, and price-index momentum.
+- PCEPILFE: Core PCE includes `mom`, `yoy`, `annualized_3m`, and price-index momentum.
+- ECIALLCIV: Employment Cost Index includes `qoq` and `yoy` values only.
+- CES0500000003: Average Hourly Earnings includes `mom`, `yoy`, and `annualized_3m` as wage-pressure context only.
+
 ## Labor Market Momentum
 
 This is momentum classification only. It is not an absolute strong/weak labor-market classification, it is not an investment signal, and there is no numeric labor score yet.

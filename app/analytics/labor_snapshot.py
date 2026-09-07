@@ -5,11 +5,11 @@ from datetime import date
 from decimal import Decimal
 from typing import Optional
 
+from app.analytics.feature_store import load_latest_component_features
 from app.analytics.labor_state import (
     CLAIMS_FEATURES,
     PAYROLL_FEATURES,
     UNEMPLOYMENT_FEATURES,
-    _load_latest_component_features,
     _parse_as_of_date,
     build_labor_momentum_state,
     classify_claims_momentum,
@@ -132,43 +132,43 @@ def load_labor_snapshot_inputs(requested_as_of_date: Optional[date] = None) -> d
     try:
         connection = get_connection()
         return {
-            "payrolls": _load_latest_component_features(
+            "payrolls": load_latest_component_features(
                 connection,
                 "PAYEMS",
                 PAYROLL_FEATURES,
                 requested_as_of_date,
             ),
-            "unemployment": _load_latest_component_features(
+            "unemployment": load_latest_component_features(
                 connection,
                 "UNRATE",
                 UNEMPLOYMENT_FEATURES,
                 requested_as_of_date,
             ),
-            "initial_claims": _load_latest_component_features(
+            "initial_claims": load_latest_component_features(
                 connection,
                 "ICSA",
                 CLAIMS_FEATURES,
                 requested_as_of_date,
             ),
-            "continuing_claims": _load_latest_component_features(
+            "continuing_claims": load_latest_component_features(
                 connection,
                 "CCSA",
                 CONTINUING_CLAIMS_FEATURES,
                 requested_as_of_date,
             ),
-            "job_openings": _load_latest_component_features(
+            "job_openings": load_latest_component_features(
                 connection,
                 "JTSJOL",
                 JOB_OPENINGS_FEATURES,
                 requested_as_of_date,
             ),
-            "labor_force_participation": _load_latest_component_features(
+            "labor_force_participation": load_latest_component_features(
                 connection,
                 "CIVPART",
                 PARTICIPATION_FEATURES,
                 requested_as_of_date,
             ),
-            "average_hourly_earnings": _load_latest_component_features(
+            "average_hourly_earnings": load_latest_component_features(
                 connection,
                 "CES0500000003",
                 EARNINGS_FEATURES,
