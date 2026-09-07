@@ -90,3 +90,21 @@ Using payroll, unemployment, and claims component classifications:
 - At least 2 `improving`: `improving`
 - At least 2 `weakening`: `weakening`
 - Otherwise: `mixed`
+
+## Labor Market Snapshot
+
+The Labor Market Snapshot is a transparent current-state view using all configured labor-market series. It preserves the existing Labor Market Momentum v1 methodology exactly: overall momentum is still based only on PAYEMS, UNRATE, and ICSA.
+
+The snapshot does not create a numeric labor score, does not classify the labor market as strong or weak, does not treat JTSJOL or CIVPART direction as good or bad, and does not classify wage growth as good or bad.
+
+Each snapshot component includes `observation_date` and `feature_as_of_date` so data freshness is visible.
+
+### Snapshot Components
+
+- PAYEMS: includes `monthly_change`, `monthly_change_ma_3m`, `monthly_change_ma_6m`, and the existing payroll momentum classification.
+- UNRATE: includes `level`, `change_3m`, and the existing unemployment momentum classification.
+- ICSA: includes `moving_average_4w`, `moving_average_13w`, and the existing claims momentum classification.
+- CCSA: includes `moving_average_4w`, `moving_average_13w`, and uses the same directional logic as ICSA: 4W lower than 13W is `improving`, 4W higher than 13W is `weakening`, equal values are `stable`.
+- JTSJOL: includes `level`, `change_3m`, and `yoy`; `change_3m` > 0 is `rising`, `change_3m` < 0 is `falling`, and `change_3m` == 0 is `stable`.
+- CIVPART: includes `level`, `change_3m`, and `moving_average_3m`; `change_3m` > 0 is `rising`, `change_3m` < 0 is `falling`, and `change_3m` == 0 is `stable`.
+- CES0500000003: includes `mom`, `yoy`, and `annualized_3m` values only.
