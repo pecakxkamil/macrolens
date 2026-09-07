@@ -200,6 +200,118 @@ def test_quarterly_yoy_calculation():
     assert feature_values(features, "yoy") == pytest.approx([5.0])
 
 
+def test_gdpc1_qoq_annualized_calculation():
+    features = calculate_features(
+        "GDPC1",
+        observations([100.0, 101.0], frequency="QS"),
+        ["qoq_annualized"],
+    )
+
+    expected = ((101.0 / 100.0) ** 4 - 1) * 100
+    assert feature_values(features, "qoq_annualized") == pytest.approx([expected])
+
+
+def test_gdpc1_quarterly_yoy_uses_lag_4():
+    features = calculate_features(
+        "GDPC1",
+        observations([100.0, 101.0, 102.0, 103.0, 104.0], frequency="QS"),
+        ["yoy"],
+    )
+
+    assert feature_values(features, "yoy") == pytest.approx([4.0])
+
+
+def test_cfnai_level():
+    features = calculate_features(
+        "CFNAI",
+        observations([0.1, -0.2]),
+        ["level"],
+    )
+
+    assert feature_values(features, "level") == [0.1, -0.2]
+
+
+def test_cfnai_3m_moving_average():
+    features = calculate_features(
+        "CFNAI",
+        observations([0.1, -0.2, 0.4]),
+        ["moving_average_3m"],
+    )
+
+    assert feature_values(features, "moving_average_3m") == pytest.approx([0.1])
+
+
+def test_indpro_mom():
+    features = calculate_features(
+        "INDPRO",
+        observations([100.0, 102.0]),
+        ["mom"],
+    )
+
+    assert feature_values(features, "mom") == pytest.approx([2.0])
+
+
+def test_indpro_monthly_yoy_uses_lag_12():
+    features = calculate_features(
+        "INDPRO",
+        observations([100.0] * 12 + [105.0]),
+        ["yoy"],
+    )
+
+    assert feature_values(features, "yoy") == pytest.approx([5.0])
+
+
+def test_indpro_annualized_3m():
+    features = calculate_features(
+        "INDPRO",
+        observations([100.0, 101.0, 102.0, 103.0]),
+        ["annualized_3m"],
+    )
+
+    expected = ((103.0 / 100.0) ** 4 - 1) * 100
+    assert feature_values(features, "annualized_3m") == pytest.approx([expected])
+
+
+def test_tcu_level():
+    features = calculate_features(
+        "TCU",
+        observations([75.0, 76.0]),
+        ["level"],
+    )
+
+    assert feature_values(features, "level") == [75.0, 76.0]
+
+
+def test_tcu_change_3m():
+    features = calculate_features(
+        "TCU",
+        observations([75.0, 75.5, 76.0, 77.0]),
+        ["change_3m"],
+    )
+
+    assert feature_values(features, "change_3m") == pytest.approx([2.0])
+
+
+def test_dgorder_mom():
+    features = calculate_features(
+        "DGORDER",
+        observations([200.0, 220.0]),
+        ["mom"],
+    )
+
+    assert feature_values(features, "mom") == pytest.approx([10.0])
+
+
+def test_dgorder_monthly_yoy_uses_lag_12():
+    features = calculate_features(
+        "DGORDER",
+        observations([200.0] * 12 + [220.0]),
+        ["yoy"],
+    )
+
+    assert feature_values(features, "yoy") == pytest.approx([10.0])
+
+
 def test_existing_labor_feature_behavior_is_preserved():
     payems_features = calculate_features(
         "PAYEMS",
@@ -220,6 +332,22 @@ def test_existing_labor_feature_behavior_is_preserved():
     assert feature_values(payems_features, "monthly_change_ma_3m") == [20.0]
     assert feature_values(unrate_features, "change_3m") == pytest.approx([0.5])
     assert feature_values(icsa_features, "yoy") == pytest.approx([10.0])
+
+
+def test_existing_inflation_feature_behavior_is_preserved():
+    cpi_features = calculate_features(
+        "CPIAUCSL",
+        observations([300.0] * 12 + [312.0]),
+        ["yoy"],
+    )
+    eci_features = calculate_features(
+        "ECIALLCIV",
+        observations([160.0, 162.0], frequency="QS"),
+        ["qoq"],
+    )
+
+    assert feature_values(cpi_features, "yoy") == pytest.approx([4.0])
+    assert feature_values(eci_features, "qoq") == pytest.approx([1.25])
 
 
 def test_insufficient_rolling_history_produces_no_premature_values():
@@ -264,6 +392,34 @@ def test_insufficient_growth_history_produces_no_premature_values():
     assert monthly_yoy_features.empty
     assert mom_features.empty
     assert annualized_features.empty
+
+
+def test_insufficient_new_growth_history_produces_no_premature_values():
+    gdp_qoq_features = calculate_features(
+        "GDPC1",
+        observations([100.0], frequency="QS"),
+        ["qoq_annualized"],
+    )
+    gdp_yoy_features = calculate_features(
+        "GDPC1",
+        observations([100.0, 101.0, 102.0, 103.0], frequency="QS"),
+        ["yoy"],
+    )
+    cfnai_average_features = calculate_features(
+        "CFNAI",
+        observations([0.1, -0.2]),
+        ["moving_average_3m"],
+    )
+    dgorder_yoy_features = calculate_features(
+        "DGORDER",
+        observations([200.0] * 12),
+        ["yoy"],
+    )
+
+    assert gdp_qoq_features.empty
+    assert gdp_yoy_features.empty
+    assert cfnai_average_features.empty
+    assert dgorder_yoy_features.empty
 
 
 def test_insufficient_quarterly_growth_history_produces_no_premature_values():

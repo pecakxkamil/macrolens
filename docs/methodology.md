@@ -82,6 +82,38 @@ Methodology version: `v1`
 
 Inflation state, hot/cold classification, and inflation scoring are not designed yet.
 
+## GDPC1
+
+- `qoq_annualized`: ((current value / previous quarter) ** 4 - 1) * 100
+- `yoy`: ((current value / value 4 observations earlier) - 1) * 100
+
+## CFNAI
+
+- `level`: current value
+- `moving_average_3m`: arithmetic mean of current and previous 2 observations
+
+CFNAI is an official index where zero indicates historical trend growth, positive values indicate above-average growth, and negative values indicate below-average growth. MacroLens does not create a Growth classification from CFNAI yet.
+
+## INDPRO
+
+- `mom`: ((current value / previous observation) - 1) * 100
+- `yoy`: ((current value / value 12 observations earlier) - 1) * 100
+- `annualized_3m`: ((current value / value 3 observations earlier) ** 4 - 1) * 100
+
+## TCU
+
+- `level`: current value
+- `change_3m`: current value - value 3 observations earlier
+- `moving_average_3m`: arithmetic mean of current and previous 2 observations
+
+## DGORDER
+
+- `mom`: ((current value / previous observation) - 1) * 100
+- `yoy`: ((current value / value 12 observations earlier) - 1) * 100
+- `moving_average_3m`: arithmetic mean of current and previous 2 observations
+
+Growth state, growth scoring, strong/weak/recessionary classification, and investment signals are not designed yet.
+
 ## Inflation Snapshot
 
 The Inflation Snapshot is a transparent current-state view using existing computed features. It does not create an overall inflation score, does not classify inflation as hot/cold/high/low, does not compare inflation to a policy target, and does not create investment or trading signals.

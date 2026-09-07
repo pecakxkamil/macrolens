@@ -143,3 +143,61 @@ ECIALLCIV:
     - qoq
     - yoy
   revision_tracking: true
+
+GDPC1:
+  name: Real Gross Domestic Product
+  short_name: Real GDP
+  category: growth
+  frequency: quarterly
+  unit: billions of chained 2017 dollars
+  transformations:
+    - qoq_annualized
+    - yoy
+  revision_tracking: true
+
+CFNAI:
+  name: Chicago Fed National Activity Index
+  short_name: CFNAI
+  category: growth
+  frequency: monthly
+  unit: index
+  transformations:
+    - level
+    - moving_average_3m
+  revision_tracking: true
+
+INDPRO:
+  name: "Industrial Production: Total Index"
+  short_name: Industrial Production
+  category: growth
+  frequency: monthly
+  unit: index
+  transformations:
+    - mom
+    - yoy
+    - annualized_3m
+  revision_tracking: true
+
+TCU:
+  name: "Capacity Utilization: Total Index"
+  short_name: Capacity Utilization
+  category: growth
+  frequency: monthly
+  unit: percent
+  transformations:
+    - level
+    - change_3m
+    - moving_average_3m
+  revision_tracking: true
+
+DGORDER:
+  name: "Manufacturers' New Orders: Durable Goods"
+  short_name: Durable Goods Orders
+  category: growth
+  frequency: monthly
+  unit: millions of dollars
+  transformations:
+    - mom
+    - yoy
+    - moving_average_3m
+  revision_tracking: true

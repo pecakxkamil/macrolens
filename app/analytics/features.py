@@ -20,6 +20,11 @@ FEATURES_BY_SERIES = {
     "PCEPI": ("mom", "yoy", "annualized_3m"),
     "PCEPILFE": ("mom", "yoy", "annualized_3m"),
     "ECIALLCIV": ("qoq", "yoy"),
+    "GDPC1": ("qoq_annualized", "yoy"),
+    "CFNAI": ("level", "moving_average_3m"),
+    "INDPRO": ("mom", "yoy", "annualized_3m"),
+    "TCU": ("level", "change_3m", "moving_average_3m"),
+    "DGORDER": ("mom", "yoy", "moving_average_3m"),
 }
 
 YOY_LAG_BY_SERIES = {
@@ -32,6 +37,9 @@ YOY_LAG_BY_SERIES = {
     "PCEPI": 12,
     "PCEPILFE": 12,
     "ECIALLCIV": 4,
+    "GDPC1": 4,
+    "INDPRO": 12,
+    "DGORDER": 12,
 }
 
 
@@ -87,6 +95,8 @@ def calculate_features(
         calculated["mom"] = ((values / values.shift(1)) - 1) * 100
     if "qoq" in feature_names:
         calculated["qoq"] = ((values / values.shift(1)) - 1) * 100
+    if "qoq_annualized" in feature_names:
+        calculated["qoq_annualized"] = ((values / values.shift(1)) ** 4 - 1) * 100
     if "annualized_3m" in feature_names:
         calculated["annualized_3m"] = ((values / values.shift(3)) ** 4 - 1) * 100
 

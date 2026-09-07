@@ -18,3 +18,8 @@ Configured economic series:
 | PCEPI | Personal Consumption Expenditures: Chain-type Price Index | Monthly | Index |
 | PCEPILFE | Personal Consumption Expenditures Excluding Food and Energy | Monthly | Index |
 | ECIALLCIV | Employment Cost Index: Total compensation: All Civilian | Quarterly | Index |
+| GDPC1 | Real Gross Domestic Product | Quarterly | Billions of chained 2017 dollars |
+| CFNAI | Chicago Fed National Activity Index | Monthly | Index |
+| INDPRO | Industrial Production: Total Index | Monthly | Index |
+| TCU | Capacity Utilization: Total Index | Monthly | Percent |
+| DGORDER | Manufacturers' New Orders: Durable Goods | Monthly | Millions of dollars |
