@@ -13,6 +13,7 @@ FRED API
 -> PostgreSQL observations
 -> Computed features
 -> Macro modules / state
+-> USA Economy Now aggregation
 -> future API / dashboard / AI interpretation
 ```
 
@@ -39,7 +40,8 @@ FRED API
 - `computed_features` layer
 - Batch feature computation
 - Labor Market Momentum v1
-- Labor Market Snapshot
+- Snapshots for six macro domains: Labor, Inflation, Growth, Consumer, Housing, and Financial Conditions
+- USA Economy Now aggregation layer
 - Automated tests
 
 ## Labor Series
@@ -70,6 +72,5 @@ docker compose up -d
 - Consumer
 - Housing
 - Financial Conditions
-- USA Economy Now
 - API/dashboard
 - AI interpretation

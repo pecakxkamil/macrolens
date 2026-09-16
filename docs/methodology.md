@@ -275,6 +275,23 @@ These labels describe NFCI mechanically and are not trading signals.
 - 2s10s: includes synchronized `dgs2`, `dgs10`, `spread`, and curve shape.
 - NFCI: includes `level`, `change_4w`, `moving_average_4w`, position, and direction.
 
+## USA Economy Now
+
+USA Economy Now v1 is an aggregation and view layer over the six existing domain snapshots:
+
+- Labor Market Snapshot
+- Inflation Snapshot
+- Growth Snapshot
+- Consumer Snapshot
+- Housing Snapshot
+- Financial Conditions Snapshot
+
+All domain methodologies remain unchanged. USA Economy Now does not average domain classifications, vote across components, create an overall economy score, produce strong/weak labels, create expansion/recession labels, create risk-on/risk-off labels, generate trading signals, predict markets, or infer future Fed decisions.
+
+Economic domains have different release schedules. For that reason, USA Economy Now exposes `component_as_of_dates` for every domain. The top-level `as_of_date` is a view/reference date: when a date is requested explicitly, it is that requested date; otherwise, it is the maximum top-level `as_of_date` across the component snapshots. It is not a claim that every underlying observation shares the same date.
+
+The current USA Economy Now snapshot is supported using the feature rows available in the current feature store. An explicit historical `as_of_date` is usable only when the required feature rows exist under that as-of constraint for all required domains. MacroLens storage is not yet a complete point-in-time vintage history. True historical reconstruction will require the planned vintage-aware / ALFRED layer; MacroLens must not substitute current revised data, forward-fill missing historical features, or recompute historical snapshots from today's revised data and call them point-in-time snapshots.
+
 ## Housing Snapshot
 
 The Housing Snapshot is a transparent current-state view using existing computed features. It does not create an overall Housing score, does not classify housing as strong/weak/hot/cold, does not create affordability scores, does not create recession labels, and does not create investment or trading signals.
