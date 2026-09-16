@@ -114,6 +114,64 @@ CFNAI is an official index where zero indicates historical trend growth, positiv
 
 Growth state, growth scoring, strong/weak/recessionary classification, and investment signals are not designed yet.
 
+## Growth Snapshot
+
+The Growth Snapshot is a transparent current-state view using existing computed features. It does not create an overall Growth score, does not classify the economy as strong/weak/recessionary, does not create business-cycle regime labels, and does not create investment or trading signals.
+
+Each snapshot component includes `observation_date` and `feature_as_of_date` so data freshness is visible.
+
+### GDP Momentum
+
+Real GDP uses a mechanical momentum comparison:
+
+- `qoq_annualized` > `yoy`: `accelerating`
+- `qoq_annualized` < `yoy`: `decelerating`
+- Equal values: `stable`
+
+### CFNAI Position
+
+CFNAI position is based on `moving_average_3m` relative to the official zero trend reference:
+
+- `moving_average_3m` > 0: `above_trend`
+- `moving_average_3m` < 0: `below_trend`
+- `moving_average_3m` == 0: `at_trend`
+
+This is mechanical and reflects the official meaning of zero in CFNAI. It is not a strong/weak or recession classification.
+
+### Industrial Production Momentum
+
+Industrial Production uses the same mechanical momentum comparison as Real GDP:
+
+- `annualized_3m` > `yoy`: `accelerating`
+- `annualized_3m` < `yoy`: `decelerating`
+- Equal values: `stable`
+
+### Capacity Utilization Direction
+
+Capacity Utilization direction is based on `change_3m`:
+
+- `change_3m` > 0: `rising`
+- `change_3m` < 0: `falling`
+- `change_3m` == 0: `stable`
+
+### Durable Goods Orders Latest Direction
+
+Durable Goods Orders latest direction is based only on `mom`:
+
+- `mom` > 0: `rising`
+- `mom` < 0: `falling`
+- `mom` == 0: `stable`
+
+This direction is not treated as a good/bad classification.
+
+### Snapshot Components
+
+- GDPC1: Real GDP includes `qoq_annualized`, `yoy`, and GDP momentum.
+- CFNAI: Chicago Fed National Activity Index includes `level`, `moving_average_3m`, and position relative to trend.
+- INDPRO: Industrial Production includes `mom`, `yoy`, `annualized_3m`, and industrial-production momentum.
+- TCU: Capacity Utilization includes `level`, `change_3m`, `moving_average_3m`, and direction.
+- DGORDER: Durable Goods Orders includes `mom`, `yoy`, `moving_average_3m`, and latest direction.
+
 ## Inflation Snapshot
 
 The Inflation Snapshot is a transparent current-state view using existing computed features. It does not create an overall inflation score, does not classify inflation as hot/cold/high/low, does not compare inflation to a policy target, and does not create investment or trading signals.
