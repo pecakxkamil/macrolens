@@ -186,6 +186,53 @@ Mortgage-rate changes are expressed in percentage points, not relative percentag
 
 Housing state, housing scoring, strong/weak/hot/cold classification, affordability scoring, recession labels, and investment signals are not designed yet.
 
+## Housing Snapshot
+
+The Housing Snapshot is a transparent current-state view using existing computed features. It does not create an overall Housing score, does not classify housing as strong/weak/hot/cold, does not create affordability scores, does not create recession labels, and does not create investment or trading signals.
+
+Each snapshot component includes `observation_date` and `feature_as_of_date` so data freshness is visible.
+
+### Housing Starts Direction
+
+Housing Starts direction is based on `mom`:
+
+- `mom` > 0: `rising`
+- `mom` < 0: `falling`
+- `mom` == 0: `stable`
+
+### Building Permits Direction
+
+Building Permits direction is based on `mom`:
+
+- `mom` > 0: `rising`
+- `mom` < 0: `falling`
+- `mom` == 0: `stable`
+
+### New Home Sales Direction
+
+New Home Sales direction is based on `mom`:
+
+- `mom` > 0: `rising`
+- `mom` < 0: `falling`
+- `mom` == 0: `stable`
+
+### Mortgage Rate Direction
+
+30-Year Mortgage Rate direction is based on `change_4w`:
+
+- `change_4w` > 0: `rising`
+- `change_4w` < 0: `falling`
+- `change_4w` == 0: `stable`
+
+Mortgage-rate changes are absolute percentage-point changes. Rising/falling is descriptive only and is not treated as good or bad.
+
+### Snapshot Components
+
+- HOUST: Housing Starts includes `level`, `mom`, `yoy`, `moving_average_3m`, and direction.
+- PERMIT: Building Permits includes `level`, `mom`, `yoy`, `moving_average_3m`, and direction.
+- HSN1F: New Home Sales includes `level`, `mom`, `yoy`, `moving_average_3m`, and direction.
+- MORTGAGE30US: 30-Year Mortgage Rate includes `level`, `change_4w`, `change_13w`, `moving_average_4w`, and direction.
+
 ## Consumer Snapshot
 
 The Consumer Snapshot is a transparent current-state view using existing computed features. It does not create an overall Consumer State, does not create a Consumer score, does not classify consumers as strong or weak, does not create recession or business-cycle labels, and does not create investment or trading signals.
