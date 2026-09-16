@@ -222,6 +222,59 @@ The 2s10s Treasury spread will later be calculated as `DGS10 - DGS2` using synch
 
 Financial Conditions State, financial conditions scoring, Fed-decision inference, bullish/bearish rate labels, recession predictions, and investment signals are not designed yet.
 
+## Financial Conditions Snapshot
+
+The Financial Conditions Snapshot is a transparent current-state view using existing computed features. It does not create an overall Financial Conditions score, does not infer future Fed decisions, does not classify rates as bullish or bearish, does not create recession predictions, and does not create investment or trading signals.
+
+Each snapshot component includes `observation_date` and `feature_as_of_date` so data freshness is visible.
+
+### Rate And Yield Levels
+
+DFF, DGS2, DGS10, and DFII10 expose `level` only. These are rate or yield levels expressed in percent and are descriptive only.
+
+### 2s10s Yield Curve
+
+The 2s10s spread is calculated inside the snapshot:
+
+- `spread`: DGS10 - DGS2
+
+The calculation uses DGS10 and DGS2 observations with exactly the same `observation_date`. The snapshot chooses the latest common `observation_date` available under the requested as-of constraint. It does not subtract independently selected latest observations if their dates differ, does not forward-fill, and does not use a separate FRED spread series.
+
+The spread `feature_as_of_date` is the maximum of the synchronized DGS2 and DGS10 `feature_as_of_date` values.
+
+The curve-shape label is purely mathematical:
+
+- `spread` > 0: `positive`
+- `spread` < 0: `inverted`
+- `spread` == 0: `flat`
+
+This is not a recession classification, investment signal, or good/bad label.
+
+### NFCI Position And Direction
+
+NFCI position is based on `level` relative to zero:
+
+- `level` > 0: `tighter_than_average`
+- `level` < 0: `looser_than_average`
+- `level` == 0: `average`
+
+NFCI direction is based on `change_4w`:
+
+- `change_4w` > 0: `tightening`
+- `change_4w` < 0: `easing`
+- `change_4w` == 0: `stable`
+
+These labels describe NFCI mechanically and are not trading signals.
+
+### Snapshot Components
+
+- DFF: Effective Fed Funds Rate includes `level`.
+- DGS2: 2Y Treasury Yield includes `level`.
+- DGS10: 10Y Treasury Yield includes `level`.
+- DFII10: 10Y Real Yield includes `level`.
+- 2s10s: includes synchronized `dgs2`, `dgs10`, `spread`, and curve shape.
+- NFCI: includes `level`, `change_4w`, `moving_average_4w`, position, and direction.
+
 ## Housing Snapshot
 
 The Housing Snapshot is a transparent current-state view using existing computed features. It does not create an overall Housing score, does not classify housing as strong/weak/hot/cold, does not create affordability scores, does not create recession labels, and does not create investment or trading signals.
