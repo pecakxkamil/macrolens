@@ -27,3 +27,7 @@ Configured economic series:
 | PCEC96 | Real Personal Consumption Expenditures | Monthly | Billions of chained 2017 dollars |
 | DSPIC96 | Real Disposable Personal Income | Monthly | Billions of chained 2017 dollars |
 | PSAVERT | Personal Saving Rate | Monthly | Percent |
+| HOUST | Housing Starts | Monthly | Thousands of units, seasonally adjusted annual rate |
+| PERMIT | New Private Housing Units Authorized by Building Permits | Monthly | Thousands of units, seasonally adjusted annual rate |
+| HSN1F | New One Family Houses Sold | Monthly | Thousands of units, seasonally adjusted annual rate |
+| MORTGAGE30US | 30-Year Fixed Rate Mortgage Average in the United States | Weekly | Percent |

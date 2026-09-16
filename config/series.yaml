@@ -249,3 +249,55 @@ PSAVERT:
     - change_3m
     - moving_average_3m
   revision_tracking: true
+
+HOUST:
+  name: Housing Starts
+  short_name: Housing Starts
+  category: housing
+  frequency: monthly
+  unit: thousands of units, seasonally adjusted annual rate
+  transformations:
+    - level
+    - mom
+    - yoy
+    - moving_average_3m
+  revision_tracking: true
+
+PERMIT:
+  name: New Private Housing Units Authorized by Building Permits
+  short_name: Building Permits
+  category: housing
+  frequency: monthly
+  unit: thousands of units, seasonally adjusted annual rate
+  transformations:
+    - level
+    - mom
+    - yoy
+    - moving_average_3m
+  revision_tracking: true
+
+HSN1F:
+  name: New One Family Houses Sold
+  short_name: New Home Sales
+  category: housing
+  frequency: monthly
+  unit: thousands of units, seasonally adjusted annual rate
+  transformations:
+    - level
+    - mom
+    - yoy
+    - moving_average_3m
+  revision_tracking: true
+
+MORTGAGE30US:
+  name: 30-Year Fixed Rate Mortgage Average in the United States
+  short_name: 30Y Mortgage Rate
+  category: housing
+  frequency: weekly
+  unit: percent
+  transformations:
+    - level
+    - change_4w
+    - change_13w
+    - moving_average_4w
+  revision_tracking: true

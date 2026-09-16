@@ -29,6 +29,10 @@ FEATURES_BY_SERIES = {
     "PCEC96": ("mom", "yoy", "annualized_3m"),
     "DSPIC96": ("mom", "yoy", "annualized_3m"),
     "PSAVERT": ("level", "change_3m", "moving_average_3m"),
+    "HOUST": ("level", "mom", "yoy", "moving_average_3m"),
+    "PERMIT": ("level", "mom", "yoy", "moving_average_3m"),
+    "HSN1F": ("level", "mom", "yoy", "moving_average_3m"),
+    "MORTGAGE30US": ("level", "change_4w", "change_13w", "moving_average_4w"),
 }
 
 YOY_LAG_BY_SERIES = {
@@ -47,6 +51,9 @@ YOY_LAG_BY_SERIES = {
     "RSAFS": 12,
     "PCEC96": 12,
     "DSPIC96": 12,
+    "HOUST": 12,
+    "PERMIT": 12,
+    "HSN1F": 12,
 }
 
 
@@ -89,6 +96,10 @@ def calculate_features(
         calculated["change_3m"] = values.diff(3)
     if "change_6m" in feature_names:
         calculated["change_6m"] = values.diff(6)
+    if "change_4w" in feature_names:
+        calculated["change_4w"] = values.diff(4)
+    if "change_13w" in feature_names:
+        calculated["change_13w"] = values.diff(13)
     if "moving_average_3m" in feature_names:
         calculated["moving_average_3m"] = values.rolling(window=3).mean()
     if "moving_average_4w" in feature_names:

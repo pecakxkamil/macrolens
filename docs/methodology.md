@@ -148,6 +148,44 @@ PSAVERT is a saving-rate level, not a growth series.
 
 Consumer state, consumer scoring, strong/weak classification, sentiment-based classification, and investment signals are not designed yet.
 
+## HOUST
+
+- `level`: current published SAAR level
+- `mom`: ((current value / previous observation) - 1) * 100
+- `yoy`: ((current value / value 12 observations earlier) - 1) * 100
+- `moving_average_3m`: arithmetic mean of current and previous 2 observations
+
+Housing Starts is a seasonally adjusted annual rate level series. `mom` and `yoy` describe percentage changes in the published SAAR level. The 3M moving average smooths volatile monthly housing activity.
+
+## PERMIT
+
+- `level`: current published SAAR level
+- `mom`: ((current value / previous observation) - 1) * 100
+- `yoy`: ((current value / value 12 observations earlier) - 1) * 100
+- `moving_average_3m`: arithmetic mean of current and previous 2 observations
+
+Building Permits is a seasonally adjusted annual rate level series. `mom` and `yoy` describe percentage changes in the published SAAR level. The 3M moving average smooths volatile monthly housing activity.
+
+## HSN1F
+
+- `level`: current published SAAR level
+- `mom`: ((current value / previous observation) - 1) * 100
+- `yoy`: ((current value / value 12 observations earlier) - 1) * 100
+- `moving_average_3m`: arithmetic mean of current and previous 2 observations
+
+New Home Sales is a seasonally adjusted annual rate level series. `mom` and `yoy` describe percentage changes in the published SAAR level. The 3M moving average smooths volatile monthly housing activity.
+
+## MORTGAGE30US
+
+- `level`: current value
+- `change_4w`: current mortgage rate - rate 4 weekly observations earlier
+- `change_13w`: current mortgage rate - rate 13 weekly observations earlier
+- `moving_average_4w`: arithmetic mean of current and previous 3 observations
+
+Mortgage-rate changes are expressed in percentage points, not relative percentage changes. These features are descriptive only and are not interpreted as automatically good or bad.
+
+Housing state, housing scoring, strong/weak/hot/cold classification, affordability scoring, recession labels, and investment signals are not designed yet.
+
 ## Consumer Snapshot
 
 The Consumer Snapshot is a transparent current-state view using existing computed features. It does not create an overall Consumer State, does not create a Consumer score, does not classify consumers as strong or weak, does not create recession or business-cycle labels, and does not create investment or trading signals.

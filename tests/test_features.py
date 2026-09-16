@@ -437,6 +437,147 @@ def test_psavert_3m_moving_average():
     )
 
 
+def test_houst_level():
+    features = calculate_features(
+        "HOUST",
+        observations([1400.0, 1450.0]),
+        ["level"],
+    )
+
+    assert feature_values(features, "level") == [1400.0, 1450.0]
+
+
+def test_houst_mom():
+    features = calculate_features(
+        "HOUST",
+        observations([1400.0, 1470.0]),
+        ["mom"],
+    )
+
+    assert feature_values(features, "mom") == pytest.approx([5.0])
+
+
+def test_houst_yoy_uses_lag_12():
+    features = calculate_features(
+        "HOUST",
+        observations([1400.0] * 12 + [1540.0]),
+        ["yoy"],
+    )
+
+    assert feature_values(features, "yoy") == pytest.approx([10.0])
+
+
+def test_houst_3m_moving_average():
+    features = calculate_features(
+        "HOUST",
+        observations([1400.0, 1450.0, 1500.0]),
+        ["moving_average_3m"],
+    )
+
+    assert feature_values(features, "moving_average_3m") == pytest.approx([1450.0])
+
+
+def test_permit_mom():
+    features = calculate_features(
+        "PERMIT",
+        observations([1500.0, 1530.0]),
+        ["mom"],
+    )
+
+    assert feature_values(features, "mom") == pytest.approx([2.0])
+
+
+def test_permit_yoy_uses_lag_12():
+    features = calculate_features(
+        "PERMIT",
+        observations([1500.0] * 12 + [1650.0]),
+        ["yoy"],
+    )
+
+    assert feature_values(features, "yoy") == pytest.approx([10.0])
+
+
+def test_permit_3m_moving_average():
+    features = calculate_features(
+        "PERMIT",
+        observations([1500.0, 1530.0, 1560.0]),
+        ["moving_average_3m"],
+    )
+
+    assert feature_values(features, "moving_average_3m") == pytest.approx([1530.0])
+
+
+def test_hsn1f_mom():
+    features = calculate_features(
+        "HSN1F",
+        observations([700.0, 735.0]),
+        ["mom"],
+    )
+
+    assert feature_values(features, "mom") == pytest.approx([5.0])
+
+
+def test_hsn1f_yoy_uses_lag_12():
+    features = calculate_features(
+        "HSN1F",
+        observations([700.0] * 12 + [770.0]),
+        ["yoy"],
+    )
+
+    assert feature_values(features, "yoy") == pytest.approx([10.0])
+
+
+def test_hsn1f_3m_moving_average():
+    features = calculate_features(
+        "HSN1F",
+        observations([700.0, 730.0, 760.0]),
+        ["moving_average_3m"],
+    )
+
+    assert feature_values(features, "moving_average_3m") == pytest.approx([730.0])
+
+
+def test_mortgage30us_level():
+    features = calculate_features(
+        "MORTGAGE30US",
+        observations([6.5, 6.25], frequency="W-FRI"),
+        ["level"],
+    )
+
+    assert feature_values(features, "level") == [6.5, 6.25]
+
+
+def test_mortgage30us_change_4w_is_percentage_point_difference():
+    features = calculate_features(
+        "MORTGAGE30US",
+        observations([6.50, 6.45, 6.40, 6.35, 6.25], frequency="W-FRI"),
+        ["change_4w"],
+    )
+
+    assert feature_values(features, "change_4w") == pytest.approx([-0.25])
+
+
+def test_mortgage30us_change_13w_is_percentage_point_difference():
+    values = [6.50] + [6.45] * 12 + [6.25]
+    features = calculate_features(
+        "MORTGAGE30US",
+        observations(values, frequency="W-FRI"),
+        ["change_13w"],
+    )
+
+    assert feature_values(features, "change_13w") == pytest.approx([-0.25])
+
+
+def test_mortgage30us_4w_moving_average():
+    features = calculate_features(
+        "MORTGAGE30US",
+        observations([6.50, 6.40, 6.30, 6.20], frequency="W-FRI"),
+        ["moving_average_4w"],
+    )
+
+    assert feature_values(features, "moving_average_4w") == pytest.approx([6.35])
+
+
 def test_existing_labor_feature_behavior_is_preserved():
     payems_features = calculate_features(
         "PAYEMS",
@@ -490,6 +631,22 @@ def test_existing_growth_feature_behavior_is_preserved():
     expected = ((101.0 / 100.0) ** 4 - 1) * 100
     assert feature_values(gdp_features, "qoq_annualized") == pytest.approx([expected])
     assert feature_values(indpro_features, "yoy") == pytest.approx([5.0])
+
+
+def test_existing_consumer_feature_behavior_is_preserved():
+    retail_features = calculate_features(
+        "RSAFS",
+        observations([500.0] * 12 + [550.0]),
+        ["yoy"],
+    )
+    saving_features = calculate_features(
+        "PSAVERT",
+        observations([4.0, 4.1, 4.2, 4.5]),
+        ["change_3m"],
+    )
+
+    assert feature_values(retail_features, "yoy") == pytest.approx([10.0])
+    assert feature_values(saving_features, "change_3m") == pytest.approx([0.5])
 
 
 def test_insufficient_rolling_history_produces_no_premature_values():
@@ -590,6 +747,40 @@ def test_insufficient_consumer_history_produces_no_premature_values():
     assert pcec96_mom_features.empty
     assert dspic96_annualized_features.empty
     assert psavert_average_features.empty
+
+
+def test_insufficient_housing_history_produces_no_premature_values():
+    houst_yoy_features = calculate_features(
+        "HOUST",
+        observations([1400.0] * 12),
+        ["yoy"],
+    )
+    permit_mom_features = calculate_features(
+        "PERMIT",
+        observations([1500.0]),
+        ["mom"],
+    )
+    hsn1f_average_features = calculate_features(
+        "HSN1F",
+        observations([700.0, 730.0]),
+        ["moving_average_3m"],
+    )
+    mortgage_4w_features = calculate_features(
+        "MORTGAGE30US",
+        observations([6.50, 6.45, 6.40, 6.35], frequency="W-FRI"),
+        ["change_4w"],
+    )
+    mortgage_13w_features = calculate_features(
+        "MORTGAGE30US",
+        observations([6.50] + [6.45] * 12, frequency="W-FRI"),
+        ["change_13w"],
+    )
+
+    assert houst_yoy_features.empty
+    assert permit_mom_features.empty
+    assert hsn1f_average_features.empty
+    assert mortgage_4w_features.empty
+    assert mortgage_13w_features.empty
 
 
 def test_insufficient_quarterly_growth_history_produces_no_premature_values():
