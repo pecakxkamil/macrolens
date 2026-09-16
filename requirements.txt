@@ -4,3 +4,5 @@ PyYAML
 httpx
 pytest
 pandas
+fastapi
+uvicorn

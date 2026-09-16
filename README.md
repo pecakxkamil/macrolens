@@ -42,6 +42,7 @@ FRED API
 - Labor Market Momentum v1
 - Snapshots for six macro domains: Labor, Inflation, Growth, Consumer, Housing, and Financial Conditions
 - USA Economy Now aggregation layer
+- MacroLens API v1 for current snapshots
 - Automated tests
 
 ## Labor Series
@@ -64,6 +65,27 @@ docker compose up -d
 .\.venv\Scripts\python -m app.analytics.labor_snapshot
 .\.venv\Scripts\python -m pytest
 ```
+
+## Development API
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.api.main:app --reload
+```
+
+Interactive FastAPI docs are available at `/docs`.
+
+API v1 exposes current snapshots only. Full historical point-in-time API support is not implemented yet.
+
+Available routes:
+
+- `GET /health`
+- `GET /api/v1/economy/us`
+- `GET /api/v1/economy/us/labor`
+- `GET /api/v1/economy/us/inflation`
+- `GET /api/v1/economy/us/growth`
+- `GET /api/v1/economy/us/consumer`
+- `GET /api/v1/economy/us/housing`
+- `GET /api/v1/economy/us/financial-conditions`
 
 ## Roadmap
 

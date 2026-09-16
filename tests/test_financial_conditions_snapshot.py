@@ -106,6 +106,21 @@ def test_synchronized_2s10s_calculation():
     assert spread["feature_as_of_date"] == "2026-09-04"
 
 
+def test_structured_2s10s_contains_required_freshness_fields():
+    curve = financial_conditions_snapshot()["yield_curve_2s10s"]
+
+    assert set(curve.keys()) == {
+        "observation_date",
+        "feature_as_of_date",
+        "dgs2",
+        "dgs10",
+        "spread",
+        "shape",
+    }
+    assert curve["observation_date"] == "2026-08-01"
+    assert curve["feature_as_of_date"] == "2026-09-04"
+
+
 def test_latest_common_date_is_selected():
     spread = build_latest_synchronized_2s10s_spread(
         [
