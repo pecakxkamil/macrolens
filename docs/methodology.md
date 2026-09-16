@@ -148,6 +148,55 @@ PSAVERT is a saving-rate level, not a growth series.
 
 Consumer state, consumer scoring, strong/weak classification, sentiment-based classification, and investment signals are not designed yet.
 
+## Consumer Snapshot
+
+The Consumer Snapshot is a transparent current-state view using existing computed features. It does not create an overall Consumer State, does not create a Consumer score, does not classify consumers as strong or weak, does not create recession or business-cycle labels, and does not create investment or trading signals.
+
+Each snapshot component includes `observation_date` and `feature_as_of_date` so data freshness is visible.
+
+### Retail Sales Momentum
+
+Retail Sales uses a mechanical nominal growth momentum comparison:
+
+- `annualized_3m` > `yoy`: `accelerating`
+- `annualized_3m` < `yoy`: `decelerating`
+- Equal values: `stable`
+
+Retail Sales is nominal. The acceleration/deceleration label describes nominal retail-sales growth only and is not interpreted as real consumer strength.
+
+### Real Consumption Momentum
+
+Real Personal Consumption Expenditures uses a mechanical real growth momentum comparison:
+
+- `annualized_3m` > `yoy`: `accelerating`
+- `annualized_3m` < `yoy`: `decelerating`
+- Equal values: `stable`
+
+### Real Disposable Income Momentum
+
+Real Disposable Personal Income uses a mechanical real growth momentum comparison:
+
+- `annualized_3m` > `yoy`: `accelerating`
+- `annualized_3m` < `yoy`: `decelerating`
+- Equal values: `stable`
+
+### Saving-Rate Direction
+
+Personal Saving Rate direction is based on `change_3m`:
+
+- `change_3m` > 0: `rising`
+- `change_3m` < 0: `falling`
+- `change_3m` == 0: `stable`
+
+Saving-rate direction is descriptive only and is not treated as good or bad.
+
+### Snapshot Components
+
+- RSAFS: Retail Sales includes `mom`, `yoy`, `annualized_3m`, and nominal growth momentum.
+- PCEC96: Real Personal Consumption Expenditures includes `mom`, `yoy`, `annualized_3m`, and real consumption momentum.
+- DSPIC96: Real Disposable Personal Income includes `mom`, `yoy`, `annualized_3m`, and real income momentum.
+- PSAVERT: Personal Saving Rate includes `level`, `change_3m`, `moving_average_3m`, and descriptive direction.
+
 ## Growth Snapshot
 
 The Growth Snapshot is a transparent current-state view using existing computed features. It does not create an overall Growth score, does not classify the economy as strong/weak/recessionary, does not create business-cycle regime labels, and does not create investment or trading signals.
