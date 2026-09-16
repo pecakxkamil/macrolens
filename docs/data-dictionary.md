@@ -31,3 +31,8 @@ Configured economic series:
 | PERMIT | New Private Housing Units Authorized by Building Permits | Monthly | Thousands of units, seasonally adjusted annual rate |
 | HSN1F | New One Family Houses Sold | Monthly | Thousands of units, seasonally adjusted annual rate |
 | MORTGAGE30US | 30-Year Fixed Rate Mortgage Average in the United States | Weekly | Percent |
+| DFF | Federal Funds Effective Rate | Daily | Percent |
+| DGS2 | Market Yield on U.S. Treasury Securities at 2-Year Constant Maturity | Daily | Percent |
+| DGS10 | Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity | Daily | Percent |
+| DFII10 | Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity, Inflation-Indexed | Daily | Percent |
+| NFCI | Chicago Fed National Financial Conditions Index | Weekly | Index |

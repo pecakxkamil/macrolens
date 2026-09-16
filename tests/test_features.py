@@ -578,6 +578,76 @@ def test_mortgage30us_4w_moving_average():
     assert feature_values(features, "moving_average_4w") == pytest.approx([6.35])
 
 
+def test_dff_level():
+    features = calculate_features(
+        "DFF",
+        observations([5.25, 5.33], frequency="D"),
+        ["level"],
+    )
+
+    assert feature_values(features, "level") == [5.25, 5.33]
+
+
+def test_dgs2_level():
+    features = calculate_features(
+        "DGS2",
+        observations([4.75, 4.80], frequency="D"),
+        ["level"],
+    )
+
+    assert feature_values(features, "level") == [4.75, 4.80]
+
+
+def test_dgs10_level():
+    features = calculate_features(
+        "DGS10",
+        observations([4.25, 4.30], frequency="D"),
+        ["level"],
+    )
+
+    assert feature_values(features, "level") == [4.25, 4.30]
+
+
+def test_dfii10_level():
+    features = calculate_features(
+        "DFII10",
+        observations([2.00, 2.05], frequency="D"),
+        ["level"],
+    )
+
+    assert feature_values(features, "level") == [2.00, 2.05]
+
+
+def test_nfci_level():
+    features = calculate_features(
+        "NFCI",
+        observations([-0.20, -0.10], frequency="W-FRI"),
+        ["level"],
+    )
+
+    assert feature_values(features, "level") == [-0.20, -0.10]
+
+
+def test_nfci_change_4w_is_absolute_index_point_difference():
+    features = calculate_features(
+        "NFCI",
+        observations([-0.20, -0.15, -0.10, -0.05, 0.10], frequency="W-FRI"),
+        ["change_4w"],
+    )
+
+    assert feature_values(features, "change_4w") == pytest.approx([0.30])
+
+
+def test_nfci_4w_moving_average():
+    features = calculate_features(
+        "NFCI",
+        observations([-0.20, -0.10, 0.00, 0.10], frequency="W-FRI"),
+        ["moving_average_4w"],
+    )
+
+    assert feature_values(features, "moving_average_4w") == pytest.approx([-0.05])
+
+
 def test_existing_labor_feature_behavior_is_preserved():
     payems_features = calculate_features(
         "PAYEMS",
@@ -781,6 +851,22 @@ def test_insufficient_housing_history_produces_no_premature_values():
     assert hsn1f_average_features.empty
     assert mortgage_4w_features.empty
     assert mortgage_13w_features.empty
+
+
+def test_insufficient_financial_conditions_history_produces_no_premature_values():
+    nfci_change_features = calculate_features(
+        "NFCI",
+        observations([-0.20, -0.15, -0.10, -0.05], frequency="W-FRI"),
+        ["change_4w"],
+    )
+    nfci_average_features = calculate_features(
+        "NFCI",
+        observations([-0.20, -0.15, -0.10], frequency="W-FRI"),
+        ["moving_average_4w"],
+    )
+
+    assert nfci_change_features.empty
+    assert nfci_average_features.empty
 
 
 def test_insufficient_quarterly_growth_history_produces_no_premature_values():

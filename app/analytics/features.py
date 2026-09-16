@@ -33,6 +33,11 @@ FEATURES_BY_SERIES = {
     "PERMIT": ("level", "mom", "yoy", "moving_average_3m"),
     "HSN1F": ("level", "mom", "yoy", "moving_average_3m"),
     "MORTGAGE30US": ("level", "change_4w", "change_13w", "moving_average_4w"),
+    "DFF": ("level",),
+    "DGS2": ("level",),
+    "DGS10": ("level",),
+    "DFII10": ("level",),
+    "NFCI": ("level", "change_4w", "moving_average_4w"),
 }
 
 YOY_LAG_BY_SERIES = {

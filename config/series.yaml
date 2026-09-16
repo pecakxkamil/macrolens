@@ -301,3 +301,55 @@ MORTGAGE30US:
     - change_13w
     - moving_average_4w
   revision_tracking: true
+
+DFF:
+  name: Federal Funds Effective Rate
+  short_name: Effective Fed Funds Rate
+  category: financial_conditions
+  frequency: daily
+  unit: percent
+  transformations:
+    - level
+  revision_tracking: true
+
+DGS2:
+  name: Market Yield on U.S. Treasury Securities at 2-Year Constant Maturity
+  short_name: 2Y Treasury Yield
+  category: financial_conditions
+  frequency: daily
+  unit: percent
+  transformations:
+    - level
+  revision_tracking: true
+
+DGS10:
+  name: Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity
+  short_name: 10Y Treasury Yield
+  category: financial_conditions
+  frequency: daily
+  unit: percent
+  transformations:
+    - level
+  revision_tracking: true
+
+DFII10:
+  name: "Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity, Inflation-Indexed"
+  short_name: 10Y Real Yield
+  category: financial_conditions
+  frequency: daily
+  unit: percent
+  transformations:
+    - level
+  revision_tracking: true
+
+NFCI:
+  name: Chicago Fed National Financial Conditions Index
+  short_name: NFCI
+  category: financial_conditions
+  frequency: weekly
+  unit: index
+  transformations:
+    - level
+    - change_4w
+    - moving_average_4w
+  revision_tracking: true

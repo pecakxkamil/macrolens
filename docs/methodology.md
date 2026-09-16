@@ -186,6 +186,42 @@ Mortgage-rate changes are expressed in percentage points, not relative percentag
 
 Housing state, housing scoring, strong/weak/hot/cold classification, affordability scoring, recession labels, and investment signals are not designed yet.
 
+## DFF
+
+- `level`: current Effective Federal Funds Rate
+
+DFF is a rate level. Values are percentages and are not classified as good or bad.
+
+## DGS2
+
+- `level`: current 2Y Treasury yield
+
+DGS2 is a yield level. Values are percentages and are not classified as good or bad.
+
+## DGS10
+
+- `level`: current 10Y Treasury yield
+
+DGS10 is a yield level. Values are percentages and are not classified as good or bad.
+
+## DFII10
+
+- `level`: current 10Y real Treasury yield
+
+DFII10 is a real yield level. Values are percentages and are not classified as good or bad.
+
+## NFCI
+
+- `level`: current Chicago Fed National Financial Conditions Index value
+- `change_4w`: current NFCI - NFCI 4 weekly observations earlier
+- `moving_average_4w`: arithmetic mean of current and previous 3 observations
+
+NFCI zero is the historical-average reference. Positive NFCI indicates tighter-than-average financial conditions, and negative NFCI indicates looser-than-average financial conditions. `change_4w` is an absolute index-point difference.
+
+The 2s10s Treasury spread will later be calculated as `DGS10 - DGS2` using synchronized observations with identical `observation_date`. MacroLens does not subtract independently selected latest DGS10 and DGS2 observations, does not forward-fill either Treasury series to force alignment, and does not use a separate FRED yield-spread series.
+
+Financial Conditions State, financial conditions scoring, Fed-decision inference, bullish/bearish rate labels, recession predictions, and investment signals are not designed yet.
+
 ## Housing Snapshot
 
 The Housing Snapshot is a transparent current-state view using existing computed features. It does not create an overall Housing score, does not classify housing as strong/weak/hot/cold, does not create affordability scores, does not create recession labels, and does not create investment or trading signals.
