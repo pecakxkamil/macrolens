@@ -312,6 +312,131 @@ def test_dgorder_monthly_yoy_uses_lag_12():
     assert feature_values(features, "yoy") == pytest.approx([10.0])
 
 
+def test_rsafs_mom():
+    features = calculate_features(
+        "RSAFS",
+        observations([500.0, 510.0]),
+        ["mom"],
+    )
+
+    assert feature_values(features, "mom") == pytest.approx([2.0])
+
+
+def test_rsafs_monthly_yoy_uses_lag_12():
+    features = calculate_features(
+        "RSAFS",
+        observations([500.0] * 12 + [550.0]),
+        ["yoy"],
+    )
+
+    assert feature_values(features, "yoy") == pytest.approx([10.0])
+
+
+def test_rsafs_annualized_3m():
+    features = calculate_features(
+        "RSAFS",
+        observations([500.0, 505.0, 510.0, 515.0]),
+        ["annualized_3m"],
+    )
+
+    expected = ((515.0 / 500.0) ** 4 - 1) * 100
+    assert feature_values(features, "annualized_3m") == pytest.approx([expected])
+
+
+def test_pcec96_mom():
+    features = calculate_features(
+        "PCEC96",
+        observations([100.0, 101.0]),
+        ["mom"],
+    )
+
+    assert feature_values(features, "mom") == pytest.approx([1.0])
+
+
+def test_pcec96_yoy():
+    features = calculate_features(
+        "PCEC96",
+        observations([100.0] * 12 + [103.0]),
+        ["yoy"],
+    )
+
+    assert feature_values(features, "yoy") == pytest.approx([3.0])
+
+
+def test_pcec96_annualized_3m():
+    features = calculate_features(
+        "PCEC96",
+        observations([100.0, 101.0, 102.0, 104.0]),
+        ["annualized_3m"],
+    )
+
+    expected = ((104.0 / 100.0) ** 4 - 1) * 100
+    assert feature_values(features, "annualized_3m") == pytest.approx([expected])
+
+
+def test_dspic96_mom():
+    features = calculate_features(
+        "DSPIC96",
+        observations([200.0, 204.0]),
+        ["mom"],
+    )
+
+    assert feature_values(features, "mom") == pytest.approx([2.0])
+
+
+def test_dspic96_yoy():
+    features = calculate_features(
+        "DSPIC96",
+        observations([200.0] * 12 + [210.0]),
+        ["yoy"],
+    )
+
+    assert feature_values(features, "yoy") == pytest.approx([5.0])
+
+
+def test_dspic96_annualized_3m():
+    features = calculate_features(
+        "DSPIC96",
+        observations([200.0, 202.0, 204.0, 206.0]),
+        ["annualized_3m"],
+    )
+
+    expected = ((206.0 / 200.0) ** 4 - 1) * 100
+    assert feature_values(features, "annualized_3m") == pytest.approx([expected])
+
+
+def test_psavert_level():
+    features = calculate_features(
+        "PSAVERT",
+        observations([4.0, 4.2]),
+        ["level"],
+    )
+
+    assert feature_values(features, "level") == [4.0, 4.2]
+
+
+def test_psavert_change_3m():
+    features = calculate_features(
+        "PSAVERT",
+        observations([4.0, 4.1, 4.2, 4.5]),
+        ["change_3m"],
+    )
+
+    assert feature_values(features, "change_3m") == pytest.approx([0.5])
+
+
+def test_psavert_3m_moving_average():
+    features = calculate_features(
+        "PSAVERT",
+        observations([4.0, 4.1, 4.2, 4.5]),
+        ["moving_average_3m"],
+    )
+
+    assert feature_values(features, "moving_average_3m") == pytest.approx(
+        [4.1, 4.2666666667]
+    )
+
+
 def test_existing_labor_feature_behavior_is_preserved():
     payems_features = calculate_features(
         "PAYEMS",
@@ -348,6 +473,23 @@ def test_existing_inflation_feature_behavior_is_preserved():
 
     assert feature_values(cpi_features, "yoy") == pytest.approx([4.0])
     assert feature_values(eci_features, "qoq") == pytest.approx([1.25])
+
+
+def test_existing_growth_feature_behavior_is_preserved():
+    gdp_features = calculate_features(
+        "GDPC1",
+        observations([100.0, 101.0], frequency="QS"),
+        ["qoq_annualized"],
+    )
+    indpro_features = calculate_features(
+        "INDPRO",
+        observations([100.0] * 12 + [105.0]),
+        ["yoy"],
+    )
+
+    expected = ((101.0 / 100.0) ** 4 - 1) * 100
+    assert feature_values(gdp_features, "qoq_annualized") == pytest.approx([expected])
+    assert feature_values(indpro_features, "yoy") == pytest.approx([5.0])
 
 
 def test_insufficient_rolling_history_produces_no_premature_values():
@@ -420,6 +562,34 @@ def test_insufficient_new_growth_history_produces_no_premature_values():
     assert gdp_yoy_features.empty
     assert cfnai_average_features.empty
     assert dgorder_yoy_features.empty
+
+
+def test_insufficient_consumer_history_produces_no_premature_values():
+    rsafs_yoy_features = calculate_features(
+        "RSAFS",
+        observations([500.0] * 12),
+        ["yoy"],
+    )
+    pcec96_mom_features = calculate_features(
+        "PCEC96",
+        observations([100.0]),
+        ["mom"],
+    )
+    dspic96_annualized_features = calculate_features(
+        "DSPIC96",
+        observations([200.0, 202.0, 204.0]),
+        ["annualized_3m"],
+    )
+    psavert_average_features = calculate_features(
+        "PSAVERT",
+        observations([4.0, 4.1]),
+        ["moving_average_3m"],
+    )
+
+    assert rsafs_yoy_features.empty
+    assert pcec96_mom_features.empty
+    assert dspic96_annualized_features.empty
+    assert psavert_average_features.empty
 
 
 def test_insufficient_quarterly_growth_history_produces_no_premature_values():

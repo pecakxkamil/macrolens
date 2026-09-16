@@ -114,6 +114,40 @@ CFNAI is an official index where zero indicates historical trend growth, positiv
 
 Growth state, growth scoring, strong/weak/recessionary classification, and investment signals are not designed yet.
 
+## RSAFS
+
+- `mom`: ((current value / previous observation) - 1) * 100
+- `yoy`: ((current value / value 12 observations earlier) - 1) * 100
+- `annualized_3m`: ((current value / value 3 observations earlier) ** 4 - 1) * 100
+
+Retail Sales is a nominal series. MacroLens does not interpret higher nominal retail sales automatically as stronger real consumption.
+
+## PCEC96
+
+- `mom`: ((current value / previous observation) - 1) * 100
+- `yoy`: ((current value / value 12 observations earlier) - 1) * 100
+- `annualized_3m`: ((current value / value 3 observations earlier) ** 4 - 1) * 100
+
+PCEC96 is a real consumption series.
+
+## DSPIC96
+
+- `mom`: ((current value / previous observation) - 1) * 100
+- `yoy`: ((current value / value 12 observations earlier) - 1) * 100
+- `annualized_3m`: ((current value / value 3 observations earlier) ** 4 - 1) * 100
+
+DSPIC96 is a real disposable-income series.
+
+## PSAVERT
+
+- `level`: current value
+- `change_3m`: current value - value 3 observations earlier
+- `moving_average_3m`: arithmetic mean of current and previous 2 observations
+
+PSAVERT is a saving-rate level, not a growth series.
+
+Consumer state, consumer scoring, strong/weak classification, sentiment-based classification, and investment signals are not designed yet.
+
 ## Growth Snapshot
 
 The Growth Snapshot is a transparent current-state view using existing computed features. It does not create an overall Growth score, does not classify the economy as strong/weak/recessionary, does not create business-cycle regime labels, and does not create investment or trading signals.

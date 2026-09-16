@@ -23,3 +23,7 @@ Configured economic series:
 | INDPRO | Industrial Production: Total Index | Monthly | Index |
 | TCU | Capacity Utilization: Total Index | Monthly | Percent |
 | DGORDER | Manufacturers' New Orders: Durable Goods | Monthly | Millions of dollars |
+| RSAFS | Advance Retail Sales: Retail Trade and Food Services | Monthly | Millions of dollars |
+| PCEC96 | Real Personal Consumption Expenditures | Monthly | Billions of chained 2017 dollars |
+| DSPIC96 | Real Disposable Personal Income | Monthly | Billions of chained 2017 dollars |
+| PSAVERT | Personal Saving Rate | Monthly | Percent |

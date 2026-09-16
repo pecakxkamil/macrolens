@@ -201,3 +201,51 @@ DGORDER:
     - yoy
     - moving_average_3m
   revision_tracking: true
+
+RSAFS:
+  name: "Advance Retail Sales: Retail Trade and Food Services"
+  short_name: Retail Sales
+  category: consumer
+  frequency: monthly
+  unit: millions of dollars
+  transformations:
+    - mom
+    - yoy
+    - annualized_3m
+  revision_tracking: true
+
+PCEC96:
+  name: Real Personal Consumption Expenditures
+  short_name: Real Personal Consumption
+  category: consumer
+  frequency: monthly
+  unit: billions of chained 2017 dollars
+  transformations:
+    - mom
+    - yoy
+    - annualized_3m
+  revision_tracking: true
+
+DSPIC96:
+  name: Real Disposable Personal Income
+  short_name: Real Disposable Income
+  category: consumer
+  frequency: monthly
+  unit: billions of chained 2017 dollars
+  transformations:
+    - mom
+    - yoy
+    - annualized_3m
+  revision_tracking: true
+
+PSAVERT:
+  name: Personal Saving Rate
+  short_name: Personal Saving Rate
+  category: consumer
+  frequency: monthly
+  unit: percent
+  transformations:
+    - level
+    - change_3m
+    - moving_average_3m
+  revision_tracking: true

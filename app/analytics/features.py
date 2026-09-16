@@ -25,6 +25,10 @@ FEATURES_BY_SERIES = {
     "INDPRO": ("mom", "yoy", "annualized_3m"),
     "TCU": ("level", "change_3m", "moving_average_3m"),
     "DGORDER": ("mom", "yoy", "moving_average_3m"),
+    "RSAFS": ("mom", "yoy", "annualized_3m"),
+    "PCEC96": ("mom", "yoy", "annualized_3m"),
+    "DSPIC96": ("mom", "yoy", "annualized_3m"),
+    "PSAVERT": ("level", "change_3m", "moving_average_3m"),
 }
 
 YOY_LAG_BY_SERIES = {
@@ -40,6 +44,9 @@ YOY_LAG_BY_SERIES = {
     "GDPC1": 4,
     "INDPRO": 12,
     "DGORDER": 12,
+    "RSAFS": 12,
+    "PCEC96": 12,
+    "DSPIC96": 12,
 }
 
 
