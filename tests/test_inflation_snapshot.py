@@ -1,6 +1,7 @@
 from app.analytics.inflation_snapshot import (
     build_inflation_snapshot,
     classify_inflation_momentum,
+    print_inflation_snapshot,
 )
 from app.analytics.labor_state import build_labor_momentum_state
 
@@ -98,6 +99,28 @@ def test_eci_and_wages_are_exposed_without_good_bad_classification():
         "yoy": 4.1,
         "annualized_3m": 3.8,
     }
+
+
+def test_average_hourly_earnings_console_output_includes_required_fields(capsys):
+    snapshot = build_inflation_snapshot(
+        "2026-09-04",
+        price_features(2.5, 3.0),
+        price_features(3.5, 3.0),
+        price_features(3.0, 3.0),
+        price_features(2.0, 3.0),
+        component_features(qoq=0.8, yoy=3.7),
+        component_features(mom=0.3, yoy=4.1, annualized_3m=3.8),
+    )
+
+    print_inflation_snapshot(snapshot)
+    output = capsys.readouterr().out
+
+    assert "Average Hourly Earnings:" in output
+    assert "Observation date: 2026-08-01" in output
+    assert "Feature as of: 2026-09-04" in output
+    assert "MoM: 0.3" in output
+    assert "YoY: 4.1" in output
+    assert "3M annualized: 3.8" in output
 
 
 def test_existing_labor_behavior_remains_unchanged():
