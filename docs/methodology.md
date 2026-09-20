@@ -6,6 +6,19 @@ These are mechanical feature calculations only. Macro-state scoring and economic
 
 Methodology version: `v1`
 
+## Historical Chart Data
+
+MacroLens chart history is **current-vintage history**. For each historical
+`observation_date`, observation endpoints select the latest stored vintage and
+feature endpoints select the latest stored feature `as_of_date`. This is suitable
+for viewing how the latest available dataset evolves across observation dates.
+
+Current-vintage history is not point-in-time historical reconstruction. Revised
+economic series may differ from the values originally published, so these chart
+endpoints must not be interpreted as showing what was known at each historical
+date. True point-in-time reconstruction remains planned and will require
+vintage-aware / ALFRED ingestion and feature computation.
+
 ## PAYEMS
 
 - `monthly_change`: value[t] - value[t-1]

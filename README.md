@@ -14,7 +14,9 @@ FRED API
 -> Computed features
 -> Macro modules / state
 -> USA Economy Now aggregation
--> future API / dashboard / AI interpretation
+-> API
+-> Dashboard
+-> future AI interpretation
 ```
 
 ## Technology Stack
@@ -43,6 +45,8 @@ FRED API
 - Snapshots for six macro domains: Labor, Inflation, Growth, Consumer, Housing, and Financial Conditions
 - USA Economy Now aggregation layer
 - MacroLens API v1 for current snapshots
+- Current-vintage observation and feature history endpoints for charts
+- Dashboard v1 for current USA Economy Now data
 - Automated tests
 
 ## Labor Series
@@ -74,7 +78,10 @@ docker compose up -d
 
 Interactive FastAPI docs are available at `/docs`.
 
-API v1 exposes current snapshots only. Full historical point-in-time API support is not implemented yet.
+API v1 exposes current macro snapshots and current-vintage historical series for
+charts. Chart history uses the latest stored value for each observation date; it
+does not reconstruct what was known on that date. Full historical point-in-time
+API support is not implemented yet.
 
 Available routes:
 
@@ -86,6 +93,37 @@ Available routes:
 - `GET /api/v1/economy/us/consumer`
 - `GET /api/v1/economy/us/housing`
 - `GET /api/v1/economy/us/financial-conditions`
+- `GET /api/v1/series/{series_id}/history`
+- `GET /api/v1/series/{series_id}/features/{feature_name}/history`
+
+Both history routes accept optional `start_date` and `end_date` query parameters
+in `YYYY-MM-DD` format.
+
+## Development Dashboard
+
+Run the backend and frontend in two terminals.
+
+Terminal 1:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.api.main:app --reload
+```
+
+Terminal 2:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Development URLs:
+
+- API: `http://127.0.0.1:8000`
+- API docs: `http://127.0.0.1:8000/docs`
+- Dashboard: `http://127.0.0.1:5173` or the URL printed by Vite
+
+Dashboard v1 shows current-state data only. Full historical point-in-time dashboard support is not implemented yet.
 
 ## Roadmap
 

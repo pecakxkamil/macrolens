@@ -58,6 +58,31 @@ def test_health_payload():
     assert response.json() == {"status": "ok"}
 
 
+def test_development_cors_allows_vite_origin():
+    response = client.options(
+        "/health",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
+
+
+def test_development_cors_does_not_use_wildcard_origin():
+    response = client.options(
+        "/health",
+        headers={
+            "Origin": "http://127.0.0.1:5173",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+
+    assert response.headers["access-control-allow-origin"] != "*"
+
+
 def test_us_economy_endpoint_returns_aggregator_result(monkeypatch):
     expected = {
         "as_of_date": "2026-09-04",
@@ -244,3 +269,144 @@ def test_no_historical_as_of_parameter_is_advertised_in_v1():
     ):
         operation = openapi["paths"][path]["get"]
         assert "parameters" not in operation
+
+
+def test_observation_history_serializes_dates_and_decimals(monkeypatch):
+    monkeypatch.setattr(
+        api_main.history,
+        "load_series_history",
+        lambda series_id, start_date, end_date: {
+            "series_id": series_id,
+            "name": "Unemployment Rate",
+            "short_name": "Unemployment Rate",
+            "frequency": "monthly",
+            "unit": "percent",
+            "history_type": "current_vintage",
+            "start_date": start_date,
+            "end_date": end_date,
+            "observations": [
+                {
+                    "observation_date": date(2026, 1, 1),
+                    "value": Decimal("4.125"),
+                }
+            ],
+        },
+    )
+
+    response = client.get(
+        "/api/v1/series/UNRATE/history",
+        params={"start_date": "2026-01-01", "end_date": "2026-12-31"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["history_type"] == "current_vintage"
+    assert payload["start_date"] == "2026-01-01"
+    assert payload["end_date"] == "2026-12-31"
+    assert payload["observations"] == [
+        {"observation_date": "2026-01-01", "value": 4.125}
+    ]
+    assert not isinstance(payload["observations"][0]["value"], str)
+
+
+def test_feature_history_preserves_feature_as_of_date(monkeypatch):
+    monkeypatch.setattr(
+        api_main.history,
+        "load_feature_history",
+        lambda series_id, feature_name, start_date, end_date: {
+            "series_id": series_id,
+            "feature_name": feature_name,
+            "methodology_version": "v1",
+            "history_type": "current_vintage",
+            "observations": [
+                {
+                    "observation_date": date(2026, 1, 1),
+                    "feature_as_of_date": date(2026, 3, 1),
+                    "value": Decimal("4.2"),
+                }
+            ],
+        },
+    )
+
+    response = client.get("/api/v1/series/UNRATE/features/level/history")
+
+    assert response.status_code == 200
+    assert response.json()["observations"] == [
+        {
+            "observation_date": "2026-01-01",
+            "feature_as_of_date": "2026-03-01",
+            "value": 4.2,
+        }
+    ]
+
+
+def test_history_unknown_series_returns_404(monkeypatch):
+    def unknown_series(*args):
+        raise api_main.history.UnknownSeriesError("Unknown series: UNKNOWN")
+
+    monkeypatch.setattr(api_main.history, "load_series_history", unknown_series)
+
+    response = client.get("/api/v1/series/UNKNOWN/history")
+
+    assert response.status_code == 404
+
+
+def test_history_unknown_feature_returns_404(monkeypatch):
+    def unsupported_feature(*args):
+        raise api_main.history.UnsupportedFeatureError(
+            "Unsupported feature for UNRATE: unknown"
+        )
+
+    monkeypatch.setattr(api_main.history, "load_feature_history", unsupported_feature)
+
+    response = client.get("/api/v1/series/UNRATE/features/unknown/history")
+
+    assert response.status_code == 404
+
+
+def test_history_reversed_date_range_returns_clean_400(monkeypatch):
+    def invalid_range(*args):
+        raise api_main.history.InvalidDateRangeError(
+            "start_date must be on or before end_date."
+        )
+
+    monkeypatch.setattr(api_main.history, "load_series_history", invalid_range)
+
+    response = client.get(
+        "/api/v1/series/UNRATE/history",
+        params={"start_date": "2026-02-01", "end_date": "2026-01-01"},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": "start_date must be on or before end_date."
+    }
+
+
+def test_history_invalid_date_returns_422():
+    response = client.get(
+        "/api/v1/series/UNRATE/history",
+        params={"start_date": "not-a-date"},
+    )
+
+    assert response.status_code == 422
+
+
+def test_history_database_failure_does_not_leak_internal_details(monkeypatch):
+    def fail_history(*args):
+        raise RuntimeError("SELECT secret FROM observation_vintages password=secret")
+
+    monkeypatch.setattr(api_main.history, "load_series_history", fail_history)
+
+    response = client.get("/api/v1/series/UNRATE/history")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "detail": "Historical chart data is temporarily unavailable."
+    }
+    assert "SELECT" not in response.text
+    assert "password" not in response.text
+
+
+def test_existing_health_endpoint_remains_unchanged():
+    assert client.get("/health").json() == {"status": "ok"}
