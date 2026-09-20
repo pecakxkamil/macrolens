@@ -163,6 +163,13 @@ h2 {
   margin-bottom: 0.25rem;
 }
 
+.metric-label {
+  align-items: center;
+  display: flex;
+  gap: 0.35rem;
+  min-height: 1.35rem;
+}
+
 .metric-value {
   color: #f8fafc;
   line-height: 1.2;
@@ -183,6 +190,19 @@ h2 {
 .metric-detail {
   display: block;
   margin-top: 0.2rem;
+}
+
+.metric-previous {
+  color: #8795a8;
+  display: block;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  margin-top: 0.3rem;
+}
+
+.metric-previous span {
+  color: #718096;
+  font-size: inherit;
 }
 
 .metric-detail--category {
@@ -211,6 +231,103 @@ h2 {
   max-width: 100%;
   overflow-wrap: anywhere;
   padding: 0.32rem 0.52rem;
+}
+
+.classification-pill--positive {
+  background: #11251d;
+  border-color: #2f6b50;
+  color: #b8e3cd;
+}
+
+.classification-pill--negative {
+  background: #291719;
+  border-color: #744148;
+  color: #edc1c5;
+}
+
+.classification-pill--neutral {
+  background: #1a2029;
+  border-color: #465466;
+  color: #d3dae4;
+}
+
+.classification-pill--context {
+  background: #15222b;
+  border-color: #3b596a;
+  color: #c6dce7;
+}
+
+.info-tooltip {
+  display: inline-flex;
+  position: relative;
+}
+
+.info-tooltip__trigger {
+  align-items: center;
+  background: transparent;
+  border: 1px solid #526174;
+  border-radius: 50%;
+  color: #a9b6c6;
+  display: inline-flex;
+  font-size: 0.65rem;
+  font-weight: 800;
+  height: 1rem;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  width: 1rem;
+}
+
+.info-tooltip__trigger:hover,
+.info-tooltip__trigger:focus-visible {
+  border-color: #8fa4ba;
+  color: #f1f5f9;
+  outline: none;
+}
+
+.info-tooltip__trigger:focus-visible {
+  box-shadow: 0 0 0 2px #24364a;
+}
+
+.info-tooltip__content {
+  background: #171d25;
+  border: 1px solid #46566a;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+  color: #d8e0ea;
+  left: 0;
+  line-height: 1.4;
+  max-width: min(280px, calc(100vw - 3rem));
+  opacity: 0;
+  padding: 0.65rem;
+  pointer-events: none;
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  transform: translateY(-2px);
+  transition: opacity 120ms ease, transform 120ms ease;
+  visibility: hidden;
+  width: max-content;
+  z-index: 20;
+}
+
+.info-tooltip__content span {
+  color: inherit;
+  display: block;
+  font-size: 0.76rem;
+}
+
+.info-tooltip__content span + span {
+  color: #aebbc9;
+  margin-top: 0.35rem;
+}
+
+.info-tooltip:hover .info-tooltip__content,
+.info-tooltip:focus-within .info-tooltip__content,
+.info-tooltip--open .info-tooltip__content {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  visibility: visible;
 }
 
 .methodology-note {

@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import { afterEach, describe, expect, test, vi } from "vitest";
 import App from "./App";
 import { type UsaEconomyNow } from "./api/macrolens";
+import { formatObservationDate } from "./format";
 
 const snapshot: UsaEconomyNow = {
   as_of_date: "2026-09-04",
@@ -209,13 +210,32 @@ const snapshot: UsaEconomyNow = {
 };
 
 function mockFetchSuccess() {
-  vi.stubGlobal(
-    "fetch",
-    vi.fn().mockResolvedValue({
+  const fetchMock = vi.fn().mockImplementation((input: string | URL) => {
+    const url = String(input);
+    const payload = url.endsWith("/api/v1/economy/us")
+      ? snapshot
+      : url.includes("/series/CPIAUCSL/features/yoy/history")
+        ? {
+            series_id: "CPIAUCSL",
+            frequency: "monthly",
+            history_type: "current_vintage",
+            observations: [
+              { observation_date: "2026-07-01", feature_as_of_date: "2026-09-03", value: 3.54 },
+              { observation_date: "2026-08-01", feature_as_of_date: "2026-09-03", value: 3.71 },
+            ],
+          }
+        : {
+            history_type: "current_vintage",
+            observations: [],
+          };
+
+    return Promise.resolve({
       ok: true,
-      json: async () => snapshot,
-    }),
-  );
+      json: async () => payload,
+    });
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
 }
 
 afterEach(() => {
@@ -295,17 +315,32 @@ describe("MacroLens dashboard", () => {
   test("retry triggers another request", async () => {
     const fetchMock = vi
       .fn()
-      .mockRejectedValueOnce(new Error("offline"))
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => snapshot,
+      .mockImplementation((input: string | URL) => {
+        const url = String(input);
+        if (url.endsWith("/api/v1/economy/us")) {
+          const economyCalls = fetchMock.mock.calls.filter(([calledUrl]) =>
+            String(calledUrl).endsWith("/api/v1/economy/us"),
+          ).length;
+          return economyCalls === 1
+            ? Promise.reject(new Error("offline"))
+            : Promise.resolve({ ok: true, json: async () => snapshot });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ history_type: "current_vintage", observations: [] }),
+        });
       });
     vi.stubGlobal("fetch", fetchMock);
 
     render(<App />);
     fireEvent.click(await screen.findByRole("button", { name: "Retry" }));
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    await waitFor(() => {
+      const economyCalls = fetchMock.mock.calls.filter(([url]) =>
+        String(url).endsWith("/api/v1/economy/us"),
+      );
+      expect(economyCalls).toHaveLength(2);
+    });
     expect(await screen.findByRole("heading", { name: "USA Economy Now" })).toBeInTheDocument();
   });
 
@@ -317,6 +352,82 @@ describe("MacroLens dashboard", () => {
     expect(await screen.findByText("3.71%")).toBeInTheDocument();
     expect(screen.getByText("0.09 pp")).toBeInTheDocument();
     expect(screen.queryByText("0.0899999999999999")).not.toBeInTheDocument();
+  });
+
+  test("current and previous values render from snapshot and history", async () => {
+    mockFetchSuccess();
+
+    render(<App />);
+
+    const label = await screen.findByText("Headline CPI YoY");
+    const metric = label.closest(".metric");
+    expect(metric).not.toBeNull();
+    expect(within(metric as HTMLElement).getByText("3.71%")).toBeInTheDocument();
+    expect(metric).toHaveTextContent("Previous: 3.54%");
+    expect(metric).toHaveTextContent("Jul 2026");
+    expect(metric).not.toHaveTextContent("2026-07-01");
+  });
+
+  test("unavailable previous value renders fallback", async () => {
+    mockFetchSuccess();
+
+    render(<App />);
+
+    const label = await screen.findByText("Core CPI YoY");
+    expect(label.closest(".metric")).toHaveTextContent("Previous: —");
+  });
+
+  test("observation dates format by series frequency", () => {
+    expect(formatObservationDate("2026-07-01", "monthly")).toBe("Jul 2026");
+    expect(formatObservationDate("2026-04-01", "quarterly")).toBe("Q2 2026");
+    expect(formatObservationDate("2026-09-11", "weekly")).toBe("Sep 11, 2026");
+    expect(formatObservationDate("2026-09-11", "daily")).toBe("Sep 11, 2026");
+  });
+
+  test("evaluative classification tones do not color descriptive direction as good or bad", async () => {
+    mockFetchSuccess();
+
+    render(<App />);
+
+    const improving = await screen.findByText("Improving");
+    const weakening = screen.getByText("Weakening");
+    const rising = screen.getAllByText("Rising")[0];
+    const falling = screen.getAllByText("Falling")[0];
+
+    expect(improving).toHaveClass("classification-pill--positive");
+    expect(weakening).toHaveClass("classification-pill--negative");
+    expect(rising).toHaveClass("classification-pill--context");
+    expect(falling).toHaveClass("classification-pill--context");
+    expect(rising).not.toHaveClass("classification-pill--positive", "classification-pill--negative");
+    expect(falling).not.toHaveClass("classification-pill--positive", "classification-pill--negative");
+  });
+
+  test("metric information is keyboard and click accessible", async () => {
+    mockFetchSuccess();
+
+    render(<App />);
+
+    const trigger = await screen.findByRole("button", { name: "About Overall momentum" });
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(trigger);
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(
+      screen.getByText(/At least two improving components means Improving/),
+    ).toBeInTheDocument();
+    trigger.focus();
+    fireEvent.keyDown(trigger, { key: "Escape" });
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+  });
+
+  test("2s10s tooltip is descriptive and makes no recession claim", async () => {
+    mockFetchSuccess();
+
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "About 2s10s shape" }));
+    const tooltipText = screen.getByText(/purely mathematical description/i).parentElement;
+    expect(tooltipText).toHaveTextContent(/not a recession or trading signal/i);
+    expect(tooltipText).not.toHaveTextContent(/predicts|signals a recession/i);
   });
 
   test("no overall macro score is displayed", async () => {

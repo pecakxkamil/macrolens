@@ -142,6 +142,39 @@ export interface UsaEconomyNow {
   financial_conditions: FinancialConditionsSnapshot;
 }
 
+export interface HistoryObservation {
+  observation_date: string;
+  value: number | null;
+  feature_as_of_date?: string;
+}
+
+export interface HistoryResponse {
+  series_id: string;
+  frequency?: string;
+  history_type: "current_vintage";
+  observations: HistoryObservation[];
+}
+
+export const dashboardHistoryRequests = {
+  headlineCpiYoy: ["CPIAUCSL", "yoy"],
+  coreCpiYoy: ["CPILFESL", "yoy"],
+  corePceYoy: ["PCEPILFE", "yoy"],
+  realGdpQoq: ["GDPC1", "qoq_annualized"],
+  retailYoy: ["RSAFS", "yoy"],
+  consumptionYoy: ["PCEC96", "yoy"],
+  savingRate: ["PSAVERT", "level"],
+  housingStartsYoy: ["HOUST", "yoy"],
+  mortgageRate: ["MORTGAGE30US", "level"],
+  fedFunds: ["DFF", "level"],
+  treasury2y: ["DGS2", "level"],
+  treasury10y: ["DGS10", "level"],
+  realYield10y: ["DFII10", "level"],
+  nfciLevel: ["NFCI", "level"],
+} as const;
+
+export type DashboardHistoryKey = keyof typeof dashboardHistoryRequests;
+export type DashboardHistory = Partial<Record<DashboardHistoryKey, HistoryResponse>>;
+
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:8000";
 
@@ -153,4 +186,38 @@ export async function fetchUsaEconomyNow(): Promise<UsaEconomyNow> {
   }
 
   return response.json();
+}
+
+export async function fetchFeatureHistory(
+  seriesId: string,
+  featureName: string,
+): Promise<HistoryResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/v1/series/${encodeURIComponent(seriesId)}/features/${encodeURIComponent(featureName)}/history`,
+  );
+
+  if (!response.ok) {
+    throw new Error(`Unable to load history for ${seriesId} ${featureName}.`);
+  }
+
+  return response.json();
+}
+
+export async function fetchDashboardHistory(): Promise<DashboardHistory> {
+  const entries = Object.entries(dashboardHistoryRequests) as Array<
+    [DashboardHistoryKey, readonly [string, string]]
+  >;
+  const results = await Promise.allSettled(
+    entries.map(([, [seriesId, featureName]]) =>
+      fetchFeatureHistory(seriesId, featureName),
+    ),
+  );
+
+  return entries.reduce<DashboardHistory>((history, [key], index) => {
+    const result = results[index];
+    if (result.status === "fulfilled" && Array.isArray(result.value.observations)) {
+      history[key] = result.value;
+    }
+    return history;
+  }, {});
 }
