@@ -53,6 +53,7 @@ FRED API
 
 - `PAYEMS`: Nonfarm Payrolls
 - `UNRATE`: Unemployment Rate
+- `UNEMPLOY`: Unemployment Level (unemployed persons)
 - `ICSA`: Initial Jobless Claims
 - `CCSA`: Continuing Jobless Claims
 - `JTSJOL`: JOLTS Job Openings

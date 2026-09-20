@@ -39,6 +39,36 @@ const snapshot: UsaEconomyNow = {
       moving_average_13w: 220000,
       momentum: "weakening",
     },
+    continuing_claims: {
+      observation_date: "2026-08-23",
+      feature_as_of_date: "2026-09-01",
+      moving_average_4w: 1850000,
+      moving_average_13w: 1820000,
+      momentum: "weakening",
+    },
+    job_openings: {
+      observation_date: "2026-07-01",
+      feature_as_of_date: "2026-09-01",
+      level: 7400,
+      change_3m: -100,
+      yoy: -2,
+      direction: "falling",
+    },
+    labor_force_participation: {
+      observation_date: "2026-08-01",
+      feature_as_of_date: "2026-09-01",
+      level: 62.5,
+      change_3m: 0.1,
+      moving_average_3m: 62.4,
+      direction: "rising",
+    },
+    average_hourly_earnings: {
+      observation_date: "2026-08-01",
+      feature_as_of_date: "2026-09-01",
+      mom: 0.3,
+      yoy: 4.1,
+      annualized_3m: 3.8,
+    },
   },
   inflation: {
     as_of_date: "2026-09-03",
@@ -58,6 +88,14 @@ const snapshot: UsaEconomyNow = {
       annualized_3m: 3.5,
       momentum: "accelerating",
     },
+    headline_pce: {
+      observation_date: "2026-08-01",
+      feature_as_of_date: "2026-09-03",
+      mom: 0.2,
+      yoy: 2.8,
+      annualized_3m: 2.4,
+      momentum: "decelerating",
+    },
     core_pce: {
       observation_date: "2026-08-01",
       feature_as_of_date: "2026-09-03",
@@ -65,6 +103,19 @@ const snapshot: UsaEconomyNow = {
       yoy: 2.9,
       annualized_3m: 2.0,
       momentum: "decelerating",
+    },
+    employment_cost_index: {
+      observation_date: "2026-07-01",
+      feature_as_of_date: "2026-09-03",
+      qoq: 0.9,
+      yoy: 3.8,
+    },
+    average_hourly_earnings: {
+      observation_date: "2026-08-01",
+      feature_as_of_date: "2026-09-03",
+      mom: 0.3,
+      yoy: 4.1,
+      annualized_3m: 3.8,
     },
   },
   growth: {
@@ -99,6 +150,14 @@ const snapshot: UsaEconomyNow = {
       moving_average_3m: 77.5,
       direction: "falling",
     },
+    durable_goods_orders: {
+      observation_date: "2026-08-01",
+      feature_as_of_date: "2026-08-30",
+      mom: 0.5,
+      yoy: 2.6,
+      moving_average_3m: 290000,
+      latest_direction: "rising",
+    },
   },
   consumer: {
     as_of_date: "2026-09-02",
@@ -118,6 +177,14 @@ const snapshot: UsaEconomyNow = {
       yoy: 2.1,
       annualized_3m: 3.0,
       momentum: "stable",
+    },
+    real_disposable_income: {
+      observation_date: "2026-08-01",
+      feature_as_of_date: "2026-09-02",
+      mom: 0.2,
+      yoy: 2.4,
+      annualized_3m: 2.8,
+      momentum: "accelerating",
     },
     saving_rate: {
       observation_date: "2026-08-01",
@@ -212,10 +279,11 @@ const snapshot: UsaEconomyNow = {
 function mockFetchSuccess() {
   const fetchMock = vi.fn().mockImplementation((input: string | URL) => {
     const url = String(input);
-    const payload = url.endsWith("/api/v1/economy/us")
-      ? snapshot
-      : url.includes("/series/CPIAUCSL/features/yoy/history")
-        ? {
+    let payload: unknown;
+    if (url.endsWith("/api/v1/economy/us")) {
+      payload = snapshot;
+    } else if (url.includes("/series/CPIAUCSL/features/yoy/history")) {
+      payload = {
             series_id: "CPIAUCSL",
             frequency: "monthly",
             history_type: "current_vintage",
@@ -223,11 +291,30 @@ function mockFetchSuccess() {
               { observation_date: "2026-07-01", feature_as_of_date: "2026-09-03", value: 3.54 },
               { observation_date: "2026-08-01", feature_as_of_date: "2026-09-03", value: 3.71 },
             ],
-          }
-        : {
-            history_type: "current_vintage",
-            observations: [],
           };
+    } else {
+      const seriesHistory: Record<string, { frequency: string; values: number[]; dates: string[] }> = {
+        UNEMPLOY: { frequency: "monthly", values: [7100, 7200], dates: ["2026-07-01", "2026-08-01"] },
+        PAYEMS: { frequency: "monthly", values: [158900, 159100], dates: ["2026-07-01", "2026-08-01"] },
+        ICSA: { frequency: "weekly", values: [219000, 224000], dates: ["2026-08-23", "2026-08-30"] },
+        CCSA: { frequency: "weekly", values: [1810000, 1830000], dates: ["2026-08-16", "2026-08-23"] },
+      };
+      const seriesId = Object.keys(seriesHistory).find((id) =>
+        url.endsWith(`/api/v1/series/${id}/history`),
+      );
+      const series = seriesId ? seriesHistory[seriesId] : undefined;
+      payload = series
+        ? {
+            series_id: seriesId,
+            frequency: series.frequency,
+            history_type: "current_vintage",
+            observations: series.values.map((value, index) => ({
+              observation_date: series.dates[index],
+              value,
+            })),
+          }
+        : { history_type: "current_vintage", observations: [] };
+    }
 
     return Promise.resolve({
       ok: true,
@@ -240,6 +327,7 @@ function mockFetchSuccess() {
 
 afterEach(() => {
   cleanup();
+  localStorage.clear();
   vi.unstubAllGlobals();
 });
 
@@ -384,7 +472,59 @@ describe("MacroLens dashboard", () => {
     expect(formatObservationDate("2026-09-11", "daily")).toBe("Sep 11, 2026");
   });
 
-  test("evaluative classification tones do not color descriptive direction as good or bad", async () => {
+  test("each domain separates key readings from interpretation", async () => {
+    mockFetchSuccess();
+
+    render(<App />);
+
+    expect(await screen.findAllByRole("heading", { name: "Key readings" })).toHaveLength(6);
+    expect(
+      screen.getAllByRole("heading", { name: "Interpretation / momentum" }),
+    ).toHaveLength(6);
+  });
+
+  test("important economic readings and numeric momentum evidence render", async () => {
+    mockFetchSuccess();
+
+    render(<App />);
+
+    for (const label of [
+      "Headline CPI YoY",
+      "Real GDP QoQ annualized",
+      "Real Consumption YoY",
+      "Housing Starts",
+      "Effective Fed Funds Rate",
+    ]) {
+      expect(await screen.findByText(label)).toBeInTheDocument();
+    }
+    expect(screen.getByText(/3M avg change: 220K/)).toBeInTheDocument();
+    expect(screen.getByText(/4W avg: 240K/)).toBeInTheDocument();
+    expect(screen.getAllByText(/3M ann.:/).length).toBeGreaterThan(0);
+  });
+
+  test("unemployment rate and unemployment level remain distinct", async () => {
+    mockFetchSuccess();
+
+    render(<App />);
+
+    const rate = await screen.findByText("Unemployment Rate");
+    const level = screen.getByText("Unemployment Level");
+    expect(rate.closest(".metric")).toHaveTextContent("4.10%");
+    expect(level.closest(".metric")).toHaveTextContent("7.2M");
+    expect(level.closest(".metric")).toHaveTextContent("Previous: 7.1M");
+  });
+
+  test("count and SAAR levels use human-friendly K and M formatting", async () => {
+    mockFetchSuccess();
+
+    render(<App />);
+
+    expect((await screen.findByText("Initial Jobless Claims")).closest(".metric")).toHaveTextContent("224K");
+    expect(screen.getByText("Total Nonfarm Payrolls").closest(".metric")).toHaveTextContent("159.1M");
+    expect(screen.getByText("Housing Starts").closest(".metric")).toHaveTextContent("1.40M SAAR");
+  });
+
+  test("evaluative and descriptive classifications use appropriately distinct tones", async () => {
     mockFetchSuccess();
 
     render(<App />);
@@ -396,10 +536,98 @@ describe("MacroLens dashboard", () => {
 
     expect(improving).toHaveClass("classification-pill--positive");
     expect(weakening).toHaveClass("classification-pill--negative");
-    expect(rising).toHaveClass("classification-pill--context");
-    expect(falling).toHaveClass("classification-pill--context");
+    const accelerating = screen.getAllByText("Accelerating")[0];
+    const decelerating = screen.getAllByText("Decelerating")[0];
+    expect(rising).toHaveClass("classification-pill--rising");
+    expect(falling).toHaveClass("classification-pill--falling");
     expect(rising).not.toHaveClass("classification-pill--positive", "classification-pill--negative");
     expect(falling).not.toHaveClass("classification-pill--positive", "classification-pill--negative");
+    expect(accelerating).toHaveClass("classification-pill--accelerating");
+    expect(decelerating).toHaveClass("classification-pill--decelerating");
+    expect(accelerating).not.toHaveClass("classification-pill--positive");
+    expect(decelerating).not.toHaveClass("classification-pill--negative");
+  });
+
+  test("default view mode is All data", async () => {
+    mockFetchSuccess();
+
+    render(<App />);
+
+    expect(await screen.findByRole("button", { name: "All data" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByText("Employment Cost Index YoY")).toBeInTheDocument();
+  });
+
+  test("Key data hides non-core metrics and retains headline metrics", async () => {
+    mockFetchSuccess();
+
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "Key data" }));
+
+    expect(screen.queryByText("Employment Cost Index YoY")).not.toBeInTheDocument();
+    expect(screen.queryByText("Continuing Claims")).not.toBeInTheDocument();
+    expect(screen.getByText("Unemployment Rate")).toBeInTheDocument();
+    expect(screen.getByText("Headline CPI YoY")).toBeInTheDocument();
+    expect(screen.getByText("Real GDP momentum")).toBeInTheDocument();
+    expect(screen.getByText("2s10s spread")).toBeInTheDocument();
+  });
+
+  test("Custom mode shows grouped metric checkboxes", async () => {
+    mockFetchSuccess();
+
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "Custom" }));
+
+    expect(screen.getByRole("group", { name: "Custom metric selection" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Labor" })).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "Unemployment Rate" })).toBeChecked();
+  });
+
+  test("custom selections control visible card metrics", async () => {
+    mockFetchSuccess();
+
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "Custom" }));
+    const checkbox = screen.getByRole("checkbox", { name: "Employment Cost Index YoY" });
+    fireEvent.click(checkbox);
+
+    const inflationCard = screen.getByRole("heading", { name: "INFLATION" }).closest(".domain-card");
+    expect(checkbox).not.toBeChecked();
+    expect(within(inflationCard as HTMLElement).queryByText("Employment Cost Index YoY")).not.toBeInTheDocument();
+  });
+
+  test("view mode persists through localStorage", async () => {
+    mockFetchSuccess();
+
+    const firstRender = render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "Key data" }));
+    expect(localStorage.getItem("macrolens.dashboard.viewMode")).toBe("key");
+    firstRender.unmount();
+
+    render(<App />);
+    expect(await screen.findByRole("button", { name: "Key data" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  test("custom metric selections persist through localStorage", async () => {
+    mockFetchSuccess();
+
+    const firstRender = render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "Custom" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Employment Cost Index YoY" }));
+    firstRender.unmount();
+
+    render(<App />);
+    const checkbox = await screen.findByRole("checkbox", {
+      name: "Employment Cost Index YoY",
+    });
+    expect(checkbox).not.toBeChecked();
+    const inflationCard = screen.getByRole("heading", { name: "INFLATION" }).closest(".domain-card");
+    expect(within(inflationCard as HTMLElement).queryByText("Employment Cost Index YoY")).not.toBeInTheDocument();
   });
 
   test("metric information is keyboard and click accessible", async () => {

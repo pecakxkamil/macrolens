@@ -57,6 +57,29 @@ export function formatPercentagePoint(value?: number): string {
   return `${formatNumber(value)} pp`;
 }
 
+export function formatCompactCount(value?: number): string {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return "-";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+export function formatThousandsAsMillions(value?: number): string {
+  return typeof value === "number" && !Number.isNaN(value)
+    ? `${formatNumber(value / 1000, 1)}M`
+    : "-";
+}
+
+export function formatSaarThousands(value?: number): string {
+  return typeof value === "number" && !Number.isNaN(value)
+    ? `${formatNumber(value / 1000, 2)}M SAAR`
+    : "-";
+}
+
 export function formatClassification(value?: string): string {
   if (!value) {
     return "-";

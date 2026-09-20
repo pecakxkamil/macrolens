@@ -22,13 +22,45 @@ export interface LaborSnapshot {
     moving_average_13w: number;
     momentum: string;
   };
+  continuing_claims: DatedComponent & {
+    moving_average_4w: number;
+    moving_average_13w: number;
+    momentum: string;
+  };
+  job_openings: DatedComponent & {
+    level: number;
+    change_3m: number;
+    yoy: number;
+    direction: string;
+  };
+  labor_force_participation: DatedComponent & {
+    level: number;
+    change_3m: number;
+    moving_average_3m: number;
+    direction: string;
+  };
+  average_hourly_earnings: DatedComponent & {
+    mom: number;
+    yoy: number;
+    annualized_3m: number;
+  };
 }
 
 export interface InflationSnapshot {
   as_of_date: string;
   headline_cpi: DatedComponent & PriceMomentumComponent;
   core_cpi: DatedComponent & PriceMomentumComponent;
+  headline_pce: DatedComponent & PriceMomentumComponent;
   core_pce: DatedComponent & PriceMomentumComponent;
+  employment_cost_index: DatedComponent & {
+    qoq: number;
+    yoy: number;
+  };
+  average_hourly_earnings: DatedComponent & {
+    mom: number;
+    yoy: number;
+    annualized_3m: number;
+  };
 }
 
 export interface PriceMomentumComponent {
@@ -57,6 +89,12 @@ export interface GrowthSnapshot {
     moving_average_3m: number;
     direction: string;
   };
+  durable_goods_orders: DatedComponent & {
+    mom: number;
+    yoy: number;
+    moving_average_3m: number;
+    latest_direction: string;
+  };
 }
 
 export interface ConsumerSnapshot {
@@ -65,6 +103,7 @@ export interface ConsumerSnapshot {
     series_type: string;
   };
   real_consumption: DatedComponent & PriceMomentumComponent;
+  real_disposable_income: DatedComponent & PriceMomentumComponent;
   saving_rate: DatedComponent & {
     level: number;
     change_3m: number;
@@ -156,20 +195,38 @@ export interface HistoryResponse {
 }
 
 export const dashboardHistoryRequests = {
-  headlineCpiYoy: ["CPIAUCSL", "yoy"],
-  coreCpiYoy: ["CPILFESL", "yoy"],
-  corePceYoy: ["PCEPILFE", "yoy"],
-  realGdpQoq: ["GDPC1", "qoq_annualized"],
-  retailYoy: ["RSAFS", "yoy"],
-  consumptionYoy: ["PCEC96", "yoy"],
-  savingRate: ["PSAVERT", "level"],
-  housingStartsYoy: ["HOUST", "yoy"],
-  mortgageRate: ["MORTGAGE30US", "level"],
-  fedFunds: ["DFF", "level"],
-  treasury2y: ["DGS2", "level"],
-  treasury10y: ["DGS10", "level"],
-  realYield10y: ["DFII10", "level"],
-  nfciLevel: ["NFCI", "level"],
+  unemploymentRate: { seriesId: "UNRATE", featureName: "level" },
+  unemploymentLevel: { seriesId: "UNEMPLOY" },
+  payrollLevel: { seriesId: "PAYEMS" },
+  initialClaimsLevel: { seriesId: "ICSA" },
+  continuingClaimsLevel: { seriesId: "CCSA" },
+  jobOpeningsLevel: { seriesId: "JTSJOL", featureName: "level" },
+  participationLevel: { seriesId: "CIVPART", featureName: "level" },
+  earningsYoy: { seriesId: "CES0500000003", featureName: "yoy" },
+  headlineCpiYoy: { seriesId: "CPIAUCSL", featureName: "yoy" },
+  coreCpiYoy: { seriesId: "CPILFESL", featureName: "yoy" },
+  headlinePceYoy: { seriesId: "PCEPI", featureName: "yoy" },
+  corePceYoy: { seriesId: "PCEPILFE", featureName: "yoy" },
+  eciYoy: { seriesId: "ECIALLCIV", featureName: "yoy" },
+  realGdpQoq: { seriesId: "GDPC1", featureName: "qoq_annualized" },
+  realGdpYoy: { seriesId: "GDPC1", featureName: "yoy" },
+  cfnaiLevel: { seriesId: "CFNAI", featureName: "level" },
+  industrialYoy: { seriesId: "INDPRO", featureName: "yoy" },
+  capacityLevel: { seriesId: "TCU", featureName: "level" },
+  durableGoodsYoy: { seriesId: "DGORDER", featureName: "yoy" },
+  retailYoy: { seriesId: "RSAFS", featureName: "yoy" },
+  consumptionYoy: { seriesId: "PCEC96", featureName: "yoy" },
+  disposableIncomeYoy: { seriesId: "DSPIC96", featureName: "yoy" },
+  savingRate: { seriesId: "PSAVERT", featureName: "level" },
+  housingStartsLevel: { seriesId: "HOUST", featureName: "level" },
+  buildingPermitsLevel: { seriesId: "PERMIT", featureName: "level" },
+  newHomeSalesLevel: { seriesId: "HSN1F", featureName: "level" },
+  mortgageRate: { seriesId: "MORTGAGE30US", featureName: "level" },
+  fedFunds: { seriesId: "DFF", featureName: "level" },
+  treasury2y: { seriesId: "DGS2", featureName: "level" },
+  treasury10y: { seriesId: "DGS10", featureName: "level" },
+  realYield10y: { seriesId: "DFII10", featureName: "level" },
+  nfciLevel: { seriesId: "NFCI", featureName: "level" },
 } as const;
 
 export type DashboardHistoryKey = keyof typeof dashboardHistoryRequests;
@@ -203,13 +260,27 @@ export async function fetchFeatureHistory(
   return response.json();
 }
 
+export async function fetchSeriesHistory(seriesId: string): Promise<HistoryResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/v1/series/${encodeURIComponent(seriesId)}/history`,
+  );
+
+  if (!response.ok) {
+    throw new Error(`Unable to load observation history for ${seriesId}.`);
+  }
+
+  return response.json();
+}
+
 export async function fetchDashboardHistory(): Promise<DashboardHistory> {
   const entries = Object.entries(dashboardHistoryRequests) as Array<
-    [DashboardHistoryKey, readonly [string, string]]
+    [DashboardHistoryKey, { readonly seriesId: string; readonly featureName?: string }]
   >;
   const results = await Promise.allSettled(
-    entries.map(([, [seriesId, featureName]]) =>
-      fetchFeatureHistory(seriesId, featureName),
+    entries.map(([, request]) =>
+      request.featureName
+        ? fetchFeatureHistory(request.seriesId, request.featureName)
+        : fetchSeriesHistory(request.seriesId),
     ),
   );
 

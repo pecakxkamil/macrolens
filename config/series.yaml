@@ -23,6 +23,16 @@ UNRATE:
     - moving_average_3m
   revision_tracking: true
 
+UNEMPLOY:
+  name: Unemployment Level
+  short_name: Unemployed Persons
+  category: labor
+  frequency: monthly
+  unit: thousands of persons
+  transformations:
+    - level
+  revision_tracking: true
+
 ICSA:
   name: Initial Claims
   short_name: Initial Jobless Claims

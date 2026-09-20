@@ -32,6 +32,13 @@ vintage-aware / ALFRED ingestion and feature computation.
 - `change_6m`: current value - value 6 observations earlier
 - `moving_average_3m`: arithmetic mean of current and previous 2 observations
 
+## UNEMPLOY
+
+- `level`: current number of unemployed persons, published in thousands
+
+UNEMPLOY is a count of unemployed people. It is distinct from UNRATE, which is
+the unemployment rate expressed as a percentage.
+
 ## ICSA
 
 - `moving_average_4w`: arithmetic mean of current and previous 3 observations

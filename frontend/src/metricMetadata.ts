@@ -5,6 +5,38 @@ export interface MetricMetadata {
 }
 
 export const metricMetadata = {
+  unemploymentRate: {
+    label: "Unemployment Rate",
+    description: "Share of the civilian labor force that is unemployed, expressed as a percentage. This is distinct from the number of unemployed people.",
+  },
+  unemploymentLevel: {
+    label: "Unemployment Level",
+    description: "Number of unemployed people, published in thousands of persons. This is a count, not the unemployment rate.",
+  },
+  payrollLevel: {
+    label: "Total Nonfarm Payrolls",
+    description: "Total employees on nonfarm payrolls, published in thousands of persons.",
+  },
+  initialClaimsLevel: {
+    label: "Initial Jobless Claims",
+    description: "Number of new claims for unemployment insurance in the latest weekly observation.",
+  },
+  continuingClaimsLevel: {
+    label: "Continuing Claims",
+    description: "Number of people continuing to receive unemployment insurance in the latest weekly observation.",
+  },
+  jobOpeningsLevel: {
+    label: "Job Openings",
+    description: "Total nonfarm job openings, published in thousands.",
+  },
+  participationLevel: {
+    label: "Labor Force Participation",
+    description: "Share of the civilian noninstitutional population participating in the labor force.",
+  },
+  earningsYoy: {
+    label: "Average Hourly Earnings YoY",
+    description: "Twelve-month percentage change in average hourly earnings for total private employees.",
+  },
   laborOverall: {
     label: "Overall momentum",
     description: "Labor Market Momentum v1 combines Payrolls, Unemployment, and Initial Claims only.",
@@ -47,6 +79,14 @@ export const metricMetadata = {
     label: "Core PCE YoY",
     description: "Twelve-month percentage change in the PCE price index excluding food and energy.",
   },
+  headlinePceYoy: {
+    label: "Headline PCE YoY",
+    description: "Twelve-month percentage change in the headline PCE price index.",
+  },
+  eciYoy: {
+    label: "Employment Cost Index YoY",
+    description: "Four-quarter percentage change in the Employment Cost Index for total civilian compensation.",
+  },
   corePceMomentum: {
     label: "Core PCE momentum",
     description: "Describes whether recent core PCE inflation is accelerating or decelerating.",
@@ -61,6 +101,26 @@ export const metricMetadata = {
     label: "Real GDP momentum",
     description: "Compares recent annualized quarterly real GDP growth with annual growth.",
     methodology: "QoQ annualized above YoY is Accelerating, below is Decelerating, and equal is Stable.",
+  },
+  realGdpYoy: {
+    label: "Real GDP YoY",
+    description: "Four-quarter percentage change in real gross domestic product.",
+  },
+  cfnaiLevel: {
+    label: "CFNAI level / 3M average",
+    description: "Current CFNAI level and its three-month moving average. Zero represents historical trend growth.",
+  },
+  industrialYoy: {
+    label: "Industrial Production YoY",
+    description: "Twelve-month percentage change in total industrial production.",
+  },
+  capacityLevel: {
+    label: "Capacity Utilization",
+    description: "Current utilization rate for total industrial capacity.",
+  },
+  durableGoodsYoy: {
+    label: "Durable Goods Orders YoY",
+    description: "Twelve-month percentage change in manufacturers' new orders for durable goods.",
   },
   cfnaiPosition: {
     label: "CFNAI position",
@@ -95,6 +155,10 @@ export const metricMetadata = {
     label: "Real Consumption YoY",
     description: "Twelve-month percentage change in real personal consumption expenditures.",
   },
+  disposableIncomeYoy: {
+    label: "Real Disposable Income YoY",
+    description: "Twelve-month percentage change in real disposable personal income.",
+  },
   savingRate: {
     label: "Saving Rate",
     description: "Current personal saving rate as a percentage of disposable personal income.",
@@ -104,6 +168,18 @@ export const metricMetadata = {
     label: "Housing Starts direction",
     description: "Latest direction of the published seasonally adjusted annual rate for housing starts.",
     methodology: "Direction is based on MoM percentage change: positive is Rising, negative is Falling, and zero is Stable.",
+  },
+  housingStartsLevel: {
+    label: "Housing Starts",
+    description: "Current housing-starts level, published in thousands of units at a seasonally adjusted annual rate.",
+  },
+  buildingPermitsLevel: {
+    label: "Building Permits",
+    description: "Current building-permits level, published in thousands of units at a seasonally adjusted annual rate.",
+  },
+  newHomeSalesLevel: {
+    label: "New Home Sales",
+    description: "Current new one-family home sales, published in thousands of units at a seasonally adjusted annual rate.",
   },
   housingStartsYoy: {
     label: "Housing Starts YoY",

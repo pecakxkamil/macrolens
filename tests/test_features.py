@@ -71,6 +71,16 @@ def test_unrate_level():
     assert feature_values(features, "level") == [3.8, 3.9]
 
 
+def test_unemployment_level_is_supported_as_a_distinct_level_series():
+    features = calculate_features(
+        "UNEMPLOY",
+        observations([7100, 7200]),
+        ["level"],
+    )
+
+    assert feature_values(features, "level") == [7100.0, 7200.0]
+
+
 def test_icsa_4w_moving_average():
     features = calculate_features(
         "ICSA",

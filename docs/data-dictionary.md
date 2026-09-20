@@ -8,6 +8,7 @@ Configured economic series:
 | --- | --- | --- | --- |
 | PAYEMS | All Employees, Total Nonfarm | Monthly | Thousands of persons |
 | UNRATE | Unemployment Rate | Monthly | Percent |
+| UNEMPLOY | Unemployment Level | Monthly | Thousands of persons |
 | ICSA | Initial Claims | Weekly | Number |
 | CCSA | Continued Claims (Insured Unemployment) | Weekly | Number |
 | JTSJOL | Job Openings: Total Nonfarm | Monthly | Thousands |
