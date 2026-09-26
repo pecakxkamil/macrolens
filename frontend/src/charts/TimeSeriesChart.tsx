@@ -10,9 +10,14 @@ interface TooltipEntry {
   color?: string;
 }
 
-export function TimeSeriesChart({ definition, rows }: { definition: ChartDefinition; rows: ChartRow[] }) {
+export function TimeSeriesChart({ definition, rows, valueFormatter }: {
+  definition: ChartDefinition;
+  rows: ChartRow[];
+  valueFormatter?: (value: number, compact?: boolean) => string;
+}) {
   const [hidden, setHidden] = useState<string[]>([]);
   const visible = definition.series.filter((series) => !hidden.includes(series.id));
+  const formatValue = valueFormatter ?? ((value: number, compact = false) => formatChartValue(value, definition.unit, compact));
 
   return (
     <>
@@ -32,7 +37,7 @@ export function TimeSeriesChart({ definition, rows }: { definition: ChartDefinit
             >
               <span className="chart-legend__swatch" style={{ backgroundColor: series.color }} />
               <span>{series.label}</span>
-              {latest ? <span className="chart-legend__latest">{formatChartValue(latest[series.id] as number, definition.unit)} · {formatChartDate(latest.observation_date, definition)}</span> : null}
+              {latest ? <span className="chart-legend__latest">{formatValue(latest[series.id] as number)} · {formatChartDate(latest.observation_date, definition)}</span> : null}
             </button>
           );
         })}
@@ -43,7 +48,7 @@ export function TimeSeriesChart({ definition, rows }: { definition: ChartDefinit
             <LineChart accessibilityLayer data={rows} margin={{ top: 12, right: 12, left: 2, bottom: 6 }}>
               <CartesianGrid stroke="#2b3746" strokeDasharray="3 4" vertical={false} />
               <XAxis dataKey="observation_date" tickFormatter={(value: string) => formatChartDate(value, definition)} minTickGap={30} tick={{ fill: "#9eacbd", fontSize: 11 }} axisLine={{ stroke: "#425165" }} tickLine={false} />
-              <YAxis width={64} tickFormatter={(value: number) => formatChartValue(value, definition.unit, true)} tick={{ fill: "#9eacbd", fontSize: 11 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
+              <YAxis width={64} tickFormatter={(value: number) => formatValue(value, true)} tick={{ fill: "#9eacbd", fontSize: 11 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
               {definition.referenceLine !== undefined ? <ReferenceLine y={definition.referenceLine} stroke="#8795a8" strokeDasharray="4 4" /> : null}
               <Tooltip
                 isAnimationActive={false}
@@ -56,7 +61,7 @@ export function TimeSeriesChart({ definition, rows }: { definition: ChartDefinit
                       {(payload as readonly TooltipEntry[]).map((entry) => {
                         const series = definition.series.find((item) => item.id === entry.dataKey);
                         return series && typeof entry.value === "number" ? (
-                          <div key={series.id}><span style={{ color: entry.color }}>{series.label}</span><b>{formatChartValue(entry.value, definition.unit)}</b></div>
+                          <div key={series.id}><span style={{ color: entry.color }}>{series.label}</span><b>{formatValue(entry.value)}</b></div>
                         ) : null;
                       })}
                     </div>

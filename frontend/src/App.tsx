@@ -25,6 +25,7 @@ import {
 } from "./metricMetadata";
 
 const ChartsPage = lazy(() => import("./charts/ChartsPage").then((module) => ({ default: module.ChartsPage })));
+const IndicatorsPage = lazy(() => import("./indicators/IndicatorsPage").then((module) => ({ default: module.IndicatorsPage })));
 
 const freshnessLabels: Array<[keyof UsaEconomyNow["component_as_of_dates"], string]> = [
   ["labor", "Labor"],
@@ -679,14 +680,22 @@ function Overview() {
   );
 }
 
-function currentSection(): "overview" | "charts" {
-  return window.location.hash.replace(/\/$/, "") === "#/charts" ? "charts" : "overview";
+function currentSection(hash: string): "overview" | "charts" | "indicators" {
+  if (hash === "#/charts" || hash === "#/charts/") return "charts";
+  if (hash === "#/indicators" || hash === "#/indicators/" || hash.startsWith("#/indicators/")) return "indicators";
+  return "overview";
 }
 
 export default function App() {
-  const [section, setSection] = useState(currentSection);
+  const [hash, setHash] = useState(() => window.location.hash);
+  const section = currentSection(hash);
+  let seriesId: string | undefined;
+  if (section === "indicators") {
+    try { seriesId = decodeURIComponent(hash.slice("#/indicators/".length)) || undefined; }
+    catch { seriesId = "Invalid series ID"; }
+  }
   useEffect(() => {
-    const handleHashChange = () => setSection(currentSection());
+    const handleHashChange = () => setHash(window.location.hash);
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
@@ -696,8 +705,11 @@ export default function App() {
       <nav className="app-navigation" aria-label="Main navigation">
         <a href="#/" aria-current={section === "overview" ? "page" : undefined}>Overview</a>
         <a href="#/charts" aria-current={section === "charts" ? "page" : undefined}>Charts</a>
+        <a href="#/indicators" aria-current={section === "indicators" ? "page" : undefined}>Indicators</a>
       </nav>
-      {section === "charts" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading charts...</div>}><ChartsPage /></Suspense></div> : <Overview />}
+      {section === "charts" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading charts...</div>}><ChartsPage /></Suspense></div>
+        : section === "indicators" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading indicators...</div>}><IndicatorsPage seriesId={seriesId} /></Suspense></div>
+        : <Overview />}
     </>
   );
 }

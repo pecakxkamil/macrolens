@@ -97,9 +97,12 @@ Available routes:
 - `GET /api/v1/economy/us/financial-conditions`
 - `GET /api/v1/series/{series_id}/history`
 - `GET /api/v1/series/{series_id}/features/{feature_name}/history`
+- `GET /api/v1/series`
+- `GET /api/v1/series/{series_id}`
+- `GET /api/v1/series/{series_id}/features`
 - `GET /api/v1/analytics/yield-curve/2s10s/history`
 
-Both history routes accept optional `start_date` and `end_date` query parameters
+History routes accept optional `start_date` and `end_date` query parameters
 in `YYYY-MM-DD` format.
 
 ## Development Dashboard
@@ -126,8 +129,9 @@ Development URLs:
 - API docs: `http://127.0.0.1:8000/docs`
 - Overview: `http://127.0.0.1:5173/#/`
 - Charts: `http://127.0.0.1:5173/#/charts`
+- Indicators: `http://127.0.0.1:5173/#/indicators`
 
-Overview is the current snapshot dashboard. Charts shows interactive current-vintage historical charts. Historical observations use the latest stored values for each observation date, so revised series may differ from their original releases. Charts does not reconstruct what was known at each historical date. ALFRED and vintage-aware point-in-time history remain future work.
+Overview shows the current macro snapshot. Charts shows curated historical macro charts. Indicators lets you browse individual configured series and their available stored transformations. Both historical views use the latest stored values for each observation date, so revised series may differ from their original releases. They do not reconstruct what was known at each historical date. ALFRED and vintage-aware point-in-time history remain future work.
 
 ## Roadmap
 

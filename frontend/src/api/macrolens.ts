@@ -200,6 +200,25 @@ export interface HistoryOptions {
   signal?: AbortSignal;
 }
 
+export interface SeriesMetadata {
+  series_id: string;
+  name: string;
+  short_name: string;
+  category: string;
+  frequency: string;
+  unit: string;
+}
+
+export interface SeriesCatalogResponse {
+  series: SeriesMetadata[];
+}
+
+export interface SeriesFeaturesResponse {
+  series_id: string;
+  methodology_version: string;
+  features: string[];
+}
+
 export const dashboardHistoryRequests = {
   unemploymentRate: { seriesId: "UNRATE", featureName: "level" },
   unemploymentLevel: { seriesId: "UNEMPLOY" },
@@ -240,6 +259,18 @@ export type DashboardHistory = Partial<Record<DashboardHistoryKey, HistoryRespon
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:8000";
+
+export async function fetchSeriesCatalog(signal?: AbortSignal): Promise<SeriesCatalogResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/series`, { signal });
+  if (!response.ok) throw new Error("Unable to load indicator catalog.");
+  return response.json();
+}
+
+export async function fetchSeriesFeatures(seriesId: string, signal?: AbortSignal): Promise<SeriesFeaturesResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/series/${encodeURIComponent(seriesId)}/features`, { signal });
+  if (!response.ok) throw new Error(`Unable to load features for ${seriesId}.`);
+  return response.json();
+}
 
 function historyQuery({ startDate, endDate }: HistoryOptions): string {
   const params = new URLSearchParams();
