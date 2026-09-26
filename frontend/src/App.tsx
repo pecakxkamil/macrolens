@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useId, useState } from "react";
+import { createContext, lazy, Suspense, useContext, useEffect, useId, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import {
   fetchDashboardHistory,
@@ -23,6 +23,8 @@ import {
   type MetricKey,
   type MetricMetadata,
 } from "./metricMetadata";
+
+const ChartsPage = lazy(() => import("./charts/ChartsPage").then((module) => ({ default: module.ChartsPage })));
 
 const freshnessLabels: Array<[keyof UsaEconomyNow["component_as_of_dates"], string]> = [
   ["labor", "Labor"],
@@ -591,7 +593,7 @@ function Dashboard({
   );
 }
 
-export default function App() {
+function Overview() {
   const [snapshot, setSnapshot] = useState<UsaEconomyNow | null>(null);
   const [history, setHistory] = useState<DashboardHistory>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -674,5 +676,28 @@ export default function App() {
         />
       ) : null}
     </div>
+  );
+}
+
+function currentSection(): "overview" | "charts" {
+  return window.location.hash.replace(/\/$/, "") === "#/charts" ? "charts" : "overview";
+}
+
+export default function App() {
+  const [section, setSection] = useState(currentSection);
+  useEffect(() => {
+    const handleHashChange = () => setSection(currentSection());
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
+  return (
+    <>
+      <nav className="app-navigation" aria-label="Main navigation">
+        <a href="#/" aria-current={section === "overview" ? "page" : undefined}>Overview</a>
+        <a href="#/charts" aria-current={section === "charts" ? "page" : undefined}>Charts</a>
+      </nav>
+      {section === "charts" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading charts...</div>}><ChartsPage /></Suspense></div> : <Overview />}
+    </>
   );
 }

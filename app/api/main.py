@@ -116,6 +116,16 @@ def get_series_history(
     )
 
 
+@app.get("/api/v1/analytics/yield-curve/2s10s/history")
+def get_yield_curve_2s10s_history(
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> dict:
+    return _history_response(
+        lambda: history.load_yield_curve_2s10s_history(start_date, end_date)
+    )
+
+
 @app.get("/api/v1/series/{series_id}/features/{feature_name}/history")
 def get_feature_history(
     series_id: str,

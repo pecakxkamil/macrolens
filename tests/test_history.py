@@ -132,3 +132,38 @@ def test_reversed_date_range_is_rejected_before_database_access(monkeypatch):
             date(2026, 2, 1),
             date(2026, 1, 1),
         )
+
+
+def test_yield_curve_history_uses_same_date_current_values_and_date_filters(monkeypatch):
+    connection = FakeConnection([
+        (date(2026, 1, 2), Decimal("0.32")),
+        (date(2026, 1, 5), Decimal("-0.10")),
+    ])
+    monkeypatch.setattr(history, "get_connection", lambda: connection)
+    start, end = date(2026, 1, 1), date(2026, 1, 31)
+
+    result = history.load_yield_curve_2s10s_history(start, end)
+
+    assert result["history_type"] == "current_vintage"
+    assert result["start_date"] == start
+    assert result["end_date"] == end
+    assert result["observations"] == [
+        {"observation_date": date(2026, 1, 2), "value": Decimal("0.32")},
+        {"observation_date": date(2026, 1, 5), "value": Decimal("-0.10")},
+    ]
+    query = connection.cursor_instance.query
+    assert "DISTINCT ON (series_id, observation_date)" in query
+    assert "vintage_date DESC" in query
+    assert "ten.observation_date = two.observation_date" in query
+    assert "ten.value - two.value" in query
+    assert "ten.value IS NOT NULL AND two.value IS NOT NULL" in query
+    assert "ORDER BY ten.observation_date ASC" in query
+    assert "JOIN current_yields" in query and "LEFT JOIN" not in query
+    assert connection.cursor_instance.params == (start, start, end, end)
+    assert connection.closed
+
+
+def test_yield_curve_reversed_date_range_does_not_access_database(monkeypatch):
+    monkeypatch.setattr(history, "get_connection", lambda: pytest.fail("database should not be accessed"))
+    with pytest.raises(history.InvalidDateRangeError):
+        history.load_yield_curve_2s10s_history(date(2026, 2, 1), date(2026, 1, 1))

@@ -194,6 +194,12 @@ export interface HistoryResponse {
   observations: HistoryObservation[];
 }
 
+export interface HistoryOptions {
+  startDate?: string;
+  endDate?: string;
+  signal?: AbortSignal;
+}
+
 export const dashboardHistoryRequests = {
   unemploymentRate: { seriesId: "UNRATE", featureName: "level" },
   unemploymentLevel: { seriesId: "UNEMPLOY" },
@@ -235,6 +241,13 @@ export type DashboardHistory = Partial<Record<DashboardHistoryKey, HistoryRespon
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:8000";
 
+function historyQuery({ startDate, endDate }: HistoryOptions): string {
+  const params = new URLSearchParams();
+  if (startDate) params.set("start_date", startDate);
+  if (endDate) params.set("end_date", endDate);
+  return params.size ? `?${params}` : "";
+}
+
 export async function fetchUsaEconomyNow(): Promise<UsaEconomyNow> {
   const response = await fetch(`${API_BASE_URL}/api/v1/economy/us`);
 
@@ -248,9 +261,11 @@ export async function fetchUsaEconomyNow(): Promise<UsaEconomyNow> {
 export async function fetchFeatureHistory(
   seriesId: string,
   featureName: string,
+  options: HistoryOptions = {},
 ): Promise<HistoryResponse> {
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/series/${encodeURIComponent(seriesId)}/features/${encodeURIComponent(featureName)}/history`,
+    `${API_BASE_URL}/api/v1/series/${encodeURIComponent(seriesId)}/features/${encodeURIComponent(featureName)}/history${historyQuery(options)}`,
+    { signal: options.signal },
   );
 
   if (!response.ok) {
@@ -260,15 +275,25 @@ export async function fetchFeatureHistory(
   return response.json();
 }
 
-export async function fetchSeriesHistory(seriesId: string): Promise<HistoryResponse> {
+export async function fetchSeriesHistory(seriesId: string, options: HistoryOptions = {}): Promise<HistoryResponse> {
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/series/${encodeURIComponent(seriesId)}/history`,
+    `${API_BASE_URL}/api/v1/series/${encodeURIComponent(seriesId)}/history${historyQuery(options)}`,
+    { signal: options.signal },
   );
 
   if (!response.ok) {
     throw new Error(`Unable to load observation history for ${seriesId}.`);
   }
 
+  return response.json();
+}
+
+export async function fetchYieldCurveHistory(options: HistoryOptions = {}): Promise<HistoryResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/v1/analytics/yield-curve/2s10s/history${historyQuery(options)}`,
+    { signal: options.signal },
+  );
+  if (!response.ok) throw new Error("Unable to load 2s10s yield curve history.");
   return response.json();
 }
 

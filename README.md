@@ -47,6 +47,7 @@ FRED API
 - MacroLens API v1 for current snapshots
 - Current-vintage observation and feature history endpoints for charts
 - Dashboard v1 for current USA Economy Now data
+- Charts v1 for interactive current-vintage history across six macro domains
 - Automated tests
 
 ## Labor Series
@@ -96,6 +97,7 @@ Available routes:
 - `GET /api/v1/economy/us/financial-conditions`
 - `GET /api/v1/series/{series_id}/history`
 - `GET /api/v1/series/{series_id}/features/{feature_name}/history`
+- `GET /api/v1/analytics/yield-curve/2s10s/history`
 
 Both history routes accept optional `start_date` and `end_date` query parameters
 in `YYYY-MM-DD` format.
@@ -122,9 +124,10 @@ Development URLs:
 
 - API: `http://127.0.0.1:8000`
 - API docs: `http://127.0.0.1:8000/docs`
-- Dashboard: `http://127.0.0.1:5173` or the URL printed by Vite
+- Overview: `http://127.0.0.1:5173/#/`
+- Charts: `http://127.0.0.1:5173/#/charts`
 
-Dashboard v1 shows current-state data only. Full historical point-in-time dashboard support is not implemented yet.
+Overview is the current snapshot dashboard. Charts shows interactive current-vintage historical charts. Historical observations use the latest stored values for each observation date, so revised series may differ from their original releases. Charts does not reconstruct what was known at each historical date. ALFRED and vintage-aware point-in-time history remain future work.
 
 ## Roadmap
 

@@ -43,6 +43,24 @@ FROM (
 ORDER BY observation_date ASC;
 """
 
+YIELD_CURVE_HISTORY_SQL = """
+WITH current_yields AS (
+    SELECT DISTINCT ON (series_id, observation_date)
+        series_id, observation_date, value
+    FROM observation_vintages
+    WHERE series_id IN ('DGS2', 'DGS10')
+      AND (%s::date IS NULL OR observation_date >= %s)
+      AND (%s::date IS NULL OR observation_date <= %s)
+    ORDER BY series_id, observation_date, vintage_date DESC, ingested_at DESC, id DESC
+)
+SELECT ten.observation_date, ten.value - two.value AS value
+FROM current_yields AS ten
+JOIN current_yields AS two ON ten.observation_date = two.observation_date
+WHERE ten.series_id = 'DGS10' AND two.series_id = 'DGS2'
+  AND ten.value IS NOT NULL AND two.value IS NOT NULL
+ORDER BY ten.observation_date ASC;
+"""
+
 
 class UnknownSeriesError(ValueError):
     """Raised when a series is not configured in MacroLens."""
@@ -160,5 +178,37 @@ def load_feature_history(
                 "value": value,
             }
             for observation_date, feature_as_of_date, value in rows
+        ],
+    }
+
+
+def load_yield_curve_2s10s_history(
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> dict:
+    """Subtract latest stored DGS2 from DGS10 on matching observation dates."""
+    _validate_date_range(start_date, end_date)
+    connection = get_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                YIELD_CURVE_HISTORY_SQL,
+                (start_date, start_date, end_date, end_date),
+            )
+            rows = cursor.fetchall()
+    finally:
+        connection.close()
+
+    return {
+        "series_id": "2s10s",
+        "name": "2s10s Treasury Yield Spread",
+        "frequency": "daily",
+        "unit": "percentage points",
+        "history_type": HISTORY_TYPE,
+        "start_date": start_date,
+        "end_date": end_date,
+        "observations": [
+            {"observation_date": observation_date, "value": value}
+            for observation_date, value in rows
         ],
     }

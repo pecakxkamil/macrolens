@@ -410,3 +410,41 @@ def test_history_database_failure_does_not_leak_internal_details(monkeypatch):
 
 def test_existing_health_endpoint_remains_unchanged():
     assert client.get("/health").json() == {"status": "ok"}
+
+
+def test_yield_curve_history_endpoint_serializes_dates_and_decimals(monkeypatch):
+    def fake_history(start_date, end_date):
+        assert start_date == date(2026, 1, 1)
+        assert end_date == date(2026, 1, 31)
+        return {
+            "series_id": "2s10s",
+            "history_type": "current_vintage",
+            "start_date": start_date,
+            "end_date": end_date,
+            "observations": [
+                {"observation_date": date(2026, 1, 2), "value": Decimal("0.32")},
+            ],
+        }
+
+    monkeypatch.setattr(api_main.history, "load_yield_curve_2s10s_history", fake_history)
+    response = client.get(
+        "/api/v1/analytics/yield-curve/2s10s/history",
+        params={"start_date": "2026-01-01", "end_date": "2026-01-31"},
+    )
+    assert response.status_code == 200
+    assert response.json()["observations"] == [
+        {"observation_date": "2026-01-02", "value": 0.32},
+    ]
+    assert response.json()["history_type"] == "current_vintage"
+
+
+def test_yield_curve_history_reversed_dates_return_400(monkeypatch):
+    def invalid_range(*args):
+        raise api_main.history.InvalidDateRangeError("start_date must be on or before end_date.")
+
+    monkeypatch.setattr(api_main.history, "load_yield_curve_2s10s_history", invalid_range)
+    response = client.get(
+        "/api/v1/analytics/yield-curve/2s10s/history",
+        params={"start_date": "2026-02-01", "end_date": "2026-01-01"},
+    )
+    assert response.status_code == 400
