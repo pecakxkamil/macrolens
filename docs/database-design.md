@@ -46,3 +46,9 @@ Key fields:
 - `computed_at`: timestamp when the feature row was calculated.
 
 The uniqueness constraint on `series_id`, `observation_date`, `as_of_date`, `feature_name`, and `methodology_version` prevents duplicate calculations for the same point-in-time feature while allowing new methodology versions to coexist with prior results.
+
+## economic_releases, series_release_map, release_dates
+
+Calendar v1 persists FRED release metadata in `economic_releases`, links configured series to releases through `series_release_map`, and stores source-published dates in `release_dates`. The mapping and dates tables use composite primary keys to make repeated syncs idempotent. `release_last_updated` is retained only when FRED provides it; the Calendar does not treat it as a release time.
+
+Calendar queries join these tables to active configured `series` rows. A release date appears once with all linked MacroLens indicators. The schema has no consensus, actual-at-release, surprise, or release-time fields. A small official-source time mapping in the API adds scheduled time metadata for supported release names without changing stored FRED dates; unknown times remain null.

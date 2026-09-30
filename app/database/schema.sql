@@ -37,3 +37,30 @@ CREATE TABLE IF NOT EXISTS computed_features (
         methodology_version
     )
 );
+
+CREATE TABLE IF NOT EXISTS economic_releases (
+    release_id INTEGER PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    source_link VARCHAR,
+    press_release BOOLEAN,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS series_release_map (
+    series_id VARCHAR NOT NULL REFERENCES series(series_id),
+    release_id INTEGER NOT NULL REFERENCES economic_releases(release_id),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (series_id, release_id)
+);
+
+CREATE TABLE IF NOT EXISTS release_dates (
+    release_id INTEGER NOT NULL REFERENCES economic_releases(release_id),
+    release_date DATE NOT NULL,
+    release_last_updated VARCHAR,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (release_id, release_date)
+);
+
+CREATE INDEX IF NOT EXISTS release_dates_date_idx ON release_dates (release_date);

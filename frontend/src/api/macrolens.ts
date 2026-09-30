@@ -219,6 +219,36 @@ export interface SeriesFeaturesResponse {
   features: string[];
 }
 
+export interface CalendarEvent {
+  release_id: number;
+  release_name: string;
+  release_date: string;
+  release_time: string | null;
+  source_timezone: string | null;
+  release_datetime_utc: string | null;
+  importance: "high" | "medium" | "low";
+  source_link: string | null;
+  date_precision: "date";
+  series: SeriesMetadata[];
+}
+
+export interface CalendarResponse {
+  start_date: string;
+  end_date: string;
+  category: string | null;
+  events: CalendarEvent[];
+}
+
+export interface ReleaseDetailResponse {
+  release_id: number;
+  release_name: string;
+  source_link: string | null;
+  press_release: boolean | null;
+  date_precision: "date";
+  series: SeriesMetadata[];
+  recent_dates: string[];
+}
+
 export const dashboardHistoryRequests = {
   unemploymentRate: { seriesId: "UNRATE", featureName: "level" },
   unemploymentLevel: { seriesId: "UNEMPLOY" },
@@ -269,6 +299,25 @@ export async function fetchSeriesCatalog(signal?: AbortSignal): Promise<SeriesCa
 export async function fetchSeriesFeatures(seriesId: string, signal?: AbortSignal): Promise<SeriesFeaturesResponse> {
   const response = await fetch(`${API_BASE_URL}/api/v1/series/${encodeURIComponent(seriesId)}/features`, { signal });
   if (!response.ok) throw new Error(`Unable to load features for ${seriesId}.`);
+  return response.json();
+}
+
+export async function fetchCalendar(
+  startDate: string,
+  endDate: string,
+  category?: string,
+  signal?: AbortSignal,
+): Promise<CalendarResponse> {
+  const params = new URLSearchParams({ start_date: startDate, end_date: endDate });
+  if (category) params.set("category", category);
+  const response = await fetch(`${API_BASE_URL}/api/v1/calendar?${params}`, { signal });
+  if (!response.ok) throw new Error("Unable to load macro calendar.");
+  return response.json();
+}
+
+export async function fetchReleaseDetail(releaseId: number, signal?: AbortSignal): Promise<ReleaseDetailResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/releases/${releaseId}`, { signal });
+  if (!response.ok) throw new Error(`Unable to load release ${releaseId}.`);
   return response.json();
 }
 

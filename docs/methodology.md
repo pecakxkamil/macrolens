@@ -6,6 +6,12 @@ These are mechanical feature calculations only. Macro-state scoring and economic
 
 Methodology version: `v1`
 
+## Macro Calendar
+
+Calendar v1 maps active configured series to FRED economic releases and stores the release dates published by FRED and underlying sources. It includes scheduled dates without observations when FRED provides them. Dates are displayed without times or time zones. A source-published date does not necessarily mean the observations were available on FRED or ALFRED that day.
+
+Release details may show latest stored and previous observations as current-vintage context. They do not reconstruct actual values at the historical release date. Consensus, surprises, and release-vintage comparisons are outside Calendar v1.
+
 ## Historical Chart Data
 
 MacroLens chart history is **current-vintage history**. For each historical

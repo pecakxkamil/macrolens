@@ -16,6 +16,7 @@ from app.analytics import history
 from app.analytics import housing_snapshot
 from app.analytics import inflation_snapshot
 from app.analytics import labor_snapshot
+from app.analytics import release_calendar
 from app.analytics import series_catalog
 from app.analytics import usa_economy_now
 
@@ -25,6 +26,7 @@ logger = logging.getLogger(__name__)
 SNAPSHOT_UNAVAILABLE_DETAIL = "Current macro snapshot is temporarily unavailable."
 HISTORY_UNAVAILABLE_DETAIL = "Historical chart data is temporarily unavailable."
 CATALOG_UNAVAILABLE_DETAIL = "Indicator catalog is temporarily unavailable."
+CALENDAR_UNAVAILABLE_DETAIL = "Macro calendar is temporarily unavailable."
 DEVELOPMENT_CORS_ORIGINS = (
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -75,6 +77,21 @@ def _catalog_response(loader: Callable[[], dict]) -> dict:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=CATALOG_UNAVAILABLE_DETAIL,
+        ) from error
+
+
+def _calendar_response(loader: Callable[[], dict]) -> dict:
+    try:
+        return jsonable_encoder(loader())
+    except release_calendar.UnknownReleaseError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error))
+    except (release_calendar.InvalidCalendarRangeError, release_calendar.InvalidCalendarCategoryError) as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
+    except Exception as error:
+        logger.exception("Macro calendar unavailable: %s", error)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=CALENDAR_UNAVAILABLE_DETAIL,
         ) from error
 
 
@@ -171,3 +188,19 @@ def get_feature_history(
             end_date,
         )
     )
+
+
+@app.get("/api/v1/calendar")
+def get_calendar(
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    category: Optional[str] = None,
+) -> dict:
+    return _calendar_response(
+        lambda: release_calendar.list_calendar_events(start_date, end_date, category)
+    )
+
+
+@app.get("/api/v1/releases/{release_id}")
+def get_release(release_id: int) -> dict:
+    return _calendar_response(lambda: release_calendar.get_release_detail(release_id))
