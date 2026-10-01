@@ -552,3 +552,13 @@ Each snapshot component includes `observation_date` and `feature_as_of_date` so 
 - JTSJOL: includes `level`, `change_3m`, and `yoy`; `change_3m` > 0 is `rising`, `change_3m` < 0 is `falling`, and `change_3m` == 0 is `stable`.
 - CIVPART: includes `level`, `change_3m`, and `moving_average_3m`; `change_3m` > 0 is `rising`, `change_3m` < 0 is `falling`, and `change_3m` == 0 is `stable`.
 - CES0500000003: includes `mom`, `yoy`, and `annualized_3m` values only.
+
+## Macro Relationships v1
+
+Relationships uses the existing raw observation and computed-feature history loaders. Both provide the latest stored value for each observation date (`history_type = current_vintage`), so revised values can differ from those available at the time. The comparison does not reconstruct historical vintages.
+
+For two or three selected histories, the backend chooses the lowest frequency: quarterly before monthly, monthly before weekly, weekly before daily. It groups observation dates into calendar quarters, calendar months, ISO weeks, or exact days at that frequency. Within each period and each history, it takes the latest dated non-null finite observation. No missing period is filled, and each aligned period appears once. Alignment uses economic observation dates, not publication dates; it applies no lead, lag, or causal interpretation.
+
+The response keeps periods with at least one selected value. Each pair's `overlapping_observation_count` counts only periods with both values. Pearson correlation is computed from those paired values only; it is null with fewer than three pairs or if either side has zero variance. With three indicators, the API reports all three pairwise comparisons. Date filters are passed to the existing history loaders before grouping.
+
+Actual-value mode uses separate chart axes for differing units. Indexed mode uses 100 at the first period where all selected values are present and nonzero; every displayed value is divided by its own baseline value and multiplied by 100. If no shared nonzero baseline exists, indexed mode is unavailable. The index is a visual comparison of relative changes, not a measure of economic strength. Correlation describes historical co-movement, not causation or future market moves.

@@ -17,6 +17,7 @@ from app.analytics import housing_snapshot
 from app.analytics import inflation_snapshot
 from app.analytics import labor_snapshot
 from app.analytics import release_calendar
+from app.analytics import relationships
 from app.analytics import series_catalog
 from app.analytics import usa_economy_now
 
@@ -27,6 +28,7 @@ SNAPSHOT_UNAVAILABLE_DETAIL = "Current macro snapshot is temporarily unavailable
 HISTORY_UNAVAILABLE_DETAIL = "Historical chart data is temporarily unavailable."
 CATALOG_UNAVAILABLE_DETAIL = "Indicator catalog is temporarily unavailable."
 CALENDAR_UNAVAILABLE_DETAIL = "Macro calendar is temporarily unavailable."
+RELATIONSHIPS_UNAVAILABLE_DETAIL = "Macro relationships are temporarily unavailable."
 DEVELOPMENT_CORS_ORIGINS = (
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -92,6 +94,21 @@ def _calendar_response(loader: Callable[[], dict]) -> dict:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=CALENDAR_UNAVAILABLE_DETAIL,
+        ) from error
+
+
+def _relationships_response(loader: Callable[[], dict]) -> dict:
+    try:
+        return jsonable_encoder(loader())
+    except (history.UnknownSeriesError, history.UnsupportedFeatureError) as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error))
+    except (history.InvalidDateRangeError, relationships.InvalidRelationshipSelectionError) as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
+    except Exception as error:
+        logger.exception("Macro relationships unavailable: %s", error)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=RELATIONSHIPS_UNAVAILABLE_DETAIL,
         ) from error
 
 
@@ -199,6 +216,23 @@ def get_calendar(
     return _calendar_response(
         lambda: release_calendar.list_calendar_events(start_date, end_date, category)
     )
+
+
+@app.get("/api/v1/relationships/compare")
+def get_relationship_comparison(
+    left_series: str,
+    right_series: str,
+    left_feature: Optional[str] = None,
+    right_feature: Optional[str] = None,
+    third_series: Optional[str] = None,
+    third_feature: Optional[str] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> dict:
+    return _relationships_response(lambda: relationships.compare_histories(
+        left_series, right_series, left_feature, right_feature,
+        third_series, third_feature, start_date, end_date,
+    ))
 
 
 @app.get("/api/v1/releases/{release_id}")

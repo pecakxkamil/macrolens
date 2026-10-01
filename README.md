@@ -50,6 +50,7 @@ FRED API
 - Charts v1 for interactive current-vintage history across six macro domains
 - Indicator Explorer v1 for configured series and available transformations
 - Macro Calendar v1 for date-level FRED releases relevant to configured indicators
+- Macro Relationships v1 for descriptive current-vintage comparisons
 - Automated tests
 
 ## Labor Series
@@ -107,6 +108,7 @@ Available routes:
 - `GET /api/v1/analytics/yield-curve/2s10s/history`
 - `GET /api/v1/calendar?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD&category=...`
 - `GET /api/v1/releases/{release_id}`
+- `GET /api/v1/relationships/compare?left_series=...&right_series=...&left_feature=...&right_feature=...&start_date=...&end_date=...`
 
 History routes accept optional `start_date` and `end_date` query parameters
 in `YYYY-MM-DD` format.
@@ -137,6 +139,7 @@ Development URLs:
 - Charts: `http://127.0.0.1:5173/#/charts`
 - Indicators: `http://127.0.0.1:5173/#/indicators`
 - Calendar: `http://127.0.0.1:5173/#/calendar`
+- Relationships: `http://127.0.0.1:5173/#/relationships`
 
 Overview shows the current macro snapshot. Charts shows curated historical macro charts. Indicators lets you browse individual configured series and their available stored transformations. Calendar shows scheduled and historical release dates from FRED for active configured MacroLens indicators. For seven known releases, the API adds the publisher's scheduled Eastern time and its UTC instant; the frontend displays that instant in Europe/Warsaw. Other releases have null time fields. Consensus, actual-at-release values, and surprises are not included.
 
@@ -145,6 +148,8 @@ Charts and Indicators use the latest stored values for each observation date, so
 Refresh the Calendar with `python -m app.ingestion.sync_release_calendar`. The command defaults to one year of historical dates and six months ahead. Use `--start-date YYYY-MM-DD --end-date YYYY-MM-DD` to choose another window. It fetches only releases linked to active configured series, stores each FRED response immutably under `data/raw/fred/releases`, and upserts release metadata and dates. [FRED's release-date documentation](https://fred.stlouisfed.org/docs/api/fred/release_dates.html) notes that source-published dates do not necessarily mark when data becomes available on FRED or ALFRED.
 
 Calendar time metadata is a small, explicit API mapping based on the official [BLS schedule](https://www.bls.gov/schedule/2026/home.htm), [BEA schedule](https://www.bea.gov/news/schedule/full), and [Census construction schedule](https://www.census.gov/construction/soc/schedule.html). FRED does not provide or guarantee these times, and individual publication schedules may change. The mapping uses `America/New_York`, not a fixed UTC offset. It requires no schema migration or calendar resync; syncing still refreshes release dates.
+
+Relationships compares two or three configured histories. Omit a feature parameter to use raw observations; a feature parameter selects an existing stored transformation. The API groups observations at the lowest selected frequency and returns the latest non-null observation within each period. It reports Pearson correlation only for periods where both series have values. Indexed mode uses 100 at the first shared nonzero period and changes display values only. See [relationship methodology](docs/methodology.md#macro-relationships-v1) for details. These comparisons describe historical co-movement, not causation or forecasts.
 
 ## Roadmap
 

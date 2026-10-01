@@ -200,6 +200,63 @@ export interface HistoryOptions {
   signal?: AbortSignal;
 }
 
+export type RelationshipKey = "left" | "right" | "third";
+
+export interface RelationshipSource {
+  seriesId: string;
+  featureName?: string;
+}
+
+export interface RelationshipRequest extends HistoryOptions {
+  left: RelationshipSource;
+  right: RelationshipSource;
+  third?: RelationshipSource;
+}
+
+export interface RelationshipIndicator {
+  key: RelationshipKey;
+  series_id: string;
+  feature_name: string | null;
+  name: string;
+  short_name: string | null;
+  frequency: string;
+  unit: string;
+}
+
+export interface RelationshipReading {
+  observation_date: string;
+  value: number;
+  normalized_value: number | null;
+}
+
+export interface RelationshipObservation {
+  period: string;
+  left: RelationshipReading | null;
+  right: RelationshipReading | null;
+  third?: RelationshipReading | null;
+}
+
+export interface RelationshipComparison {
+  left_key: RelationshipKey;
+  right_key: RelationshipKey;
+  overlapping_observation_count: number;
+  correlation: number | null;
+}
+
+export interface RelationshipResponse {
+  history_type: "current_vintage";
+  start_date: string | null;
+  end_date: string | null;
+  comparison_frequency: "daily" | "weekly" | "monthly" | "quarterly";
+  alignment_methodology: string;
+  normalization_base_period: string | null;
+  indicators: RelationshipIndicator[];
+  observations: RelationshipObservation[];
+  overlapping_observation_count: number;
+  correlation: number | null;
+  comparisons: RelationshipComparison[];
+}
+
 export interface SeriesMetadata {
   series_id: string;
   name: string;
@@ -318,6 +375,21 @@ export async function fetchCalendar(
 export async function fetchReleaseDetail(releaseId: number, signal?: AbortSignal): Promise<ReleaseDetailResponse> {
   const response = await fetch(`${API_BASE_URL}/api/v1/releases/${releaseId}`, { signal });
   if (!response.ok) throw new Error(`Unable to load release ${releaseId}.`);
+  return response.json();
+}
+
+export async function fetchRelationshipComparison(request: RelationshipRequest): Promise<RelationshipResponse> {
+  const params = new URLSearchParams({ left_series: request.left.seriesId, right_series: request.right.seriesId });
+  if (request.left.featureName) params.set("left_feature", request.left.featureName);
+  if (request.right.featureName) params.set("right_feature", request.right.featureName);
+  if (request.third) {
+    params.set("third_series", request.third.seriesId);
+    if (request.third.featureName) params.set("third_feature", request.third.featureName);
+  }
+  if (request.startDate) params.set("start_date", request.startDate);
+  if (request.endDate) params.set("end_date", request.endDate);
+  const response = await fetch(`${API_BASE_URL}/api/v1/relationships/compare?${params}`, { signal: request.signal });
+  if (!response.ok) throw new Error("Unable to compare indicator histories.");
   return response.json();
 }
 

@@ -25,6 +25,7 @@ import {
 } from "./metricMetadata";
 
 const ChartsPage = lazy(() => import("./charts/ChartsPage").then((module) => ({ default: module.ChartsPage })));
+const RelationshipsPage = lazy(() => import("./relationships/RelationshipsPage").then((module) => ({ default: module.RelationshipsPage })));
 const IndicatorsPage = lazy(() => import("./indicators/IndicatorsPage").then((module) => ({ default: module.IndicatorsPage })));
 const CalendarPage = lazy(() => import("./calendar/CalendarPage").then((module) => ({ default: module.CalendarPage })));
 
@@ -681,8 +682,9 @@ function Overview() {
   );
 }
 
-function currentSection(hash: string): "overview" | "charts" | "indicators" | "calendar" {
+function currentSection(hash: string): "overview" | "charts" | "relationships" | "indicators" | "calendar" {
   if (hash === "#/charts" || hash === "#/charts/") return "charts";
+  if (hash === "#/relationships" || hash === "#/relationships/") return "relationships";
   if (hash === "#/indicators" || hash === "#/indicators/" || hash.startsWith("#/indicators/")) return "indicators";
   if (hash === "#/calendar" || hash === "#/calendar/") return "calendar";
   return "overview";
@@ -707,10 +709,12 @@ export default function App() {
       <nav className="app-navigation" aria-label="Main navigation">
         <a href="#/" aria-current={section === "overview" ? "page" : undefined}>Overview</a>
         <a href="#/charts" aria-current={section === "charts" ? "page" : undefined}>Charts</a>
+        <a href="#/relationships" aria-current={section === "relationships" ? "page" : undefined}>Relationships</a>
         <a href="#/indicators" aria-current={section === "indicators" ? "page" : undefined}>Indicators</a>
         <a href="#/calendar" aria-current={section === "calendar" ? "page" : undefined}>Calendar</a>
       </nav>
       {section === "charts" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading charts...</div>}><ChartsPage /></Suspense></div>
+        : section === "relationships" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading relationships...</div>}><RelationshipsPage /></Suspense></div>
         : section === "indicators" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading indicators...</div>}><IndicatorsPage seriesId={seriesId} /></Suspense></div>
         : section === "calendar" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading calendar...</div>}><CalendarPage /></Suspense></div>
         : <Overview />}
