@@ -224,7 +224,7 @@ export interface MciComponent {
   raw_value: number | null;
   domain_contribution: number | null;
   mci_contribution: number | null;
-  status: "available" | "missing" | "insufficient_history";
+  status: "available" | "missing" | "insufficient_history" | "coverage_unverified";
   source_observation_date: string | null;
   effective_month: string | null;
   feature_as_of_date: string | null;
@@ -233,6 +233,8 @@ export interface MciComponent {
   reference_sample_size: number;
   reference_start_date: string | null;
   reference_end_date: string | null;
+  vintage_dates_used?: string[];
+  raw_observations_used?: Array<{ observation_date: string; vintage_date: string | null; value: number | null }>;
 }
 
 export interface MciDomain {
@@ -244,9 +246,24 @@ export interface MciDomain {
   components: MciComponent[];
 }
 
+export type MciHistoryMode = "point_in_time" | "current_vintage";
+
+export interface PitCoverage {
+  first_valid_as_of_date: string | null;
+  backfilled_through: string | null;
+  missing_series: string[];
+  series: Record<string, {
+    first_vintage_date: string | null;
+    first_observation_date: string | null;
+    backfilled_through: string | null;
+    stored_vintage_rows: number;
+  }>;
+}
+
 export interface MciMethodology {
   methodology_version: "v1";
-  history_type: "current_vintage";
+  history_type: MciHistoryMode;
+  coverage?: PitCoverage;
   frequency: "monthly";
   as_of_date: string;
   domain_weights: Record<MciDomainKey, number>;
@@ -505,14 +522,20 @@ function historyQuery({ startDate, endDate }: HistoryOptions): string {
   return params.size ? `?${params}` : "";
 }
 
-export async function fetchMciCurrent(signal?: AbortSignal): Promise<MciCurrentResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/economy/us/mci`, { signal });
+export function pitMciAuditUrl(asOfDate: string): string {
+  return `${API_BASE_URL}/api/v1/economy/us/mci/point-in-time/${encodeURIComponent(asOfDate)}`;
+}
+
+export async function fetchMciCurrent(signal?: AbortSignal, mode: MciHistoryMode = "current_vintage"): Promise<MciCurrentResponse> {
+  const suffix = mode === "point_in_time" ? "/point-in-time" : "";
+  const response = await fetch(`${API_BASE_URL}/api/v1/economy/us/mci${suffix}`, { signal });
   if (!response.ok) throw new Error("Unable to load Macro Conditions Index.");
   return response.json();
 }
 
-export async function fetchMciHistory(options: HistoryOptions = {}): Promise<MciHistoryResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/economy/us/mci/history${historyQuery(options)}`, { signal: options.signal });
+export async function fetchMciHistory(options: HistoryOptions = {}, mode: MciHistoryMode = "current_vintage"): Promise<MciHistoryResponse> {
+  const suffix = mode === "point_in_time" ? "/point-in-time" : "";
+  const response = await fetch(`${API_BASE_URL}/api/v1/economy/us/mci${suffix}/history${historyQuery(options)}`, { signal: options.signal });
   if (!response.ok) throw new Error("Unable to load Macro Conditions Index history.");
   return response.json();
 }

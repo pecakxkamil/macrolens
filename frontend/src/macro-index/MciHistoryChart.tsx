@@ -1,5 +1,5 @@
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import type { MciDomainKey, MciHistoryObservation } from "../api/macrolens";
+import type { MciDomainKey, MciHistoryObservation, MciHistoryMode } from "../api/macrolens";
 
 export const mciDomains: Array<{ key: MciDomainKey; label: string; color: string }> = [
   { key: "labor", label: "Labor", color: "#8eadd1" },
@@ -10,8 +10,8 @@ export const mciDomains: Array<{ key: MciDomainKey; label: string; color: string
   { key: "financial_conditions", label: "Financial Conditions", color: "#7e9bb1" },
 ];
 
-export function MciHistoryChart({ rows, visible }: { rows: MciHistoryObservation[]; visible: MciDomainKey[] }) {
-  return <div className="mci-history-plot" role="region" aria-label="Macro Conditions Index historical line chart">
+export function MciHistoryChart({ rows, visible, historyType }: { rows: MciHistoryObservation[]; visible: MciDomainKey[]; historyType: MciHistoryMode }) {
+  return <div className="mci-history-plot" role="region" aria-label={`${historyType === "point_in_time" ? "Point-in-time" : "Current-vintage"} Macro Conditions Index historical line chart`}>
     <ResponsiveContainer width="100%" height="100%">
       <LineChart accessibilityLayer data={rows} margin={{ top: 15, right: 18, left: 0, bottom: 8 }}>
         <CartesianGrid stroke="#2b3746" strokeDasharray="3 4" vertical={false} />
@@ -24,7 +24,7 @@ export function MciHistoryChart({ rows, visible }: { rows: MciHistoryObservation
             <span style={{ color: entry.color }}>{entry.name}</span><b>{entry.value.toFixed(1)} / 100</b>
           </div> : null)}</div>;
         }} />
-        <Line type="linear" dataKey="mci" name="MCI" stroke="#dce8f8" strokeWidth={3} dot={false} connectNulls={false} isAnimationActive={false} />
+        <Line type="linear" dataKey="mci" name={historyType === "point_in_time" ? "PIT MCI" : "Current-vintage MCI"} stroke="#dce8f8" strokeWidth={3} dot={false} connectNulls={false} isAnimationActive={false} />
         {mciDomains.filter((item) => visible.includes(item.key)).map((item, index) => <Line
           key={item.key} type="linear" dataKey={item.key} name={item.label} stroke={item.color}
           strokeDasharray={index % 2 ? "5 3" : undefined} strokeWidth={1.8}

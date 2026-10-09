@@ -30,7 +30,8 @@ INSERT INTO observation_vintages (
 )
 ON CONFLICT (series_id, observation_date, vintage_date) DO UPDATE SET
     value = EXCLUDED.value,
-    ingested_at = CURRENT_TIMESTAMP;
+    ingested_at = CURRENT_TIMESTAMP
+WHERE observation_vintages.source != 'alfred';
 """
 
 

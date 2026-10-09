@@ -866,3 +866,7 @@ h3 {
 .mci-series-controls input { accent-color: #8eadd1; }
 .mci-history-plot { width: 100%; height: 340px; }
 .mci-methodology code { background: #1b2635; color: #cbdcf1; padding: .15rem .3rem; border-radius: 3px; overflow-wrap: anywhere; }
+.mci-mode-controls { margin: 1rem 0; }
+.mci-pit-coverage { background: #11161d; border: 1px solid #263241; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+.mci-pit-coverage p { color: #aebaca; font-size: .84rem; line-height: 1.5; }
+.mci-pit-coverage a { color: #9cc7f5; font-size: .84rem; }

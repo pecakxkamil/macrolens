@@ -765,3 +765,80 @@ The calculation excludes future economic observations from each row's expanding
 reference; it does **not** reconstruct historical vintages or all release lags.
 The historical index must not be presented as an investable/backtest signal.
 ALFRED reconstruction and market overlays remain outside MCI v1.
+
+## Point-in-Time Macro Conditions Index infrastructure v1
+
+### Products and source provenance
+
+The existing `history_type=current_vintage` MCI remains unchanged. Its historical
+rows use today's stored revised values. The separate `history_type=point_in_time`,
+`methodology_version=v1` product reconstructs only vintages known by each as-of
+date. Point-in-time MCI is designed to reduce look-ahead bias. It is not a
+validated trading or forecasting model.
+
+The separate backfill uses the official
+[FRED/ALFRED series observations API](https://fred.stlouisfed.org/docs/api/fred/series_observations.html)
+with `output_type=1` (observations by real-time period), `units=lin`, and the
+inclusive real-time window `1776-07-04` through the requested cutoff. Paginated
+change intervals preserve repeated observation dates across different vintages.
+An observation date describes the economic period; `vintage_date` is the returned
+`realtime_start`, meaning when that version became available in the source's
+real-time history. `realtime_end` is its inclusive validity end, not an ingestion
+timestamp. See [real-time period semantics](https://fred.stlouisfed.org/docs/api/fred/realtime_period.html).
+Existing FRED snapshot rows are excluded unless the authoritative backfill
+promotes the same key. Null source values remain null; expiration never revives
+an earlier value. All source payloads are stored immutably and series coverage
+is verified only after a complete successful transaction.
+
+### Reconstruction and alignment
+
+For T, select each observation's latest vintage with `vintage_date <= T` and
+`observation_date <= T`. Recompute the required features on that selected dataset
+with the existing pure feature formulas. Never read `computed_features` for PIT.
+Missing monthly, quarterly, or weekly periods are explicit nulls, so rolling and
+shift operations cannot compress gaps. An expanding normalization reference is
+reconstructed from the history known at T; revisions may change later as-of
+scores but cannot change earlier as-of scores. Existing v1 orientations,
+inflation target scoring, warmups (60 monthly / 20 quarterly), equal component
+weights within domains, and six equal domain weights are preserved.
+
+Rows use calendar month-end as-of dates. At each date use the latest finite
+component feature actually known then. Monthly source periods may be carried
+until their age exceeds three calendar months. Weekly ICSA/NFCI periods expire
+after 35 days. GDP quarters must actually be known and have ended; they expire
+six months after their quarter-start observation date. Carry is explicit in
+component responses. Missing/unverified/expired inputs keep fixed weights and
+make their domain and the full index unavailable; no future values or
+interpolation fill them. The latest endpoint evaluates the latest completed
+month-end within common completed-backfill coverage, even if its score is null.
+
+### Coverage and audit
+
+No common vintage start is assumed. History starts at the first month-end within
+all 15 series' known vintage coverage; early rows may have null scores while
+warmups or missing values prevent a full index. `coverage.first_valid_as_of_date`
+is derived from the earliest actual valid full-index history row, including when
+served from cache. It is calculated before applying the display start-date filter;
+a historical cutoff excludes later valid rows. Current and audit responses use
+the same history-derived date, rather than leaving it null. Per-series metadata reports first
+observation/vintage dates, stored vintage row counts, completed coverage cutoff,
+and missing series. This date is derived from the local backfill, not fabricated
+or hardcoded; inspect the rebuild output/API for the current coverage.
+
+The exact-date audit returns each component's raw transformed value, score,
+weights/contributions, source observation, raw dependencies and their vintage
+dates and real-time interval ends. Its concise normalization summary reports the
+method, reference count, range, and below/equal/above rank counts (or the inflation
+target and distance). Full reference distributions and selected raw input grids
+remain internal for regression tests and are omitted from the normal API response.
+This lets an auditor verify feature dependencies and the normalization result
+using only data known at T. History uses two bulk vintage/coverage reads, an ordered
+vintage sweep, and per-series feature reuse when its known inputs do not change.
+An optional local JSON history cache is invalidated by completed backfills.
+
+### Date-level limitation
+
+ALFRED's real-time date does not establish precise intraday availability. An
+as-of date includes vintages dated that day. PIT v1 therefore uses monthly
+month-end analysis and makes no minute-level availability claim. Calendar
+scheduled release times are not used to infer when ALFRED had the observations.

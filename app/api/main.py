@@ -17,6 +17,7 @@ from app.analytics import housing_snapshot
 from app.analytics import inflation_snapshot
 from app.analytics import labor_snapshot
 from app.analytics import macro_conditions_index
+from app.analytics import point_in_time_mci
 from app.analytics import macro_state
 from app.analytics import release_calendar
 from app.analytics import relationships
@@ -149,6 +150,24 @@ def get_macro_conditions_index_history(
     end_date: Optional[date] = None,
 ) -> dict:
     return _mci_response(lambda: macro_conditions_index.get_index_history(start_date, end_date))
+
+
+@app.get("/api/v1/economy/us/mci/point-in-time")
+def get_pit_mci() -> dict:
+    return _mci_response(point_in_time_mci.get_current)
+
+
+@app.get("/api/v1/economy/us/mci/point-in-time/history")
+def get_pit_mci_history(
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> dict:
+    return _mci_response(lambda: point_in_time_mci.get_history(start_date, end_date))
+
+
+@app.get("/api/v1/economy/us/mci/point-in-time/{as_of_date}")
+def get_pit_mci_audit(as_of_date: date) -> dict:
+    return _mci_response(lambda: point_in_time_mci.get_audit(as_of_date))
 
 
 @app.get("/api/v1/economy/us/state")

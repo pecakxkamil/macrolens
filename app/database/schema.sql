@@ -64,3 +64,20 @@ CREATE TABLE IF NOT EXISTS release_dates (
 );
 
 CREATE INDEX IF NOT EXISTS release_dates_date_idx ON release_dates (release_date);
+
+-- Snapshot requests do not establish historical availability. Only verified
+-- ALFRED interval downloads are used by PIT loaders.
+ALTER TABLE observation_vintages ADD COLUMN IF NOT EXISTS source VARCHAR NOT NULL DEFAULT 'fred_snapshot';
+ALTER TABLE observation_vintages ADD COLUMN IF NOT EXISTS realtime_end DATE;
+
+CREATE TABLE IF NOT EXISTS alfred_backfills (
+    series_id VARCHAR PRIMARY KEY REFERENCES series(series_id),
+    realtime_start DATE NOT NULL,
+    realtime_end DATE NOT NULL,
+    rows_downloaded BIGINT NOT NULL,
+    completed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS observation_vintages_alfred_idx
+    ON observation_vintages (series_id, vintage_date, observation_date)
+    WHERE source = 'alfred';

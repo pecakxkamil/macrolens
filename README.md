@@ -148,7 +148,7 @@ Development URLs:
 
 Overview shows the current macro snapshot. Charts shows curated historical macro charts. Indicators lets you browse individual configured series and their available stored transformations. Calendar shows scheduled and historical release dates from FRED for active configured MacroLens indicators. For seven known releases, the API adds the publisher's scheduled Eastern time and its UTC instant; the frontend displays that instant in Europe/Warsaw. Other releases have null time fields. Consensus, actual-at-release values, and surprises are not included.
 
-Charts and Indicators use the latest stored values for each observation date, so revised series may differ from their original releases. Calendar detail readings use the same current-vintage context and do not represent values known at the release date. ALFRED and vintage-aware point-in-time history remain future work.
+Charts and Indicators use the latest stored values for each observation date, so revised series may differ from their original releases. Calendar detail readings use the same current-vintage context and do not represent values known at the release date. The separate PIT Macro Index reconstructs only its 15 components from ALFRED vintages; these other views remain current-vintage.
 
 Refresh the Calendar with `python -m app.ingestion.sync_release_calendar`. The command defaults to one year of historical dates and six months ahead. Use `--start-date YYYY-MM-DD --end-date YYYY-MM-DD` to choose another window. It fetches only releases linked to active configured series, stores each FRED response immutably under `data/raw/fred/releases`, and upserts release metadata and dates. [FRED's release-date documentation](https://fred.stlouisfed.org/docs/api/fred/release_dates.html) notes that source-published dates do not necessarily mark when data becomes available on FRED or ALFRED.
 
@@ -201,3 +201,54 @@ table, migration, or new ingestion is required.
 - Financial Conditions
 - API/dashboard
 - AI interpretation
+
+## Point-in-Time Macro Conditions Index infrastructure v1
+
+Macro Index defaults to **Point-in-time**. The selector also retains the separate
+**Current-vintage** product and its existing endpoints. Point-in-time MCI is
+designed to reduce look-ahead bias; it is not a validated trading or forecasting
+model. ALFRED establishes availability by date, not by minute.
+
+PIT endpoints:
+
+- `GET /api/v1/economy/us/mci/point-in-time`
+- `GET /api/v1/economy/us/mci/point-in-time/history?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`
+- `GET /api/v1/economy/us/mci/point-in-time/{as_of_date}` (exact-date input audit)
+
+Set the existing database settings and `FRED_API_KEY` in `.env`, then run from
+the project root:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.database.init_db
+.\.venv\Scripts\python.exe -m app.ingestion.backfill_vintages
+.\.venv\Scripts\python.exe -m app.analytics.point_in_time_mci
+```
+
+The schema extension marks trusted ALFRED rows separately from ordinary FRED
+snapshots, stores validity interval ends, and records completed backfill coverage.
+The backfill supports only PAYEMS, UNRATE, ICSA, CPIAUCSL, CPILFESL, PCEPILFE,
+GDPC1, CFNAI, INDPRO, PCEC96, DSPIC96, HOUST, PERMIT, HSN1F, and NFCI.
+Use repeated `--series` arguments to select a subset, or `--end-date YYYY-MM-DD`
+to choose the retrieval cutoff. It downloads original-unit real-time change
+intervals from the FRED/ALFRED observations API starting at `1776-07-04`.
+
+Raw responses are immutable under `data/raw/alfred/<SERIES_ID>/`. Matching saved
+pages resume interrupted runs, with at most three pages fetched concurrently.
+Each series commits atomically; rerunning does not duplicate observation/vintage
+keys. Conflicting values in already trusted ALFRED rows fail the transaction
+instead of rewriting history. Ordinary snapshot ingestion cannot overwrite them.
+
+The rebuild bulk-loads vintages, sweeps historical month-ends, and writes the
+optional ignored artifact `data/derived/mci_point_in_time_v1.json`. History API
+requests reuse it only when the completed-backfill signature and requested
+coverage match. After a new backfill, rerun the rebuild; absent/stale caches
+fall back to reconstruction. The exported coverage identifies the actual first
+valid full-index date, missing series, and per-series vintage history.
+
+The completed local backfill through **2026-10-09** contains **1,066,512**
+trusted vintage interval rows. Its rebuilt history has **185** month-ends, with
+the first valid full PIT MCI on **2011-05-31**. These are measured coverage
+results for this backfill; future runs expose their own derived metadata.
+
+See [PIT methodology](docs/methodology.md#point-in-time-macro-conditions-index-infrastructure-v1)
+for feature reconstruction, carry rules, normalization, and audit semantics.
