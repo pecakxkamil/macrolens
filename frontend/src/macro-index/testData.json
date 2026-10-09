@@ -1,0 +1,575 @@
+{
+  "methodology_version": "v1",
+  "history_type": "current_vintage",
+  "frequency": "monthly",
+  "domain_weights": {
+    "labor": 0.16666666666666666,
+    "inflation": 0.16666666666666666,
+    "growth": 0.16666666666666666,
+    "consumer": 0.16666666666666666,
+    "housing": 0.16666666666666666,
+    "financial_conditions": 0.16666666666666666
+  },
+  "normalization": {
+    "method": "expanding_midrank_percentile",
+    "formula": "100 * (count(x < current) + 0.5 * count(x = current)) / N",
+    "lower_orientation": "100 - percentile",
+    "reference": "Distinct monthly component observations through the scored month, including current; GDP uses distinct quarterly observations.",
+    "minimum_monthly_samples": 60,
+    "minimum_quarterly_samples": 20,
+    "inflation_formula": "max(0, 100 * (1 - abs(inflation_yoy - 2) / 4))",
+    "inflation_reference_percent": 2.0,
+    "inflation_zero_distance_pp": 4.0
+  },
+  "alignment": {
+    "monthly_weekly": "Latest same-date finite component inputs within each completed calendar month; no carry-forward.",
+    "gdp": "Quarter-start observation becomes eligible in the month after that quarter ends; carry its raw value and score for at most two additional months.",
+    "calendar": "Month-end rows, completed months only. Source observation periods are used, not reconstructed publication dates."
+  },
+  "missing_data": "Require every configured component per domain and all six domains for MCI. Null scores retain fixed weights; no neutral imputation or reweighting.",
+  "current_selection": "Latest complete MCI month, or latest evaluated month with null MCI if no complete month exists.",
+  "limitation": "Current-vintage values include revisions and may differ from real-time calculations. Publication availability is not reconstructed; this is not an investable or backtest signal.",
+  "observation_date": "2006-12-31",
+  "mci": 49.999999999999986,
+  "domains": {
+    "labor": {
+      "name": "Labor Conditions Index",
+      "score": 49.99999999999999,
+      "weight": 0.16666666666666666,
+      "contribution": 8.333333333333332,
+      "as_of_date": "2026-10-01",
+      "components": [
+        {
+          "key": "payroll_momentum",
+          "label": "Payroll momentum gap",
+          "series_id": "PAYEMS",
+          "features": [
+            "monthly_change_ma_3m",
+            "monthly_change_ma_6m"
+          ],
+          "unit": "thousands of persons",
+          "orientation": "higher",
+          "rationale": "A larger 3M minus 6M payroll-change average denotes improving payroll momentum.",
+          "weight": 0.3333333333333333,
+          "overall_weight": 0.05555555555555555,
+          "score": 50.0,
+          "raw_value": 50.0,
+          "domain_contribution": 16.666666666666664,
+          "mci_contribution": 2.7777777777777772,
+          "status": "available",
+          "source_observation_date": "2006-12-01",
+          "effective_month": "2006-12-01",
+          "feature_as_of_date": "2026-10-01",
+          "inputs": [
+            {
+              "feature_name": "monthly_change_ma_3m",
+              "value": 200.0
+            },
+            {
+              "feature_name": "monthly_change_ma_6m",
+              "value": 150.0
+            }
+          ],
+          "carried_forward": false,
+          "reference_sample_size": 84,
+          "reference_start_date": "2000-01-01",
+          "reference_end_date": "2006-12-01"
+        },
+        {
+          "key": "unemployment_change",
+          "label": "Unemployment 3M change",
+          "series_id": "UNRATE",
+          "features": [
+            "change_3m"
+          ],
+          "unit": "percentage points",
+          "orientation": "lower",
+          "rationale": "A lower 3M unemployment-rate change denotes improving labor momentum.",
+          "weight": 0.3333333333333333,
+          "overall_weight": 0.05555555555555555,
+          "score": 50.0,
+          "raw_value": -0.2,
+          "domain_contribution": 16.666666666666664,
+          "mci_contribution": 2.7777777777777772,
+          "status": "available",
+          "source_observation_date": "2006-12-01",
+          "effective_month": "2006-12-01",
+          "feature_as_of_date": "2026-10-01",
+          "inputs": [
+            {
+              "feature_name": "change_3m",
+              "value": -0.2
+            }
+          ],
+          "carried_forward": false,
+          "reference_sample_size": 84,
+          "reference_start_date": "2000-01-01",
+          "reference_end_date": "2006-12-01"
+        },
+        {
+          "key": "claims_momentum",
+          "label": "Initial claims momentum gap",
+          "series_id": "ICSA",
+          "features": [
+            "moving_average_4w",
+            "moving_average_13w"
+          ],
+          "unit": "persons",
+          "orientation": "lower",
+          "rationale": "A lower 4W minus 13W claims average denotes improving claims momentum.",
+          "weight": 0.3333333333333333,
+          "overall_weight": 0.05555555555555555,
+          "score": 50.0,
+          "raw_value": -20000.0,
+          "domain_contribution": 16.666666666666664,
+          "mci_contribution": 2.7777777777777772,
+          "status": "available",
+          "source_observation_date": "2006-12-01",
+          "effective_month": "2006-12-01",
+          "feature_as_of_date": "2026-10-01",
+          "inputs": [
+            {
+              "feature_name": "moving_average_4w",
+              "value": 200000.0
+            },
+            {
+              "feature_name": "moving_average_13w",
+              "value": 220000.0
+            }
+          ],
+          "carried_forward": false,
+          "reference_sample_size": 84,
+          "reference_start_date": "2000-01-01",
+          "reference_end_date": "2006-12-01"
+        }
+      ]
+    },
+    "inflation": {
+      "name": "Inflation Stability Index",
+      "score": 49.99999999999999,
+      "weight": 0.16666666666666666,
+      "contribution": 8.333333333333332,
+      "as_of_date": "2026-10-01",
+      "components": [
+        {
+          "key": "headline_cpi",
+          "label": "Headline CPI YoY",
+          "series_id": "CPIAUCSL",
+          "features": [
+            "yoy"
+          ],
+          "unit": "percent",
+          "orientation": "target_distance",
+          "rationale": "Symmetric distance from the analytical 2% inflation reference.",
+          "weight": 0.3333333333333333,
+          "overall_weight": 0.05555555555555555,
+          "score": 50.0,
+          "raw_value": 4.0,
+          "domain_contribution": 16.666666666666664,
+          "mci_contribution": 2.7777777777777772,
+          "status": "available",
+          "source_observation_date": "2006-12-01",
+          "effective_month": "2006-12-01",
+          "feature_as_of_date": "2026-10-01",
+          "inputs": [
+            {
+              "feature_name": "yoy",
+              "value": 4.0
+            }
+          ],
+          "carried_forward": false,
+          "reference_sample_size": 0,
+          "reference_start_date": null,
+          "reference_end_date": null
+        },
+        {
+          "key": "core_cpi",
+          "label": "Core CPI YoY",
+          "series_id": "CPILFESL",
+          "features": [
+            "yoy"
+          ],
+          "unit": "percent",
+          "orientation": "target_distance",
+          "rationale": "Symmetric distance from the analytical 2% inflation reference.",
+          "weight": 0.3333333333333333,
+          "overall_weight": 0.05555555555555555,
+          "score": 50.0,
+          "raw_value": 4.0,
+          "domain_contribution": 16.666666666666664,
+          "mci_contribution": 2.7777777777777772,
+          "status": "available",
+          "source_observation_date": "2006-12-01",
+          "effective_month": "2006-12-01",
+          "feature_as_of_date": "2026-10-01",
+          "inputs": [
+            {
+              "feature_name": "yoy",
+              "value": 4.0
+            }
+          ],
+          "carried_forward": false,
+          "reference_sample_size": 0,
+          "reference_start_date": null,
+          "reference_end_date": null
+        },
+        {
+          "key": "core_pce",
+          "label": "Core PCE YoY",
+          "series_id": "PCEPILFE",
+          "features": [
+            "yoy"
+          ],
+          "unit": "percent",
+          "orientation": "target_distance",
+          "rationale": "Symmetric distance from the analytical 2% inflation reference.",
+          "weight": 0.3333333333333333,
+          "overall_weight": 0.05555555555555555,
+          "score": 50.0,
+          "raw_value": 4.0,
+          "domain_contribution": 16.666666666666664,
+          "mci_contribution": 2.7777777777777772,
+          "status": "available",
+          "source_observation_date": "2006-12-01",
+          "effective_month": "2006-12-01",
+          "feature_as_of_date": "2026-10-01",
+          "inputs": [
+            {
+              "feature_name": "yoy",
+              "value": 4.0
+            }
+          ],
+          "carried_forward": false,
+          "reference_sample_size": 0,
+          "reference_start_date": null,
+          "reference_end_date": null
+        }
+      ]
+    },
+    "growth": {
+      "name": "Growth Conditions Index",
+      "score": 49.99999999999999,
+      "weight": 0.16666666666666666,
+      "contribution": 8.333333333333332,
+      "as_of_date": "2026-10-01",
+      "components": [
+        {
+          "key": "real_gdp",
+          "label": "Real GDP QoQ annualized",
+          "series_id": "GDPC1",
+          "features": [
+            "qoq_annualized"
+          ],
+          "unit": "percent",
+          "orientation": "higher",
+          "rationale": "Higher real GDP growth describes greater aggregate output growth.",
+          "weight": 0.3333333333333333,
+          "overall_weight": 0.05555555555555555,
+          "score": 50.0,
+          "raw_value": 2.0,
+          "domain_contribution": 16.666666666666664,
+          "mci_contribution": 2.7777777777777772,
+          "status": "available",
+          "source_observation_date": "2006-07-01",
+          "effective_month": "2006-10-01",
+          "feature_as_of_date": "2026-10-01",
+          "inputs": [
+            {
+              "feature_name": "qoq_annualized",
+              "value": 2.0
+            }
+          ],
+          "carried_forward": true,
+          "reference_sample_size": 27,
+          "reference_start_date": "2000-04-01",
+          "reference_end_date": "2006-10-01"
+        },
+        {
+          "key": "cfnai",
+          "label": "CFNAI 3M average",
+          "series_id": "CFNAI",
+          "features": [
+            "moving_average_3m"
+          ],
+          "unit": "index points",
+          "orientation": "higher",
+          "rationale": "Higher CFNAI describes activity further above its trend reference.",
+          "weight": 0.3333333333333333,
+          "overall_weight": 0.05555555555555555,
+          "score": 50.0,
+          "raw_value": 0.1,
+          "domain_contribution": 16.666666666666664,
+          "mci_contribution": 2.7777777777777772,
+          "status": "available",
+          "source_observation_date": "2006-12-01",
+          "effective_month": "2006-12-01",
+          "feature_as_of_date": "2026-10-01",
+          "inputs": [
+            {
+              "feature_name": "moving_average_3m",
+              "value": 0.1
+            }
+          ],
+          "carried_forward": false,
+          "reference_sample_size": 84,
+          "reference_start_date": "2000-01-01",
+          "reference_end_date": "2006-12-01"
+        },
+        {
+          "key": "industrial_production",
+          "label": "Industrial production 3M annualized",
+          "series_id": "INDPRO",
+          "features": [
+            "annualized_3m"
+          ],
+          "unit": "percent",
+          "orientation": "higher",
+          "rationale": "Higher real industrial growth describes greater output growth.",
+          "weight": 0.3333333333333333,
+          "overall_weight": 0.05555555555555555,
+          "score": 50.0,
+          "raw_value": 2.0,
+          "domain_contribution": 16.666666666666664,
+          "mci_contribution": 2.7777777777777772,
+          "status": "available",
+          "source_observation_date": "2006-12-01",
+          "effective_month": "2006-12-01",
+          "feature_as_of_date": "2026-10-01",
+          "inputs": [
+            {
+              "feature_name": "annualized_3m",
+              "value": 2.0
+            }
+          ],
+          "carried_forward": false,
+          "reference_sample_size": 84,
+          "reference_start_date": "2000-01-01",
+          "reference_end_date": "2006-12-01"
+        }
+      ]
+    },
+    "consumer": {
+      "name": "Consumer Conditions Index",
+      "score": 50.0,
+      "weight": 0.16666666666666666,
+      "contribution": 8.333333333333332,
+      "as_of_date": "2026-10-01",
+      "components": [
+        {
+          "key": "real_consumption",
+          "label": "Real consumption 3M annualized",
+          "series_id": "PCEC96",
+          "features": [
+            "annualized_3m"
+          ],
+          "unit": "percent",
+          "orientation": "higher",
+          "rationale": "Higher inflation-adjusted consumption growth describes greater real spending growth.",
+          "weight": 0.5,
+          "overall_weight": 0.08333333333333333,
+          "score": 50.0,
+          "raw_value": 2.0,
+          "domain_contribution": 25.0,
+          "mci_contribution": 4.166666666666666,
+          "status": "available",
+          "source_observation_date": "2006-12-01",
+          "effective_month": "2006-12-01",
+          "feature_as_of_date": "2026-10-01",
+          "inputs": [
+            {
+              "feature_name": "annualized_3m",
+              "value": 2.0
+            }
+          ],
+          "carried_forward": false,
+          "reference_sample_size": 84,
+          "reference_start_date": "2000-01-01",
+          "reference_end_date": "2006-12-01"
+        },
+        {
+          "key": "real_income",
+          "label": "Real disposable income 3M annualized",
+          "series_id": "DSPIC96",
+          "features": [
+            "annualized_3m"
+          ],
+          "unit": "percent",
+          "orientation": "higher",
+          "rationale": "Higher real disposable income growth describes greater real income growth.",
+          "weight": 0.5,
+          "overall_weight": 0.08333333333333333,
+          "score": 50.0,
+          "raw_value": 2.0,
+          "domain_contribution": 25.0,
+          "mci_contribution": 4.166666666666666,
+          "status": "available",
+          "source_observation_date": "2006-12-01",
+          "effective_month": "2006-12-01",
+          "feature_as_of_date": "2026-10-01",
+          "inputs": [
+            {
+              "feature_name": "annualized_3m",
+              "value": 2.0
+            }
+          ],
+          "carried_forward": false,
+          "reference_sample_size": 84,
+          "reference_start_date": "2000-01-01",
+          "reference_end_date": "2006-12-01"
+        }
+      ]
+    },
+    "housing": {
+      "name": "Housing Conditions Index",
+      "score": 49.99999999999999,
+      "weight": 0.16666666666666666,
+      "contribution": 8.333333333333332,
+      "as_of_date": "2026-10-01",
+      "components": [
+        {
+          "key": "housing_starts",
+          "label": "Housing starts YoY",
+          "series_id": "HOUST",
+          "features": [
+            "yoy"
+          ],
+          "unit": "percent",
+          "orientation": "higher",
+          "rationale": "Higher starts growth describes expanding construction activity, not affordability.",
+          "weight": 0.3333333333333333,
+          "overall_weight": 0.05555555555555555,
+          "score": 50.0,
+          "raw_value": 2.0,
+          "domain_contribution": 16.666666666666664,
+          "mci_contribution": 2.7777777777777772,
+          "status": "available",
+          "source_observation_date": "2006-12-01",
+          "effective_month": "2006-12-01",
+          "feature_as_of_date": "2026-10-01",
+          "inputs": [
+            {
+              "feature_name": "yoy",
+              "value": 2.0
+            }
+          ],
+          "carried_forward": false,
+          "reference_sample_size": 84,
+          "reference_start_date": "2000-01-01",
+          "reference_end_date": "2006-12-01"
+        },
+        {
+          "key": "building_permits",
+          "label": "Building permits YoY",
+          "series_id": "PERMIT",
+          "features": [
+            "yoy"
+          ],
+          "unit": "percent",
+          "orientation": "higher",
+          "rationale": "Higher permits growth describes expanding permitted activity, not affordability.",
+          "weight": 0.3333333333333333,
+          "overall_weight": 0.05555555555555555,
+          "score": 50.0,
+          "raw_value": 2.0,
+          "domain_contribution": 16.666666666666664,
+          "mci_contribution": 2.7777777777777772,
+          "status": "available",
+          "source_observation_date": "2006-12-01",
+          "effective_month": "2006-12-01",
+          "feature_as_of_date": "2026-10-01",
+          "inputs": [
+            {
+              "feature_name": "yoy",
+              "value": 2.0
+            }
+          ],
+          "carried_forward": false,
+          "reference_sample_size": 84,
+          "reference_start_date": "2000-01-01",
+          "reference_end_date": "2006-12-01"
+        },
+        {
+          "key": "new_home_sales",
+          "label": "New home sales YoY",
+          "series_id": "HSN1F",
+          "features": [
+            "yoy"
+          ],
+          "unit": "percent",
+          "orientation": "higher",
+          "rationale": "Higher sales growth describes expanding new-home sales activity, not affordability.",
+          "weight": 0.3333333333333333,
+          "overall_weight": 0.05555555555555555,
+          "score": 50.0,
+          "raw_value": 2.0,
+          "domain_contribution": 16.666666666666664,
+          "mci_contribution": 2.7777777777777772,
+          "status": "available",
+          "source_observation_date": "2006-12-01",
+          "effective_month": "2006-12-01",
+          "feature_as_of_date": "2026-10-01",
+          "inputs": [
+            {
+              "feature_name": "yoy",
+              "value": 2.0
+            }
+          ],
+          "carried_forward": false,
+          "reference_sample_size": 84,
+          "reference_start_date": "2000-01-01",
+          "reference_end_date": "2006-12-01"
+        }
+      ]
+    },
+    "financial_conditions": {
+      "name": "Financial Conditions Index",
+      "score": 50.0,
+      "weight": 0.16666666666666666,
+      "contribution": 8.333333333333332,
+      "as_of_date": "2026-10-01",
+      "components": [
+        {
+          "key": "nfci",
+          "label": "NFCI level",
+          "series_id": "NFCI",
+          "features": [
+            "level"
+          ],
+          "unit": "index points",
+          "orientation": "lower",
+          "rationale": "Lower NFCI describes looser financial conditions relative to history, not economic welfare.",
+          "weight": 1.0,
+          "overall_weight": 0.16666666666666666,
+          "score": 50.0,
+          "raw_value": -0.2,
+          "domain_contribution": 50.0,
+          "mci_contribution": 8.333333333333332,
+          "status": "available",
+          "source_observation_date": "2006-12-01",
+          "effective_month": "2006-12-01",
+          "feature_as_of_date": "2026-10-01",
+          "inputs": [
+            {
+              "feature_name": "level",
+              "value": -0.2
+            }
+          ],
+          "carried_forward": false,
+          "reference_sample_size": 84,
+          "reference_start_date": "2000-01-01",
+          "reference_end_date": "2006-12-01"
+        }
+      ]
+    }
+  },
+  "as_of_date": "2026-10-09",
+  "latest_evaluated_month": "2006-12-31",
+  "component_as_of_dates": {
+    "labor": "2026-10-01",
+    "inflation": "2026-10-01",
+    "growth": "2026-10-01",
+    "consumer": "2026-10-01",
+    "housing": "2026-10-01",
+    "financial_conditions": "2026-10-01"
+  }
+}

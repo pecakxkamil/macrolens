@@ -208,6 +208,84 @@ export interface MacroStateResponse {
   }>;
 }
 
+export type MciDomainKey = keyof UsaEconomyNow["component_as_of_dates"];
+
+export interface MciComponent {
+  key: string;
+  label: string;
+  series_id: string;
+  features: string[];
+  unit: string;
+  orientation: "higher" | "lower" | "target_distance";
+  rationale: string;
+  weight: number;
+  overall_weight: number;
+  score: number | null;
+  raw_value: number | null;
+  domain_contribution: number | null;
+  mci_contribution: number | null;
+  status: "available" | "missing" | "insufficient_history";
+  source_observation_date: string | null;
+  effective_month: string | null;
+  feature_as_of_date: string | null;
+  inputs: Array<{ feature_name: string; value: number }>;
+  carried_forward: boolean;
+  reference_sample_size: number;
+  reference_start_date: string | null;
+  reference_end_date: string | null;
+}
+
+export interface MciDomain {
+  name: string;
+  score: number | null;
+  weight: number;
+  contribution: number | null;
+  as_of_date: string | null;
+  components: MciComponent[];
+}
+
+export interface MciMethodology {
+  methodology_version: "v1";
+  history_type: "current_vintage";
+  frequency: "monthly";
+  as_of_date: string;
+  domain_weights: Record<MciDomainKey, number>;
+  normalization: {
+    method: string;
+    formula: string;
+    lower_orientation: string;
+    reference: string;
+    minimum_monthly_samples: number;
+    minimum_quarterly_samples: number;
+    inflation_formula: string;
+    inflation_reference_percent: number;
+    inflation_zero_distance_pp: number;
+  };
+  alignment: { monthly_weekly: string; gdp: string; calendar: string };
+  missing_data: string;
+  current_selection: string;
+  limitation: string;
+}
+
+export interface MciCurrentResponse extends MciMethodology {
+  observation_date: string | null;
+  latest_evaluated_month: string | null;
+  mci: number | null;
+  component_as_of_dates: Record<MciDomainKey, string | null>;
+  domains: Record<MciDomainKey, MciDomain>;
+}
+
+export type MciHistoryObservation = {
+  observation_date: string;
+  mci: number | null;
+} & Record<MciDomainKey, number | null>;
+
+export interface MciHistoryResponse extends MciMethodology {
+  start_date: string | null;
+  end_date: string | null;
+  observations: MciHistoryObservation[];
+}
+
 export interface HistoryObservation {
   observation_date: string;
   value: number | null;
@@ -425,6 +503,18 @@ function historyQuery({ startDate, endDate }: HistoryOptions): string {
   if (startDate) params.set("start_date", startDate);
   if (endDate) params.set("end_date", endDate);
   return params.size ? `?${params}` : "";
+}
+
+export async function fetchMciCurrent(signal?: AbortSignal): Promise<MciCurrentResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/economy/us/mci`, { signal });
+  if (!response.ok) throw new Error("Unable to load Macro Conditions Index.");
+  return response.json();
+}
+
+export async function fetchMciHistory(options: HistoryOptions = {}): Promise<MciHistoryResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/economy/us/mci/history${historyQuery(options)}`, { signal: options.signal });
+  if (!response.ok) throw new Error("Unable to load Macro Conditions Index history.");
+  return response.json();
 }
 
 export async function fetchMacroState(signal?: AbortSignal): Promise<MacroStateResponse> {

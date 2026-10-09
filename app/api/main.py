@@ -16,6 +16,7 @@ from app.analytics import history
 from app.analytics import housing_snapshot
 from app.analytics import inflation_snapshot
 from app.analytics import labor_snapshot
+from app.analytics import macro_conditions_index
 from app.analytics import macro_state
 from app.analytics import release_calendar
 from app.analytics import relationships
@@ -29,6 +30,7 @@ SNAPSHOT_UNAVAILABLE_DETAIL = "Current macro snapshot is temporarily unavailable
 HISTORY_UNAVAILABLE_DETAIL = "Historical chart data is temporarily unavailable."
 CATALOG_UNAVAILABLE_DETAIL = "Indicator catalog is temporarily unavailable."
 CALENDAR_UNAVAILABLE_DETAIL = "Macro calendar is temporarily unavailable."
+MCI_UNAVAILABLE_DETAIL = "Macro Conditions Index is temporarily unavailable."
 RELATIONSHIPS_UNAVAILABLE_DETAIL = "Macro relationships are temporarily unavailable."
 DEVELOPMENT_CORS_ORIGINS = (
     "http://localhost:5173",
@@ -113,6 +115,19 @@ def _relationships_response(loader: Callable[[], dict]) -> dict:
         ) from error
 
 
+def _mci_response(loader: Callable[[], dict]) -> dict:
+    try:
+        return jsonable_encoder(loader())
+    except history.InvalidDateRangeError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
+    except Exception as error:
+        logger.exception("Macro Conditions Index unavailable: %s", error)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=MCI_UNAVAILABLE_DETAIL,
+        ) from error
+
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
@@ -121,6 +136,19 @@ def health() -> dict:
 @app.get("/api/v1/economy/us")
 def get_us_economy_now() -> dict:
     return _current_snapshot(usa_economy_now.build_usa_economy_now)
+
+
+@app.get("/api/v1/economy/us/mci")
+def get_macro_conditions_index() -> dict:
+    return _mci_response(macro_conditions_index.get_current_index)
+
+
+@app.get("/api/v1/economy/us/mci/history")
+def get_macro_conditions_index_history(
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> dict:
+    return _mci_response(lambda: macro_conditions_index.get_index_history(start_date, end_date))
 
 
 @app.get("/api/v1/economy/us/state")

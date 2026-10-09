@@ -597,3 +597,171 @@ directional evidence without causal interpretation or market predictions.
 Current-vintage limitations continue to apply: stored values may include
 revisions, and this view does not reconstruct what was known at a historical
 date. Macro State v1 has no historical or ALFRED reconstruction.
+
+## Macro Conditions Index v1
+
+### Definition and interpretation
+
+The Macro Conditions Index (MCI) is a monthly, descriptive 0-100 composite of six
+domain subindices. Its methodology version is `v1`. The 50 reference denotes
+historically typical activity conditions or the specified inflation-stability
+reference distance; above 50 indicates broader relatively favorable/strong
+conditions, and below 50 broader relatively weak conditions. These are
+analytical comparisons, not economy regime classifications, economic welfare
+measures, or predictions.
+
+MCI does not model recession probability, market returns, or trading decisions.
+No parameters are fitted, optimized, or chosen using asset performance. No
+market asset overlays are included.
+
+### Explicit components and orientation
+
+Only the following 15 components are included. Inputs are existing stored
+MacroLens v1 computed features; the index does not recompute their methodology.
+
+| Domain | Component / source | Raw component value | Orientation | Within-domain weight |
+| --- | --- | --- | --- | --- |
+| Labor | PAYEMS payroll momentum | monthly_change_ma_3m - monthly_change_ma_6m | Higher | 1/3 |
+| Labor | UNRATE unemployment change | change_3m (percentage points) | Lower | 1/3 |
+| Labor | ICSA initial claims momentum | moving_average_4w - moving_average_13w | Lower | 1/3 |
+| Inflation | CPIAUCSL headline CPI | yoy (%) | Distance from 2% | 1/3 |
+| Inflation | CPILFESL core CPI | yoy (%) | Distance from 2% | 1/3 |
+| Inflation | PCEPILFE core PCE | yoy (%) | Distance from 2% | 1/3 |
+| Growth | GDPC1 real GDP | qoq_annualized (%) | Higher | 1/3 |
+| Growth | CFNAI activity | moving_average_3m | Higher | 1/3 |
+| Growth | INDPRO production | annualized_3m (%) | Higher | 1/3 |
+| Consumer | PCEC96 real consumption | annualized_3m (%) | Higher | 1/2 |
+| Consumer | DSPIC96 real disposable income | annualized_3m (%) | Higher | 1/2 |
+| Housing | HOUST housing starts | yoy (%) | Higher | 1/3 |
+| Housing | PERMIT building permits | yoy (%) | Higher | 1/3 |
+| Housing | HSN1F new home sales | yoy (%) | Higher | 1/3 |
+| Financial Conditions | NFCI | level | Lower | 1 |
+
+The two labor differences preserve the existing payroll/claims momentum
+comparisons. A declining unemployment-rate change has the same orientation as
+existing unemployment momentum. Higher real output, consumption, income, and
+housing activity growth describes expansion in those particular activities.
+Housing uses growth rather than trending raw levels; it does not score prices,
+affordability, housing welfare, or whether increasing construction is desirable.
+NFCI's lower orientation means looser conditions relative to history; it does
+not assert that ever-looser finance improves economic welfare. Policy rates,
+Treasury yields, yield-curve shape, and mortgage rates are omitted because their
+orientation is ambiguous. Nominal retail sales is omitted from consumer scoring.
+
+### Historical activity normalization
+
+For each non-inflation component, first form one valid component observation per
+eligible calendar month (quarterly GDP is the exception described below). Let
+`x_t` be the current raw component and `H_t` the expanding reference containing
+only component observations through that eligible month, including `x_t`.
+There are no future observations in this reference.
+
+With `N = size(H_t)`, the midrank percentile is:
+
+`P_t = 100 * (count(x in H_t where x < x_t) + 0.5 * count(x in H_t where x = x_t)) / N`
+
+Higher-oriented components use `S_t = P_t`; lower-oriented components use
+`S_t = 100 - P_t`. Scores are bounded to 0-100. A tied constant history and a
+symmetric median observation score 50. The inclusion of half the tied values
+avoids assigning an extreme score to a constant history.
+
+Require at least **60 distinct eligible monthly component observations**, or
+**20 distinct eligible quarterly GDP observations**, before an activity score
+is available. These fixed v1 warm-up requirements approximate five years of
+reference observations; gaps can lengthen the calendar period. Carried GDP
+values do not increase the quarterly reference count. Earlier warm-up scores
+are null. The expanding reference starts at the first stored valid component
+observation, so differing stored history coverage can affect normalization.
+
+### Inflation stability reference
+
+Inflation is not assigned a simple lower-is-better orientation. For each of
+headline CPI YoY, core CPI YoY, and core PCE YoY:
+
+`S_t = max(0, 100 * (1 - abs(inflation_yoy_t - 2) / 4))`
+
+The fixed analytical reference is **2%** and the zero-score distance is **4
+percentage points**. Thus 2% scores 100; 0% and 4% score 50; -2% and 6% score 0.
+Larger deviations also score 0. Both deflation and inflation above the reference
+reduce stability scores. The 4pp scale is an explicit v1 design constant,
+not an estimated economic boundary or a parameter fitted to market outcomes.
+The 2% reference is applied consistently for comparison across these measures;
+it is not a claim that CPI and core measures share an official policy target.
+
+Inflation needs a finite current value but no historical warm-up. Its score of
+50 is a specified reference distance, not an empirical median. Consequently the
+overall index is not forced to have a historical median of exactly 50.
+
+### Equal domains, contributions, and missing data
+
+Components are equally weighted within their domain. Every domain weight is
+**1/6**, regardless of its number of components:
+
+`Domain_d = sum_i(component_score_i / component_count_d)`
+
+`MCI = sum_d(Domain_d / 6)`
+
+A component's domain contribution is `score * within_domain_weight`; its MCI
+contribution is `score * within_domain_weight / 6`. A domain's MCI contribution
+is `domain_score / 6`. The current API returns raw values, source inputs,
+orientations, reference sample counts/dates, weights, and these contributions.
+Scores are calculated with full numerical precision; display rounding does not
+change the calculation.
+
+All configured components are required for a domain score; all six domains are
+required for MCI. Missing, nonfinite, unmatched, or insufficient-history inputs
+produce null scores. Existing weights remain fixed. No components/domains are
+dropped, reweighted, interpolated, or imputed as 50. Available component/domain
+scores remain visible even when their containing composite is unavailable.
+
+### Frequency alignment and GDP carry-forward
+
+Output rows use **calendar month-end observation dates** and include completed
+months only. For monthly sources, use the latest finite observation within that
+month. For weekly claims and NFCI, select the latest finite component observation
+within that month, not an average of weekly percentiles. Components needing two
+features require an exact shared source observation date before subtraction.
+There is one normalization sample per month, not one per week. Monthly and
+weekly components are never carried into a later month.
+
+FRED GDP observation dates denote quarter starts. A quarterly GDP feature is
+eligible in the month immediately **after the quarter ends**: January-quarter
+GDP first enters April, April-quarter GDP enters July, and so on. Normalize each
+new GDP observation against eligible quarterly observations and then carry
+**both its raw value and its score** for that month and at most two subsequent
+months. Carry does not create extra reference observations. This is an explicit,
+conservative period-alignment convention, not reconstructed publication timing
+or interpolation. If a subsequent quarter is missing, the older value expires
+after its three-month eligibility window and the growth score becomes null.
+
+The current response chooses the most recent complete MCI month. It also exposes
+`latest_evaluated_month` and the selected `observation_date` so an older complete
+month cannot silently appear current. If no complete MCI exists, return the latest
+evaluated row with null MCI and its available decomposition. Empty histories
+return null current scores and an empty history.
+
+History range filters are applied after building the full expanding reference.
+Changing `start_date` therefore does not reset normalization. `end_date` limits
+eligible month-end rows, and future dates are capped at today's calculation
+cutoff. A mid-month endpoint does not include that incomplete endpoint month.
+
+### Current-vintage limitations and API
+
+Both endpoints expose `history_type = "current_vintage"` and
+`methodology_version = "v1"`:
+
+- `GET /api/v1/economy/us/mci`
+- `GET /api/v1/economy/us/mci/history?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`
+
+These endpoints are read-only and accept no methodology tuning parameters.
+History reads the latest stored feature value for each economic observation
+date. Revisions can change earlier raw values and their expanding reference
+distribution, so historical index values may differ from real-time calculations.
+Economic observation periods, not actual historical publication availability,
+drive alignment. Feature freshness dates can be later than an index observation
+month because of revisions.
+
+The calculation excludes future economic observations from each row's expanding
+reference; it does **not** reconstruct historical vintages or all release lags.
+The historical index must not be presented as an investable/backtest signal.
+ALFRED reconstruction and market overlays remain outside MCI v1.

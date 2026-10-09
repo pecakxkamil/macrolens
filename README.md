@@ -95,6 +95,8 @@ Available routes:
 - `GET /health`
 - `GET /api/v1/economy/us`
 - `GET /api/v1/economy/us/state`
+- `GET /api/v1/economy/us/mci`
+- `GET /api/v1/economy/us/mci/history?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`
 - `GET /api/v1/economy/us/labor`
 - `GET /api/v1/economy/us/inflation`
 - `GET /api/v1/economy/us/growth`
@@ -138,6 +140,7 @@ Development URLs:
 - API docs: `http://127.0.0.1:8000/docs`
 - Overview: `http://127.0.0.1:5173/#/`
 - Macro State: `http://127.0.0.1:5173/#/state`
+- Macro Index: `http://127.0.0.1:5173/#/macro-index`
 - Charts: `http://127.0.0.1:5173/#/charts`
 - Indicators: `http://127.0.0.1:5173/#/indicators`
 - Calendar: `http://127.0.0.1:5173/#/calendar`
@@ -166,6 +169,28 @@ rules documented in [the methodology](docs/methodology.md#macro-state-v1).
 They do not imply causation or forecasts. The current-vintage limitation still
 applies: the state uses latest stored values, including revisions, and does not
 reconstruct historical knowledge. Historical Macro State is not implemented.
+
+## Macro Conditions Index v1
+
+Macro Index (`#/macro-index`) shows a descriptive 0-100 monthly composite and
+six equally weighted domain subindices. Fifteen explicit components use existing
+stored feature histories. Activity components use expanding historical midrank
+percentiles; inflation uses a symmetric distance-from-2% reference score.
+The page exposes raw values, normalization, weights, contributions, and
+freshness, alongside a historical chart and optional domain lines.
+
+Missing inputs retain fixed weights and leave scores unavailable. Activity
+scores need 60 monthly observations, or 20 quarterly GDP observations. GDP is
+eligible after its quarter ends and may be carried for two additional months.
+The current index identifies the latest complete month and the latest evaluated
+month. Full formulas, orientations, and coverage rules are in
+[the methodology](docs/methodology.md#macro-conditions-index-v1).
+
+MCI uses current-vintage histories that include revisions. It does not recreate
+historical publication availability and must not be treated as an investable or
+backtest signal. It provides no market forecast, recession probability, or asset
+overlay. Existing feature ingestion/computation supplies the data; no index
+table, migration, or new ingestion is required.
 
 ## Roadmap
 

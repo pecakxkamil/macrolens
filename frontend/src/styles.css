@@ -833,3 +833,36 @@ h3 {
 .macro-state-cross-card > div > div { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin: .55rem 0; font-size: .84rem; color: #cbd5e1; }
 .macro-state-cross-card p { color: #aebaca; font-size: .84rem; margin: .8rem 0 0; }
 @media (max-width: 520px) { .macro-state-grid { grid-template-columns: 1fr; } .macro-state-readings { grid-template-columns: 1fr; } }
+
+.macro-index-header { margin-bottom: 1.3rem; }
+.mci-current, .mci-domain-card, .mci-history, .mci-methodology { background: #11161d; border: 1px solid #263241; border-radius: 8px; padding: 1.2rem; margin: 1rem 0; }
+.mci-current > div:first-child { display: flex; flex-wrap: wrap; align-items: baseline; gap: 1rem; }
+.mci-current > div:first-child > span { color: #b6c5d8; font-size: 1.1rem; }
+.mci-current strong { color: #dce8f8; font-size: clamp(2rem, 4vw, 3rem); }
+.mci-scale { background: linear-gradient(90deg, #243348, #4d6b92, #aac5e8); border-radius: 5px; height: 10px; margin-top: 1.1rem; position: relative; }
+.mci-scale > span { background: #f3f7fc; border: 2px solid #1b2534; border-radius: 4px; height: 22px; position: absolute; top: -6px; width: 7px; transform: translateX(-50%); }
+.mci-scale-labels { display: flex; justify-content: space-between; margin: .55rem 0 1rem; color: #9fadc0; font-size: .8rem; }
+.mci-current p, .mci-domain-card p, .mci-methodology p, .mci-history-note { color: #aebaca; font-size: .84rem; line-height: 1.6; }
+.mci-current p:last-child { margin-bottom: 0; }
+.mci-domain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 1rem; }
+.mci-domain-card { margin: 0; min-width: 0; }
+.mci-domain-card h3 { font-size: 1rem; margin-bottom: .5rem; }
+.mci-domain-score { color: #c8daf1; font-size: 1.7rem; }
+.mci-table-wrap { overflow-x: auto; margin: 1rem 0; }
+.mci-domain-card table { border-collapse: collapse; text-align: left; width: 100%; min-width: 430px; font-size: .78rem; }
+.mci-domain-card caption { color: #aebaca; font-size: .75rem; text-align: left; margin-bottom: .5rem; }
+.mci-domain-card th, .mci-domain-card td { border-bottom: 1px solid #263241; padding: .55rem .4rem; vertical-align: top; }
+.mci-domain-card thead { color: #aabbd0; }
+.mci-domain-card tbody th { font-weight: 500; }
+.mci-domain-card td small { display: block; color: #aebaca; padding-top: .3rem; }
+.mci-component-details { border-bottom: 1px solid #263241; font-size: .8rem; padding: .65rem 0; }
+.mci-component-details summary { color: #bdd0e9; cursor: pointer; }
+.mci-component-details p { margin: .6rem 0 0; }
+.mci-component-details ul { color: #aebaca; line-height: 1.6; padding-left: 1.2rem; }
+.mci-history h2, .mci-methodology h2 { font-size: 1.05rem; }
+.mci-series-controls { display: flex; flex-wrap: wrap; gap: .6rem 1rem; border: 0; padding: .8rem 0; margin: .6rem 0; }
+.mci-series-controls legend { color: #aebaca; font-size: .82rem; }
+.mci-series-controls label { display: flex; align-items: center; gap: .35rem; font-size: .85rem; cursor: pointer; }
+.mci-series-controls input { accent-color: #8eadd1; }
+.mci-history-plot { width: 100%; height: 340px; }
+.mci-methodology code { background: #1b2635; color: #cbdcf1; padding: .15rem .3rem; border-radius: 3px; overflow-wrap: anywhere; }
