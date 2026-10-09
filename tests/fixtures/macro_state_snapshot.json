@@ -1,0 +1,271 @@
+{
+  "as_of_date": "2026-09-04",
+  "component_as_of_dates": {
+    "labor": "2026-09-01",
+    "inflation": "2026-09-03",
+    "growth": "2026-08-30",
+    "consumer": "2026-09-02",
+    "housing": "2026-08-28",
+    "financial_conditions": "2026-09-04"
+  },
+  "labor": {
+    "as_of_date": "2026-09-01",
+    "overall_momentum": "mixed",
+    "payrolls": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-09-01",
+      "monthly_change": 180,
+      "monthly_change_ma_3m": 220,
+      "monthly_change_ma_6m": 200,
+      "momentum": "improving"
+    },
+    "unemployment": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-09-01",
+      "level": 4.1,
+      "change_3m": -0.1,
+      "momentum": "stable"
+    },
+    "initial_claims": {
+      "observation_date": "2026-08-30",
+      "feature_as_of_date": "2026-09-01",
+      "moving_average_4w": 240000,
+      "moving_average_13w": 220000,
+      "momentum": "weakening"
+    },
+    "continuing_claims": {
+      "observation_date": "2026-08-23",
+      "feature_as_of_date": "2026-09-01",
+      "moving_average_4w": 1850000,
+      "moving_average_13w": 1820000,
+      "momentum": "weakening"
+    },
+    "job_openings": {
+      "observation_date": "2026-07-01",
+      "feature_as_of_date": "2026-09-01",
+      "level": 7400,
+      "change_3m": -100,
+      "yoy": -2,
+      "direction": "falling"
+    },
+    "labor_force_participation": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-09-01",
+      "level": 62.5,
+      "change_3m": 0.1,
+      "moving_average_3m": 62.4,
+      "direction": "rising"
+    },
+    "average_hourly_earnings": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-09-01",
+      "mom": 0.3,
+      "yoy": 4.1,
+      "annualized_3m": 3.8
+    }
+  },
+  "inflation": {
+    "as_of_date": "2026-09-03",
+    "headline_cpi": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-09-03",
+      "mom": 0.2,
+      "yoy": 3.712958105,
+      "annualized_3m": 2.5,
+      "momentum": "decelerating"
+    },
+    "core_cpi": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-09-03",
+      "mom": 0.3,
+      "yoy": 3.2,
+      "annualized_3m": 3.5,
+      "momentum": "accelerating"
+    },
+    "headline_pce": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-09-03",
+      "mom": 0.2,
+      "yoy": 2.8,
+      "annualized_3m": 2.4,
+      "momentum": "decelerating"
+    },
+    "core_pce": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-09-03",
+      "mom": 0.1,
+      "yoy": 2.9,
+      "annualized_3m": 2.0,
+      "momentum": "decelerating"
+    },
+    "employment_cost_index": {
+      "observation_date": "2026-07-01",
+      "feature_as_of_date": "2026-09-03",
+      "qoq": 0.9,
+      "yoy": 3.8
+    },
+    "average_hourly_earnings": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-09-03",
+      "mom": 0.3,
+      "yoy": 4.1,
+      "annualized_3m": 3.8
+    }
+  },
+  "growth": {
+    "as_of_date": "2026-08-30",
+    "real_gdp": {
+      "observation_date": "2026-07-01",
+      "feature_as_of_date": "2026-08-30",
+      "qoq_annualized": 3.0,
+      "yoy": 2.0,
+      "momentum": "accelerating"
+    },
+    "cfnai": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-08-30",
+      "level": 0.2,
+      "moving_average_3m": -0.1,
+      "position": "below_trend"
+    },
+    "industrial_production": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-08-30",
+      "mom": 0.3,
+      "yoy": 3.0,
+      "annualized_3m": 4.0,
+      "momentum": "accelerating"
+    },
+    "capacity_utilization": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-08-30",
+      "level": 78,
+      "change_3m": -0.2,
+      "moving_average_3m": 77.5,
+      "direction": "falling"
+    },
+    "durable_goods_orders": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-08-30",
+      "mom": 0.5,
+      "yoy": 2.6,
+      "moving_average_3m": 290000,
+      "latest_direction": "rising"
+    }
+  },
+  "consumer": {
+    "as_of_date": "2026-09-02",
+    "retail_sales": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-09-02",
+      "mom": 0.3,
+      "yoy": 5.2,
+      "annualized_3m": 4.0,
+      "momentum": "accelerating",
+      "series_type": "nominal"
+    },
+    "real_consumption": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-09-02",
+      "mom": 0.2,
+      "yoy": 2.1,
+      "annualized_3m": 3.0,
+      "momentum": "stable"
+    },
+    "real_disposable_income": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-09-02",
+      "mom": 0.2,
+      "yoy": 2.4,
+      "annualized_3m": 2.8,
+      "momentum": "accelerating"
+    },
+    "saving_rate": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-09-02",
+      "level": 4.5,
+      "change_3m": 0.2,
+      "moving_average_3m": 4.3,
+      "direction": "rising"
+    }
+  },
+  "housing": {
+    "as_of_date": "2026-08-28",
+    "housing_starts": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-08-28",
+      "level": 1400,
+      "mom": 1,
+      "yoy": 5,
+      "moving_average_3m": 1380,
+      "direction": "rising"
+    },
+    "building_permits": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-08-28",
+      "level": 1390,
+      "mom": -1,
+      "yoy": 3,
+      "moving_average_3m": 1370,
+      "direction": "falling"
+    },
+    "new_home_sales": {
+      "observation_date": "2026-08-01",
+      "feature_as_of_date": "2026-08-28",
+      "level": 650,
+      "mom": 0,
+      "yoy": 2,
+      "moving_average_3m": 640,
+      "direction": "stable"
+    },
+    "mortgage_rate": {
+      "observation_date": "2026-08-28",
+      "feature_as_of_date": "2026-08-28",
+      "level": 6.5,
+      "change_4w": 0.0899999999999999,
+      "change_13w": 0.5,
+      "moving_average_4w": 6.35,
+      "direction": "rising"
+    }
+  },
+  "financial_conditions": {
+    "as_of_date": "2026-09-04",
+    "fed_funds_rate": {
+      "observation_date": "2026-09-04",
+      "feature_as_of_date": "2026-09-04",
+      "level": 5.33
+    },
+    "treasury_2y": {
+      "observation_date": "2026-09-04",
+      "feature_as_of_date": "2026-09-04",
+      "level": 4.0
+    },
+    "treasury_10y": {
+      "observation_date": "2026-09-04",
+      "feature_as_of_date": "2026-09-04",
+      "level": 4.5
+    },
+    "real_yield_10y": {
+      "observation_date": "2026-09-04",
+      "feature_as_of_date": "2026-09-04",
+      "level": 2.1
+    },
+    "yield_curve_2s10s": {
+      "observation_date": "2026-09-04",
+      "feature_as_of_date": "2026-09-04",
+      "dgs2": 4.0,
+      "dgs10": 4.5,
+      "spread": 0.0899999999999999,
+      "shape": "positive"
+    },
+    "nfci": {
+      "observation_date": "2026-09-04",
+      "feature_as_of_date": "2026-09-04",
+      "level": 0.12,
+      "change_4w": 0.1,
+      "moving_average_4w": 0.05,
+      "position": "looser_than_average",
+      "direction": "tightening"
+    }
+  }
+}

@@ -16,6 +16,7 @@ from app.analytics import history
 from app.analytics import housing_snapshot
 from app.analytics import inflation_snapshot
 from app.analytics import labor_snapshot
+from app.analytics import macro_state
 from app.analytics import release_calendar
 from app.analytics import relationships
 from app.analytics import series_catalog
@@ -120,6 +121,11 @@ def health() -> dict:
 @app.get("/api/v1/economy/us")
 def get_us_economy_now() -> dict:
     return _current_snapshot(usa_economy_now.build_usa_economy_now)
+
+
+@app.get("/api/v1/economy/us/state")
+def get_macro_state() -> dict:
+    return _current_snapshot(macro_state.build_macro_state)
 
 
 @app.get("/api/v1/economy/us/labor")

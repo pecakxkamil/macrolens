@@ -94,6 +94,7 @@ Available routes:
 
 - `GET /health`
 - `GET /api/v1/economy/us`
+- `GET /api/v1/economy/us/state`
 - `GET /api/v1/economy/us/labor`
 - `GET /api/v1/economy/us/inflation`
 - `GET /api/v1/economy/us/growth`
@@ -136,6 +137,7 @@ Development URLs:
 - API: `http://127.0.0.1:8000`
 - API docs: `http://127.0.0.1:8000/docs`
 - Overview: `http://127.0.0.1:5173/#/`
+- Macro State: `http://127.0.0.1:5173/#/state`
 - Charts: `http://127.0.0.1:5173/#/charts`
 - Indicators: `http://127.0.0.1:5173/#/indicators`
 - Calendar: `http://127.0.0.1:5173/#/calendar`
@@ -150,6 +152,20 @@ Refresh the Calendar with `python -m app.ingestion.sync_release_calendar`. The c
 Calendar time metadata is a small, explicit API mapping based on the official [BLS schedule](https://www.bls.gov/schedule/2026/home.htm), [BEA schedule](https://www.bea.gov/news/schedule/full), and [Census construction schedule](https://www.census.gov/construction/soc/schedule.html). FRED does not provide or guarantee these times, and individual publication schedules may change. The mapping uses `America/New_York`, not a fixed UTC offset. It requires no schema migration or calendar resync; syncing still refreshes release dates.
 
 Relationships compares two or three configured histories. Omit a feature parameter to use raw observations; a feature parameter selects an existing stored transformation. The API groups observations at the lowest selected frequency and returns the latest non-null observation within each period. It reports Pearson correlation only for periods where both series have values. Indexed mode uses 100 at the first shared nonzero period and changes display values only. See [relationship methodology](docs/methodology.md#macro-relationships-v1) for details. These comparisons describe historical co-movement, not causation or forecasts.
+
+## Macro State v1
+
+Macro State (`#/state`, `GET /api/v1/economy/us/state`) is a descriptive synthesis
+of the existing USA Economy Now snapshot. It shows selected readings, the existing
+classifications, deterministic evidence, and freshness for each of the six domains.
+The existing overall labor momentum is preserved. It creates no single economic
+score and does not predict recession or markets.
+
+Cross-currents highlight conflicting directional evidence using three explicit
+rules documented in [the methodology](docs/methodology.md#macro-state-v1).
+They do not imply causation or forecasts. The current-vintage limitation still
+applies: the state uses latest stored values, including revisions, and does not
+reconstruct historical knowledge. Historical Macro State is not implemented.
 
 ## Roadmap
 

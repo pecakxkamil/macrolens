@@ -562,3 +562,38 @@ For two or three selected histories, the backend chooses the lowest frequency: q
 The response keeps periods with at least one selected value. Each pair's `overlapping_observation_count` counts only periods with both values. Pearson correlation is computed from those paired values only; it is null with fewer than three pairs or if either side has zero variance. With three indicators, the API reports all three pairwise comparisons. Date filters are passed to the existing history loaders before grouping.
 
 Actual-value mode uses separate chart axes for differing units. Indexed mode uses 100 at the first period where all selected values are present and nonzero; every displayed value is divided by its own baseline value and multiplied by 100. If no shared nonzero baseline exists, indexed mode is unavailable. The index is a visual comparison of relative changes, not a measure of economic strength. Correlation describes historical co-movement, not causation or future market moves.
+
+## Macro State v1
+
+Macro State is a descriptive synthesis of the six existing USA Economy Now domain
+snapshots. It projects their stored feature readings and classifications without
+recomputing economic features or changing domain methodology. The API preserves
+the top-level date, component dates, and each selected reading's observation and
+feature dates. Domain as-of dates describe snapshot freshness; they are not a shared
+publication date for all underlying observations.
+
+Labor retains its existing overall momentum based on payrolls, unemployment, and
+initial claims. Other domains receive no overall classification. Retail sales
+remains explicitly nominal. Inflation, growth, housing, and financial directions
+retain their original meaning; rising, falling, accelerating, and decelerating
+receive contextual styling rather than a good/bad judgment.
+
+Evidence statements are fixed templates over existing classifications. The three
+curated cross-current rules require both classifications to match exactly:
+
+- Labor overall momentum is `improving` and payroll momentum is `weakening`.
+- Real GDP momentum is `decelerating` and industrial production momentum is `accelerating`.
+- Housing starts direction is `falling` and building permits direction is `rising`.
+
+No other combinations trigger these rules, including stable states or the
+reverse combination. Each detected cross-current returns its domain, descriptive
+summary, and both underlying classifications as structured evidence. An empty
+list means none of these curated rules matched; it does not establish agreement
+across all macro indicators.
+
+Macro State creates no single economic score, recession probability, economic
+regime, trading signal, or forecast. Cross-currents highlight conflicting
+directional evidence without causal interpretation or market predictions.
+Current-vintage limitations continue to apply: stored values may include
+revisions, and this view does not reconstruct what was known at a historical
+date. Macro State v1 has no historical or ALFRED reconstruction.
