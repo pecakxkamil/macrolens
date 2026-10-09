@@ -1,5 +1,5 @@
-import { createContext, lazy, Suspense, useContext, useEffect, useId, useState } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
+import { createContext, lazy, Suspense, useContext, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import {
   fetchDashboardHistory,
   fetchUsaEconomyNow,
@@ -21,12 +21,14 @@ import {
 import {
   metricMetadata,
   type MetricKey,
-  type MetricMetadata,
 } from "./metricMetadata";
+
+import { InfoTooltip } from "./components/InfoTooltip";
 
 const ChartsPage = lazy(() => import("./charts/ChartsPage").then((module) => ({ default: module.ChartsPage })));
 const RelationshipsPage = lazy(() => import("./relationships/RelationshipsPage").then((module) => ({ default: module.RelationshipsPage })));
 const IndicatorsPage = lazy(() => import("./indicators/IndicatorsPage").then((module) => ({ default: module.IndicatorsPage })));
+const MacroStatePage = lazy(() => import("./state/MacroStatePage").then((module) => ({ default: module.MacroStatePage })));
 const CalendarPage = lazy(() => import("./calendar/CalendarPage").then((module) => ({ default: module.CalendarPage })));
 
 const freshnessLabels: Array<[keyof UsaEconomyNow["component_as_of_dates"], string]> = [
@@ -135,39 +137,6 @@ function ClassificationPill({ value }: { value: string }) {
   return (
     <span className={`classification-pill classification-pill--${tone}`}>
       {formatClassification(value)}
-    </span>
-  );
-}
-
-function InfoTooltip({ metricKey }: { metricKey: MetricKey }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const tooltipId = useId();
-  const metadata: MetricMetadata = metricMetadata[metricKey];
-
-  function handleKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
-    if (event.key === "Escape") {
-      setIsOpen(false);
-      event.currentTarget.blur();
-    }
-  }
-
-  return (
-    <span className={`info-tooltip${isOpen ? " info-tooltip--open" : ""}`}>
-      <button
-        type="button"
-        className="info-tooltip__trigger"
-        aria-label={`About ${metadata.label}`}
-        aria-describedby={tooltipId}
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen((current) => !current)}
-        onKeyDown={handleKeyDown}
-      >
-        i
-      </button>
-      <span id={tooltipId} role="tooltip" className="info-tooltip__content">
-        <span>{metadata.description}</span>
-        {metadata.methodology ? <span>{metadata.methodology}</span> : null}
-      </span>
     </span>
   );
 }
@@ -682,7 +651,8 @@ function Overview() {
   );
 }
 
-function currentSection(hash: string): "overview" | "charts" | "relationships" | "indicators" | "calendar" {
+function currentSection(hash: string): "overview" | "state" | "charts" | "relationships" | "indicators" | "calendar" {
+  if (hash === "#/state" || hash === "#/state/") return "state";
   if (hash === "#/charts" || hash === "#/charts/") return "charts";
   if (hash === "#/relationships" || hash === "#/relationships/") return "relationships";
   if (hash === "#/indicators" || hash === "#/indicators/" || hash.startsWith("#/indicators/")) return "indicators";
@@ -708,12 +678,14 @@ export default function App() {
     <>
       <nav className="app-navigation" aria-label="Main navigation">
         <a href="#/" aria-current={section === "overview" ? "page" : undefined}>Overview</a>
+        <a href="#/state" aria-current={section === "state" ? "page" : undefined}>Macro State</a>
         <a href="#/charts" aria-current={section === "charts" ? "page" : undefined}>Charts</a>
         <a href="#/relationships" aria-current={section === "relationships" ? "page" : undefined}>Relationships</a>
         <a href="#/indicators" aria-current={section === "indicators" ? "page" : undefined}>Indicators</a>
         <a href="#/calendar" aria-current={section === "calendar" ? "page" : undefined}>Calendar</a>
       </nav>
-      {section === "charts" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading charts...</div>}><ChartsPage /></Suspense></div>
+      {section === "state" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading Macro State...</div>}><MacroStatePage /></Suspense></div>
+        : section === "charts" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading charts...</div>}><ChartsPage /></Suspense></div>
         : section === "relationships" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading relationships...</div>}><RelationshipsPage /></Suspense></div>
         : section === "indicators" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading indicators...</div>}><IndicatorsPage seriesId={seriesId} /></Suspense></div>
         : section === "calendar" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading calendar...</div>}><CalendarPage /></Suspense></div>

@@ -181,6 +181,33 @@ export interface UsaEconomyNow {
   financial_conditions: FinancialConditionsSnapshot;
 }
 
+export interface MacroStateReading extends DatedComponent {
+  key: string;
+  label: string;
+  value: number;
+  unit: string;
+  classification?: string;
+}
+
+export interface MacroStateDomain {
+  name: string;
+  as_of_date: string;
+  readings: MacroStateReading[];
+  classifications: Record<string, string>;
+  evidence: string[];
+}
+
+export interface MacroStateResponse {
+  as_of_date: string;
+  component_as_of_dates: UsaEconomyNow["component_as_of_dates"];
+  domains: Record<keyof UsaEconomyNow["component_as_of_dates"], MacroStateDomain>;
+  cross_currents: Array<{
+    domain: keyof UsaEconomyNow["component_as_of_dates"];
+    summary: string;
+    evidence: Array<{ label: string; classification: string }>;
+  }>;
+}
+
 export interface HistoryObservation {
   observation_date: string;
   value: number | null;
@@ -398,6 +425,12 @@ function historyQuery({ startDate, endDate }: HistoryOptions): string {
   if (startDate) params.set("start_date", startDate);
   if (endDate) params.set("end_date", endDate);
   return params.size ? `?${params}` : "";
+}
+
+export async function fetchMacroState(signal?: AbortSignal): Promise<MacroStateResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/economy/us/state`, { signal });
+  if (!response.ok) throw new Error("Unable to load Macro State.");
+  return response.json();
 }
 
 export async function fetchUsaEconomyNow(): Promise<UsaEconomyNow> {

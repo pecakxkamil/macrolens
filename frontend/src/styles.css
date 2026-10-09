@@ -807,3 +807,29 @@ h3 {
 .relationship-summary .relationship-summary__note { margin: 0.75rem 0 0; }
 
 @media (max-width: 850px) { .relationship-selectors { grid-template-columns: 1fr; } }
+
+.macro-state-header { margin-bottom: 1.5rem; }
+.macro-state-freshness, .macro-state-card, .macro-state-cross-card {
+  background: #11161d; border: 1px solid #263241; border-radius: 8px; padding: 1.2rem;
+}
+.macro-state-freshness { margin-bottom: 1.5rem; }
+.macro-state-freshness strong { color: #f8fafc; }
+.macro-state-freshness > div { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; margin-top: .6rem; color: #aebaca; font-size: .84rem; }
+.macro-state-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+.macro-state-card__header { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+.macro-state-card__header h3 { margin: 0 0 .8rem; color: #f8fafc; }
+.macro-state-card__header span { color: #94a3b8; font-size: .8rem; }
+.macro-state-overall { display: flex; gap: .5rem; align-items: center; margin-bottom: .8rem; color: #cbd5e1; font-size: .83rem; }
+.macro-state-readings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+.macro-state-reading { display: flex; flex-direction: column; gap: .25rem; background: #171f29; border-radius: 6px; padding: .65rem; min-width: 0; }
+.macro-state-reading > span:first-child { color: #aebaca; font-size: .77rem; }
+.macro-state-reading strong { color: #f8fafc; font-size: 1rem; }
+.macro-state-reading .classification-pill { align-self: start; }
+.macro-state-evidence { color: #cbd5e1; font-size: .84rem; line-height: 1.5; padding-left: 1.2rem; }
+.macro-state-card > a { color: #9cc7f5; font-size: .84rem; }
+.macro-state-cross-currents > p { color: #aebaca; }
+.macro-state-cross-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+.macro-state-cross-card h3 { color: #f8fafc; }
+.macro-state-cross-card > div > div { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin: .55rem 0; font-size: .84rem; color: #cbd5e1; }
+.macro-state-cross-card p { color: #aebaca; font-size: .84rem; margin: .8rem 0 0; }
+@media (max-width: 520px) { .macro-state-grid { grid-template-columns: 1fr; } .macro-state-readings { grid-template-columns: 1fr; } }
