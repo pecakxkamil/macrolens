@@ -870,3 +870,31 @@ h3 {
 .mci-pit-coverage { background: #11161d; border: 1px solid #263241; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
 .mci-pit-coverage p { color: #aebaca; font-size: .84rem; line-height: 1.5; }
 .mci-pit-coverage a { color: #9cc7f5; font-size: .84rem; }
+
+.market-comparison-page { display: grid; gap: 1.5rem; }
+.market-controls, .market-chart-panel { border: 1px solid #263241; background: #11161d; border-radius: 12px; padding: 1.25rem; }
+.market-controls { display: grid; gap: 1rem; }
+.market-controls .charts-range { margin: 0; align-items: center; }
+.market-controls .charts-range > span { color: #9eacbd; font-size: .82rem; min-width: 6rem; }
+.market-asset-controls { border: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 1.5rem; }
+.market-asset-controls legend { color: #9eacbd; font-size: .82rem; margin-bottom: .6rem; }
+.market-asset-controls label { display: flex; align-items: center; gap: .55rem; font-size: .9rem; }
+.market-asset-controls input { accent-color: #86b6d8; }
+.market-chart-scroll { overflow-x: auto; }
+.market-chart { height: 440px; min-width: 700px; }
+.market-note { color: #aebaca; font-size: .84rem; line-height: 1.6; }
+.market-chart-panel h2 { margin-top: 0; }
+.market-chart-panel .relationship-chart-legend i { width: 12px; height: 3px; display: inline-block; margin-right: .4rem; }
+.market-statistics { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+.market-statistics article { border: 1px solid #263241; background: #11161d; border-radius: 12px; padding: 1.25rem; }
+.market-statistics article h3 { margin-top: 0; }
+.market-statistics p, .market-tooltip p { color: #aebaca; font-size: .82rem; line-height: 1.5; }
+.market-statistics h4 { color: #b7c6d8; margin-bottom: .5rem; }
+.market-statistics details { margin-top: 1rem; }
+.market-tooltip { min-width: 235px; max-width: 330px; }
+.market-tooltip section { border-top: 1px solid #344151; margin-top: .65rem; padding-top: .65rem; }
+.market-tooltip p { margin: .25rem 0; }
+
+.lead-lag-chart { width: 100%; min-width: 0; }
+.lead-lag-analysis select { background: #162235; color: #dce8f8; border: 1px solid #39485c; padding: 8px; border-radius: 6px; }
+.lead-lag-analysis table { width: 100%; text-align: left; border-spacing: 0 8px; }

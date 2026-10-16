@@ -615,3 +615,74 @@ export async function fetchDashboardHistory(): Promise<DashboardHistory> {
     return history;
   }, {});
 }
+
+
+export type MarketAssetId = "NASDAQCOM" | "CBBTCUSD";
+export type MarketDisplayMode = "indexed" | "actual";
+export interface MarketComparisonRow {
+  as_of_date: string;
+  mci: number | null;
+  mci_change: number | null;
+  [key: string]: number | string | null;
+}
+export interface MarketSeries {
+  series_id: string; name: string; unit: string; source: string;
+  source_organization?: string; source_url?: string; attribution?: string;
+  price_convention?: string; asset_class?: string;
+  first_observation: string | null; last_observation: string | null;
+}
+export interface MarketRelation {
+  correlation: number | null; overlapping_observations: number;
+  variable_definitions: { macro: string; market: string };
+}
+export interface MarketComparisonResponse {
+  methodology_version: "v1"; macro_history_type: MciHistoryMode;
+  market_history_type: string; frequency: "monthly"; alignment: string;
+  mode: MarketDisplayMode; status: "ready" | "insufficient_overlap";
+  base_date: string | null; base_values: Partial<Record<MarketAssetId, number>>;
+  available_overlap_start: string | null; available_overlap_end: string | null;
+  message: string | null; rows: MarketComparisonRow[]; series: MarketSeries[];
+  statistics: Array<{ asset_id: MarketAssetId; mci: MarketRelation; mci_change: MarketRelation }>;
+  minimum_correlation_observations: number; limitations: string;
+}
+export async function fetchMarketComparison(options: HistoryOptions & {
+  assets: MarketAssetId[]; macroHistoryType: MciHistoryMode; mode: MarketDisplayMode;
+}): Promise<MarketComparisonResponse> {
+  const params = new URLSearchParams({ assets: options.assets.join(","),
+    macro_history_type: options.macroHistoryType, mode: options.mode });
+  if (options.startDate) params.set("start_date", options.startDate);
+  if (options.endDate) params.set("end_date", options.endDate);
+  const response = await fetch(`${API_BASE_URL}/api/v1/market-comparison?${params}`, { signal: options.signal });
+  if (!response.ok) throw new Error("Unable to load market comparison.");
+  return response.json();
+}
+
+export interface LeadLagPair {
+  anchor_date: string; return_date: string; mci_change: number; asset_return: number;
+  asset_id: MarketAssetId; asset_name: string;
+  price_observation_date: string; previous_price_observation_date: string;
+}
+export interface LeadLagResult {
+  lag: number; correlation: number | null; n: number;
+  first_anchor_date: string | null; last_anchor_date: string | null;
+  missing_anchor_count: number; pairs: LeadLagPair[];
+  rolling: Array<{ anchor_date: string; valid_pairs: number; correlation: number | null }>;
+}
+export interface LeadLagResponse {
+  macro_history_type: MciHistoryMode; lag_convention: string; rolling_window: number;
+  maximum_price_age_days: number; anchor_count: number;
+  assets: Array<{ asset_id: MarketAssetId; name: string; lags: LeadLagResult[]; missing_price_dates: string[] }>;
+  coverage: { first_anchor_date: string | null; last_anchor_date: string | null; missing_mci_change_dates: string[] };
+  boundary_policy: string; rolling_policy: string; limitations: string;
+}
+export async function fetchLeadLag(options: HistoryOptions & {
+  asset: MarketAssetId; macroHistoryType: MciHistoryMode; rollingWindow: number;
+}): Promise<LeadLagResponse> {
+  const params = new URLSearchParams({ assets: options.asset, macro_history_type: options.macroHistoryType,
+    rolling_window: String(options.rollingWindow) });
+  if (options.startDate) params.set("start_date", options.startDate);
+  if (options.endDate) params.set("end_date", options.endDate);
+  const response = await fetch(`${API_BASE_URL}/api/v1/market-comparison/lead-lag?${params}`, { signal: options.signal });
+  if (!response.ok) throw new Error("Unable to load lead/lag analysis.");
+  return response.json();
+}

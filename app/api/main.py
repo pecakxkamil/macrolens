@@ -16,6 +16,7 @@ from app.analytics import history
 from app.analytics import housing_snapshot
 from app.analytics import inflation_snapshot
 from app.analytics import labor_snapshot
+from app.analytics import market_comparison
 from app.analytics import macro_conditions_index
 from app.analytics import point_in_time_mci
 from app.analytics import macro_state
@@ -291,3 +292,30 @@ def get_relationship_comparison(
 @app.get("/api/v1/releases/{release_id}")
 def get_release(release_id: int) -> dict:
     return _calendar_response(lambda: release_calendar.get_release_detail(release_id))
+
+
+@app.get("/api/v1/market-comparison")
+def get_market_comparison(assets: str = "NASDAQCOM", start_date: Optional[date] = None,
+                          end_date: Optional[date] = None, macro_history_type: str = "point_in_time",
+                          mode: str = "indexed") -> dict:
+    try:
+        return jsonable_encoder(market_comparison.compare_market(assets, start_date, end_date, macro_history_type, mode))
+    except (history.InvalidDateRangeError, market_comparison.InvalidMarketComparisonError) as error:
+        raise HTTPException(status_code=400, detail=str(error))
+    except Exception:
+        logger.exception("Market comparison unavailable")
+        raise HTTPException(status_code=503, detail="Market comparison is temporarily unavailable.") from None
+
+
+@app.get("/api/v1/market-comparison/lead-lag")
+def get_macro_market_lead_lag(assets: str = "NASDAQCOM,CBBTCUSD", start_date: Optional[date] = None,
+                             end_date: Optional[date] = None, macro_history_type: str = "point_in_time",
+                             rolling_window: int = 24) -> dict:
+    from app.analytics import macro_market_lead_lag
+    try:
+        return jsonable_encoder(macro_market_lead_lag.analyze(assets, start_date, end_date, macro_history_type, rolling_window))
+    except (history.InvalidDateRangeError, market_comparison.InvalidMarketComparisonError) as error:
+        raise HTTPException(status_code=400, detail=str(error))
+    except Exception:
+        logger.exception("Lead/lag analysis unavailable")
+        raise HTTPException(status_code=503, detail="Lead/lag analysis is temporarily unavailable.") from None

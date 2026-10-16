@@ -1,0 +1,24 @@
+NASDAQCOM:
+  name: Nasdaq Composite
+  asset_class: equity_index
+  provider: fred
+  source: FRED
+  source_organization: Nasdaq, Inc.
+  source_url: https://fred.stlouisfed.org/series/NASDAQCOM
+  frequency: daily
+  unit: index points
+  source_unit: Index Feb 5, 1971=100
+  price_convention: Daily market close
+  attribution: Nasdaq, Inc., NASDAQ Composite, retrieved from FRED. Copyright Nasdaq OMX Group, Inc.; source terms apply.
+CBBTCUSD:
+  name: Bitcoin
+  asset_class: cryptocurrency
+  provider: fred
+  source: FRED
+  source_organization: Coinbase
+  source_url: https://fred.stlouisfed.org/series/CBBTCUSD
+  frequency: daily
+  unit: USD
+  source_unit: U.S. Dollars
+  price_convention: Daily, 7-day; source notes specify observations as of 5 PM PST
+  attribution: Coinbase, Coinbase Bitcoin, retrieved from FRED. Copyright Coinbase; reproduction requires prior written permission under source notes.

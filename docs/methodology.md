@@ -842,3 +842,147 @@ ALFRED's real-time date does not establish precise intraday availability. An
 as-of date includes vintages dated that day. PIT v1 therefore uses monthly
 month-end analysis and makes no minute-level availability claim. Calendar
 scheduled release times are not used to infer when ALFRED had the observations.
+
+## Market Comparison Lab v1
+
+### Universe and provenance
+
+The separate `config/market_assets.yaml` explicitly configures NASDAQCOM
+(Nasdaq Composite, equity index, index points) and CBBTCUSD (Coinbase Bitcoin,
+cryptocurrency, USD). It defines provider, frequency, source links, observation
+conventions, and attribution so additional providers/assets can be introduced
+without changing alignment/scoring logic. V1's sole provider is FRED; arbitrary
+series IDs, gold, and other assets are not accepted.
+
+NASDAQCOM observations are daily market closes from Nasdaq, Inc.; the source
+unit is Index Feb 5, 1971=100. CBBTCUSD is a daily seven-day Coinbase price series;
+its official notes specify observations as of 5 PM PST. The API/UI preserve
+these descriptions without claiming matching intraday timestamps. See official
+[Nasdaq source notes](https://fred.stlouisfed.org/series/NASDAQCOM) and
+[Coinbase source notes](https://fred.stlouisfed.org/series/CBBTCUSD). These datasets
+are copyrighted by their source organizations; source terms govern reproduction.
+MacroLens does not claim ownership. Only monthly aligned values needed for the
+comparison are exposed, rather than redistributing complete raw daily responses.
+
+The explicit refresh path uses ordinary FRED observations with the existing key,
+validation, raw storage, and database upsert. Source `.` values are stored as null,
+never zero prices. Nonpositive numeric prices and incomplete responses are
+rejected. Both v1 series fit FRED's 100000-row snapshot cap; truncation is an
+error, not a silently accepted refresh. Unique raw filenames with exclusive
+creation preserve every original response. Composite observation/vintage keys
+make repeated refreshes idempotent. Market histories use the latest stored values
+for each price observation date; they are not full ALFRED vintage histories.
+Market storage uses category `market` and is excluded from active macro workflows.
+
+### Macro history and alignment
+
+The default macro product is Point-in-Time MCI v1, using only economic vintages
+known by each historical month-end. Explicit current-vintage mode uses today's
+stored revised macro values, and is clearly labeled. Neither macro product's
+calculation, weights, or scores are modified by market comparison.
+
+For each completed MCI month-end T, select the latest finite positive market price
+whose observation date is on or before T. Nasdaq weekends/holidays therefore
+use the preceding available close; Bitcoin can use an exact weekend date. Future
+prices, nearest future dates, and interpolation are never used. Before an asset's
+first observation, its value and date are null. Missing dates are skipped when
+finding the last available price; there is no age-based expiry. Actual market
+dates and source coverage remain visible so carried prices can be identified.
+Monthly MCI gaps remain null and are not interpolated or reweighted.
+
+### Display modes and shared base
+
+The first selected-range month-end with a finite MCI and a positive aligned price
+for every selected asset is the common `base_date`. Each original price is
+reported in `base_values`. Indexed asset values at/after that date are
+`100 * price / base_price`; assets never use independent base dates. Missing
+prices stay null. No shared base returns a structured `insufficient_overlap`
+result, explanation, and null indexed values. Max starts at the first shared
+valid date. Explicit ranges may include unavailable periods before their base.
+Full common coverage metadata lets the default 5Y UI fall back to Max when
+less than five calendar years are available, without treating isolated macro
+score gaps as shorter coverage.
+
+MCI is a bounded state score, not a price. It remains on its native 0-100 axis
+in both modes and is never ratio-rebased. Indexed assets share a distinct,
+clearly labeled base-100 axis. Actual assets use separate index-points and USD
+axes. Numeric magnitudes on these different scales are not directly comparable.
+Only overall MCI is shown, without domain overlays.
+
+### Monthly returns and correlation
+
+Aligned monthly price return is `100 * (P_t / P_(t-1) - 1)`. MCI change is
+`MCI_t - MCI_(t-1)` in points. Both require consecutive calendar month-end rows
+and valid inputs; gaps in the calendar or required inputs produce null changes.
+The preceding month may lie outside the display range, because it is required to
+calculate the first selected month's actual monthly change/return. Returns are
+calculated from actual aligned prices regardless of chart display mode.
+
+Each asset has two contemporaneous Pearson correlations over the selected range:
+MCI level versus that month's asset return, and MCI monthly change versus that
+month's asset return. Each correlation uses only its own finite paired rows and
+reports its overlapping observation count and variable definitions. Fewer than
+three pairs or zero variance yields null. For pairs `(x_i,y_i)`, Pearson is
+`sum((x_i-mean(x))*(y_i-mean(y))) / sqrt(sum((x_i-mean(x))^2)*sum((y_i-mean(y))^2))`.
+This reuses the existing pure correlation function; no lead/lag analysis is added.
+
+Correlation describes historical co-movement. It does not imply causation or
+predictive power. NASDAQCOM price-index changes exclude dividends and are not
+total returns; Coinbase Bitcoin represents one venue. Market observations can
+be corrected by sources; PIT macro availability is date-level rather than
+intraday. The workspace provides no forecasts, expected returns, targets,
+trading signals, optimized weights, or strategy P&L.
+
+
+## Macro?Market Lead/Lag Analysis v1
+
+The separate Lead / Lag Analysis section of `#/market-comparison` uses existing
+Nasdaq Composite (`NASDAQCOM`) and Bitcoin (`CBBTCUSD`) observations only. PIT
+MCI is the default; current-vintage is explicitly optional. No MCI construction,
+weights, ingestion or original Market Comparison alignment is changed.
+
+Definitions: `delta_MCI_t = MCI_t - MCI_(t-1)` in index points;
+`R_asset_t = 100 * (P_t / P_(t-1) - 1)` in percent, where `P_t` is the last
+finite positive observed price on or before calendar month-end. This analysis
+rejects that price if it is more than **7 calendar days** old. This permits
+ordinary weekends/holidays while preventing indefinite stale-price carry.
+This freshness rule applies only to the new analysis.
+
+For each integer `k = -6,...,+6`, compute
+`Corr(delta_MCI_t, R_asset_(t+k))`. Positive k means MCI change precedes the
+return; negative k means return precedes MCI change; zero is contemporaneous.
+Pairs use exact calendar-month dictionary keys, never row-index shifts,
+nearest-month matches, interpolation or multi-month returns. Missing/null MCI
+at t or the immediately preceding month invalidates the change. An unavailable
+price at either consecutive month-end invalidates the return. Dates and price
+observation dates are included in each scatter-ready pair.
+
+Only the MCI anchor month-end t is restricted by start_date/end_date (inclusive).
+Full prior stored history is loaded for deltas, negative lags, returns and rolling
+windows. Prices are loaded through up to six months after end_date, capped at
+today; incomplete calendar months are excluded. Positive-lag return months may
+therefore fall outside the reporting range. Missing actual observations remain
+unavailable, including at the dataset boundary. The API exposes its loading
+window and reporting/coverage metadata.
+
+Pearson r uses finite valid pairs; N and first/last valid MCI anchor dates are
+reported for every lag. Fewer than three pairs or zero variance returns null,
+never zero. There are no p-values, optimized lags or regression forecasts.
+Rolling windows cover exactly 24 or 36 calendar anchor months ending at t and
+require every paired month to be valid. A missing month makes r null; windows
+never compress to the last N available observations. Rolling windows can begin
+before the reporting range. Positive k uses later returns relative to the
+rolling anchor: these diagnostics are retrospective, not investable signals.
+
+All 13 lags remain visible with sample counts, a rolling stability chart and
+scatter tooltips identifying anchor month, return month, units and asset.
+Correlation is descriptive, not causal or predictive. Same-month correlation
+is not a prediction. Multiple testing and unstable correlations limit
+interpretation. PIT availability is date-level, not intraday; market histories
+are latest stored observations rather than vintage market histories.
+
+Read-only endpoint: `GET /api/v1/market-comparison/lead-lag` with `assets`,
+`start_date`, `end_date`, `macro_history_type=point_in_time|current_vintage`,
+and `rolling_window=24|36`. Both existing assets are returned by default;
+the UI requests its selected analysis asset. Asset whitelist, dates, history
+mode and rolling window are validated. No schema change or data sync is needed.

@@ -25,6 +25,7 @@ import {
 
 import { InfoTooltip } from "./components/InfoTooltip";
 
+const MarketComparisonPage = lazy(() => import("./market-comparison/MarketComparisonPage").then((module) => ({ default: module.MarketComparisonPage })));
 const ChartsPage = lazy(() => import("./charts/ChartsPage").then((module) => ({ default: module.ChartsPage })));
 const RelationshipsPage = lazy(() => import("./relationships/RelationshipsPage").then((module) => ({ default: module.RelationshipsPage })));
 const IndicatorsPage = lazy(() => import("./indicators/IndicatorsPage").then((module) => ({ default: module.IndicatorsPage })));
@@ -652,7 +653,8 @@ function Overview() {
   );
 }
 
-function currentSection(hash: string): "overview" | "state" | "macro-index" | "charts" | "relationships" | "indicators" | "calendar" {
+function currentSection(hash: string): "overview" | "state" | "macro-index" | "market-comparison" | "charts" | "relationships" | "indicators" | "calendar" {
+  if (hash === "#/market-comparison" || hash === "#/market-comparison/") return "market-comparison";
   if (hash === "#/macro-index" || hash === "#/macro-index/") return "macro-index";
   if (hash === "#/state" || hash === "#/state/") return "state";
   if (hash === "#/charts" || hash === "#/charts/") return "charts";
@@ -682,12 +684,14 @@ export default function App() {
         <a href="#/" aria-current={section === "overview" ? "page" : undefined}>Overview</a>
         <a href="#/state" aria-current={section === "state" ? "page" : undefined}>Macro State</a>
         <a href="#/macro-index" aria-current={section === "macro-index" ? "page" : undefined}>Macro Index</a>
+        <a href="#/market-comparison" aria-current={section === "market-comparison" ? "page" : undefined}>Market Comparison</a>
         <a href="#/charts" aria-current={section === "charts" ? "page" : undefined}>Charts</a>
         <a href="#/relationships" aria-current={section === "relationships" ? "page" : undefined}>Relationships</a>
         <a href="#/indicators" aria-current={section === "indicators" ? "page" : undefined}>Indicators</a>
         <a href="#/calendar" aria-current={section === "calendar" ? "page" : undefined}>Calendar</a>
       </nav>
-      {section === "macro-index" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading Macro Index...</div>}><MacroIndexPage /></Suspense></div>
+      {section === "market-comparison" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading Market Comparison...</div>}><MarketComparisonPage /></Suspense></div>
+        : section === "macro-index" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading Macro Index...</div>}><MacroIndexPage /></Suspense></div>
         : section === "state" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading Macro State...</div>}><MacroStatePage /></Suspense></div>
         : section === "charts" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading charts...</div>}><ChartsPage /></Suspense></div>
         : section === "relationships" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading relationships...</div>}><RelationshipsPage /></Suspense></div>
