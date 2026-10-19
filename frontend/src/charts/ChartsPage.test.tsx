@@ -32,10 +32,10 @@ describe("Charts v1", () => {
     mockHistory();
     openCharts();
     expect(await screen.findByRole("heading", { name: "Historical Charts" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Charts" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Explore Data" })).toHaveAttribute("aria-current", "page");
     vi.stubGlobal("fetch", vi.fn(() => new Promise(() => undefined)));
     fireEvent.click(screen.getByRole("link", { name: "Overview" }));
-    expect(await screen.findByText("Loading USA Economy Now...")).toBeInTheDocument();
+    expect(await screen.findByText("Loading Economy Brief...")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
   });
 

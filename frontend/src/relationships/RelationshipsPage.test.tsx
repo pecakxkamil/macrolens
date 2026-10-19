@@ -64,9 +64,10 @@ describe("Macro Relationships v1", () => {
     mockApi();
     window.location.hash = "#/";
     render(<App />);
-    fireEvent.click(screen.getByRole("link", { name: "Relationships" }));
-    expect(await screen.findByRole("heading", { name: "Macro Relationships" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Relationships" })).toHaveAttribute("aria-current", "page");
+    fireEvent.click(screen.getByRole("link", { name: "Research" }));
+    fireEvent.click(await screen.findByRole("link", { name: "Indicator Relationships" }));
+    expect(await screen.findByRole("heading", { name: "Indicator Relationships" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Research" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByText(/Correlation describes how two historical series moved together/)).toHaveTextContent("does not establish causation or predict future market moves");
     expect(screen.getByText(/Current-vintage history/).parentElement).toHaveTextContent("not point-in-time historical reconstruction");
   });
@@ -74,7 +75,7 @@ describe("Macro Relationships v1", () => {
   test("selectors, optional third indicator, and ranges update the API request", async () => {
     const fetchMock = mockApi();
     openRelationships();
-    await screen.findByRole("heading", { name: "Macro Relationships" });
+    await screen.findByRole("heading", { name: "Indicator Relationships" });
     fireEvent.change(screen.getByRole("combobox", { name: "First indicator" }), { target: { value: "UNRATE:raw" } });
     fireEvent.change(screen.getByRole("combobox", { name: "Third indicator (optional)" }), { target: { value: "DGS10:raw" } });
     fireEvent.click(within(screen.getByRole("group", { name: "Relationship time range" })).getByRole("button", { name: "5Y" }));
@@ -95,7 +96,7 @@ describe("Macro Relationships v1", () => {
   test("quick presets populate both selectors and clear the third", async () => {
     const fetchMock = mockApi();
     openRelationships();
-    await screen.findByRole("heading", { name: "Macro Relationships" });
+    await screen.findByRole("heading", { name: "Indicator Relationships" });
     fireEvent.change(screen.getByRole("combobox", { name: "Third indicator (optional)" }), { target: { value: "DGS10:raw" } });
     fireEvent.click(within(screen.getByRole("group", { name: "Quick comparisons" })).getByRole("button", { name: "Housing Starts vs Mortgage Rate" }));
     expect(screen.getByRole("combobox", { name: "First indicator" })).toHaveValue("HOUST:raw");

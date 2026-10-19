@@ -363,3 +363,23 @@ NFCI:
     - change_4w
     - moving_average_4w
   revision_tracking: true
+
+DFEDTARL:
+  name: Federal Funds Target Range - Lower Limit
+  short_name: Fed Target Lower Limit
+  category: financial_conditions
+  frequency: daily
+  unit: percent
+  transformations:
+    - level
+  revision_tracking: true
+
+DFEDTARU:
+  name: Federal Funds Target Range - Upper Limit
+  short_name: Fed Target Upper Limit
+  category: financial_conditions
+  frequency: daily
+  unit: percent
+  transformations:
+    - level
+  revision_tracking: true

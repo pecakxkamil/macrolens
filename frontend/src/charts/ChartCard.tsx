@@ -1,3 +1,4 @@
+import { tText, tLabel } from "../i18n/language";
 import type { HistoryResponse } from "../api/macrolens";
 import { combineChartData, requestKey, type HistoryResult } from "./chartData";
 import type { ChartDefinition } from "./chartDefinitions";
@@ -19,11 +20,11 @@ export function ChartCard({ definition, results }: { definition: ChartDefinition
 
   return (
     <article className="chart-card" aria-labelledby={`${definition.id}-title`}>
-      <h2 id={`${definition.id}-title`}>{definition.title}</h2>
-      <p className="chart-card__description">{definition.description}</p>
-      {loading ? <p className="chart-state" role="status">Loading history...</p>
-        : failed ? <p className="chart-state chart-state--error" role="alert">Unable to load chart history. Try another range or refresh the page.</p>
-        : !hasValues ? <p className="chart-state">No history available for this range.</p>
+      <h2 id={`${definition.id}-title`}>{tText(definition.title)}</h2>
+      <p className="chart-card__description">{tText(definition.description)}</p>
+      {loading ? <p className="chart-state" role="status">{tText("Loading history...")}</p>
+        : failed ? <p className="chart-state chart-state--error" role="alert">{tText("Unable to load chart history. Try another range or refresh the page.")}</p>
+        : !hasValues ? <p className="chart-state">{tText("No history available for this range.")}</p>
         : <TimeSeriesChart key={definition.id} definition={definition} rows={rows} />}
     </article>
   );

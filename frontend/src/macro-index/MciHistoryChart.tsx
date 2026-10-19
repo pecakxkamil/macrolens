@@ -1,3 +1,5 @@
+import { formatNumber } from "../format";
+import { tText, tLabel } from "../i18n/language";
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { MciDomainKey, MciHistoryObservation, MciHistoryMode } from "../api/macrolens";
 
@@ -11,7 +13,7 @@ export const mciDomains: Array<{ key: MciDomainKey; label: string; color: string
 ];
 
 export function MciHistoryChart({ rows, visible, historyType }: { rows: MciHistoryObservation[]; visible: MciDomainKey[]; historyType: MciHistoryMode }) {
-  return <div className="mci-history-plot" role="region" aria-label={`${historyType === "point_in_time" ? "Point-in-time" : "Current-vintage"} Macro Conditions Index historical line chart`}>
+  return <div className="mci-history-plot" role="region" aria-label={tLabel(`${historyType === "point_in_time" ? "Point-in-time" : "Current-vintage"} Macro Conditions Index historical line chart`)}>
     <ResponsiveContainer width="100%" height="100%">
       <LineChart accessibilityLayer data={rows} margin={{ top: 15, right: 18, left: 0, bottom: 8 }}>
         <CartesianGrid stroke="#2b3746" strokeDasharray="3 4" vertical={false} />
@@ -20,13 +22,13 @@ export function MciHistoryChart({ rows, visible, historyType }: { rows: MciHisto
         <ReferenceLine y={50} stroke="#7f8fa3" strokeDasharray="4 4" />
         <Tooltip isAnimationActive={false} content={({ active, label, payload }) => {
           if (!active || !payload?.length) return null;
-          return <div className="chart-tooltip"><strong>{String(label)}</strong>{payload.map((entry) => typeof entry.value === "number" ? <div key={String(entry.dataKey)}>
-            <span style={{ color: entry.color }}>{entry.name}</span><b>{entry.value.toFixed(1)} / 100</b>
+          return <div className="chart-tooltip"><strong>{tText(String(label))}</strong>{payload.map((entry) => typeof entry.value === "number" ? <div key={String(entry.dataKey)}>
+            <span style={{ color: entry.color }}>{tText(entry.name)}</span><b>{tText(formatNumber(entry.value, 1))} {tText(" / 100")}</b>
           </div> : null)}</div>;
         }} />
-        <Line type="linear" dataKey="mci" name={historyType === "point_in_time" ? "PIT MCI" : "Current-vintage MCI"} stroke="#dce8f8" strokeWidth={3} dot={false} connectNulls={false} isAnimationActive={false} />
+        <Line type="linear" dataKey="mci" name={tLabel(historyType === "point_in_time" ? "PIT MCI" : "Current-vintage MCI")} stroke="#dce8f8" strokeWidth={3} dot={false} connectNulls={false} isAnimationActive={false} />
         {mciDomains.filter((item) => visible.includes(item.key)).map((item, index) => <Line
-          key={item.key} type="linear" dataKey={item.key} name={item.label} stroke={item.color}
+          key={item.key} type="linear" dataKey={item.key} name={tLabel(item.label)} stroke={item.color}
           strokeDasharray={index % 2 ? "5 3" : undefined} strokeWidth={1.8}
           dot={false} connectNulls={false} isAnimationActive={false}
         />)}

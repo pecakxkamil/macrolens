@@ -1,3 +1,5 @@
+import { previousMonthEnd } from "../datePeriods";
+
 export interface DatedComponent {
   observation_date: string;
   feature_as_of_date: string;
@@ -399,7 +401,13 @@ export interface SeriesFeaturesResponse {
 }
 
 export interface CalendarEvent {
-  release_id: number;
+  release_id: number | null;
+  event_id?: string;
+  event_type?: "fomc_decision";
+  meeting_start_date?: string;
+  meeting_end_date?: string;
+  retrieved_at?: string;
+  time_source_url?: string | null;
   release_name: string;
   release_date: string;
   release_time: string | null;
@@ -412,6 +420,7 @@ export interface CalendarEvent {
 }
 
 export interface CalendarResponse {
+  policy_calendar?: { status: string; retrieved_at: string | null; source_url: string };
   start_date: string;
   end_date: string;
   category: string | null;
@@ -535,7 +544,7 @@ export async function fetchMciCurrent(signal?: AbortSignal, mode: MciHistoryMode
 
 export async function fetchMciHistory(options: HistoryOptions = {}, mode: MciHistoryMode = "current_vintage"): Promise<MciHistoryResponse> {
   const suffix = mode === "point_in_time" ? "/point-in-time" : "";
-  const response = await fetch(`${API_BASE_URL}/api/v1/economy/us/mci${suffix}/history${historyQuery(options)}`, { signal: options.signal });
+  const response = await fetch(`${API_BASE_URL}/api/v1/economy/us/mci${suffix}/history${historyQuery({ ...options, endDate: options.endDate ?? (mode === "point_in_time" ? previousMonthEnd(new Date()) : undefined) })}`, { signal: options.signal });
   if (!response.ok) throw new Error("Unable to load Macro Conditions Index history.");
   return response.json();
 }
@@ -651,7 +660,10 @@ export async function fetchMarketComparison(options: HistoryOptions & {
   const params = new URLSearchParams({ assets: options.assets.join(","),
     macro_history_type: options.macroHistoryType, mode: options.mode });
   if (options.startDate) params.set("start_date", options.startDate);
-  if (options.endDate) params.set("end_date", options.endDate);
+  // PIT research uses completed months; omit the unused partial month so the
+  // existing history cache can serve the same monthly observations.
+  const endDate = options.endDate ?? (options.macroHistoryType === "point_in_time" ? previousMonthEnd(new Date()) : undefined);
+  if (endDate) params.set("end_date", endDate);
   const response = await fetch(`${API_BASE_URL}/api/v1/market-comparison?${params}`, { signal: options.signal });
   if (!response.ok) throw new Error("Unable to load market comparison.");
   return response.json();
@@ -681,8 +693,55 @@ export async function fetchLeadLag(options: HistoryOptions & {
   const params = new URLSearchParams({ assets: options.asset, macro_history_type: options.macroHistoryType,
     rolling_window: String(options.rollingWindow) });
   if (options.startDate) params.set("start_date", options.startDate);
-  if (options.endDate) params.set("end_date", options.endDate);
+  // PIT research uses completed months; omit the unused partial month so the
+  // existing history cache can serve the same monthly observations.
+  const endDate = options.endDate ?? (options.macroHistoryType === "point_in_time" ? previousMonthEnd(new Date()) : undefined);
+  if (endDate) params.set("end_date", endDate);
   const response = await fetch(`${API_BASE_URL}/api/v1/market-comparison/lead-lag?${params}`, { signal: options.signal });
   if (!response.ok) throw new Error("Unable to load lead/lag analysis.");
+  return response.json();
+}
+
+
+export interface BriefSection<T> { status: "ready" | "unavailable"; data: T | null; error: string | null }
+export interface BriefComparison {
+  series_id: string; feature_name: string; label: string; frequency: string; unit: string;
+  change_unit: string; change_type: string; change: number | null;
+  expected_previous_observation_date: string | null; latest_stored_observation_date: string | null;
+  current: { value: number; observation_date: string; feature_as_of_date: string } | null;
+  previous: { value: number; observation_date: string; feature_as_of_date: string } | null;
+}
+export interface OverviewReadingComparison extends BriefComparison {
+  domain: MciDomainKey; component: string;
+  three_periods_ago: BriefComparison["current"];
+  expected_three_periods_ago_date: string | null;
+  context_yoy?: { current: BriefComparison["current"]; previous: BriefComparison["current"]; three_periods_ago: BriefComparison["current"] } | null;
+}
+export interface BriefClassificationBasis {
+  component: string; field: string; label: string; classification: string; rule: string; short: string;
+  observation_date: string | null; feature_as_of_date: string | null;
+  inputs: Array<{ feature_name: string; label: string; value: number; unit: string }>;
+  component_classifications?: Record<string, string>;
+}
+export interface FedTargetRange {
+  availability: "available" | "unavailable"; lower: number | null; upper: number | null;
+  observation_date: string | null; effective_date: string | null; retrieved_at: string | null;
+  last_rate_change: { effective_date: string; lower_change_bps: number; upper_change_bps: number; change_bps: number | null; previous_lower: number; previous_upper: number } | null;
+  sources: Array<{ series_id: string; url: string; observation_date: string | null; retrieved_at: string | null }>;
+}
+export interface EconomyBriefResponse {
+  fed_target?: BriefSection<FedTargetRange>;
+  reading_comparisons?: BriefSection<OverviewReadingComparison[]>;
+  policy?: BriefSection<{ schedule_status: string; retrieved_at: string | null; source_url: string;
+    next_decision: CalendarEvent | null; market_probabilities: { status: "not_integrated"; source_url: string } }>;
+  classification_basis?: Partial<Record<MciDomainKey, BriefClassificationBasis[]>>;
+  assembled_at: string; timezone: string; history_type: "current_vintage";
+  snapshot: BriefSection<UsaEconomyNow>; state: BriefSection<MacroStateResponse>;
+  changes: BriefSection<BriefComparison[]>; calendar: BriefSection<CalendarResponse>;
+  calendar_start_date: string; calendar_end_date: string;
+}
+export async function fetchEconomyBrief(signal?: AbortSignal): Promise<EconomyBriefResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/economy/us/brief`, { signal });
+  if (!response.ok) throw new Error("Economy Brief is unavailable.");
   return response.json();
 }

@@ -68,11 +68,9 @@ afterEach(() => {
 describe("Macro Calendar v1", () => {
   test("navigation and page title render with time-source explanation", async () => {
     mockApi();
-    window.location.hash = "#/";
-    render(<App />);
-    fireEvent.click(screen.getByRole("link", { name: "Calendar" }));
+    openCalendar();
     expect(await screen.findByRole("heading", { name: "Macro Calendar" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Calendar" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByText(/Release dates are sourced from FRED/)).toHaveTextContent("FRED does not guarantee publication times");
     expect(screen.getByText("Times shown in Poland local time (Europe/Warsaw).")).toBeInTheDocument();
   });
@@ -186,10 +184,10 @@ describe("Macro Calendar v1", () => {
     expect(within(detail).getByText("Previous observation")).toBeInTheDocument();
     expect(within(detail).getByText("Latest observation date")).toBeInTheDocument();
     const indicatorLink = within(detail).getByRole("link", { name: "View indicator" });
-    expect(indicatorLink).toHaveAttribute("href", "#/indicators/UNRATE");
+    expect(indicatorLink).toHaveAttribute("href", "#/explore/indicators/UNRATE");
     expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith("/api/v1/releases/20"))).toBe(true);
     fireEvent.click(indicatorLink);
-    await waitFor(() => expect(window.location.hash).toBe("#/indicators/UNRATE"));
+    await waitFor(() => expect(window.location.hash).toBe("#/explore/indicators/UNRATE"));
   });
 
   test("loading, error with retry, and empty range states are clear", async () => {
@@ -218,4 +216,21 @@ describe("Macro Calendar v1", () => {
     expect(screen.queryByText(/Trading signal:/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Macro score/i)).not.toBeInTheDocument();
   });
+});
+
+
+test("official FOMC event has provenance, importance and Polish time without a FRED detail request", async () => {
+  const event: CalendarEvent = { release_id: null, event_id: "fomc:2026-10-28", event_type: "fomc_decision", release_name: "FOMC policy decision", release_date: "2026-10-28", meeting_start_date: "2026-10-27", meeting_end_date: "2026-10-28", retrieved_at: "2026-10-19T12:00:00Z", release_time: "14:00:00", source_timezone: "America/New_York", release_datetime_utc: "2026-10-28T18:00:00Z", time_source_url: "https://www.federalreserve.gov/newsevents/2026-october.htm", importance: "high", source_link: "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm", date_precision: "date", series: [] };
+  const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ events: [event], policy_calendar: { status: "available" } }) });
+  vi.stubGlobal("fetch", fetch); openCalendar();
+  const heading = await screen.findByRole("heading", { name: "FOMC policy decision" });
+  const card = heading.closest("article")!;
+  expect(card).toHaveTextContent("19:00 PL");
+  expect(within(card).getByText("High importance").querySelector(".calendar-importance__dot")).not.toBeNull();
+  expect(within(card).getByText("Financial Conditions")).toBeInTheDocument();
+  fireEvent.click(within(card).getByRole("button", { name: "View details" }));
+  expect(within(card).getByText(/Schedule retrieved:/)).toHaveTextContent("2026-10-19T12:00:00Z");
+  expect(within(card).getByRole("link", { name: "Official time source" })).toHaveAttribute("href", event.time_source_url);
+  expect(fetch.mock.calls.every(([url]) => !String(url).includes("/releases/"))).toBe(true);
+  expect(card).not.toHaveTextContent("DFF");
 });

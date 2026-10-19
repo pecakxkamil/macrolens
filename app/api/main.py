@@ -319,3 +319,10 @@ def get_macro_market_lead_lag(assets: str = "NASDAQCOM,CBBTCUSD", start_date: Op
     except Exception:
         logger.exception("Lead/lag analysis unavailable")
         raise HTTPException(status_code=503, detail="Lead/lag analysis is temporarily unavailable.") from None
+
+
+@app.get("/api/v1/economy/us/brief")
+def get_economy_brief() -> dict:
+    from app.analytics import economy_brief
+    # Section failures remain explicit in a partial 200 response.
+    return jsonable_encoder(economy_brief.build_brief())

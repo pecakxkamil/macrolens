@@ -1,3 +1,4 @@
+import { tText, tLabel, t } from "../i18n/language";
 import { useEffect, useState } from "react";
 import {
   fetchFeatureHistory,
@@ -38,7 +39,8 @@ export function historyRows(history: HistoryResponse): ChartRow[] {
   })).sort((a, b) => a.observation_date.localeCompare(b.observation_date));
 }
 
-export function IndicatorsPage({ seriesId }: { seriesId?: string }) {
+export function IndicatorsPage({ seriesId, embedded = false }: { seriesId?: string; embedded?: boolean }) {
+  const Heading = embedded ? "h2" : "h1";
   const [catalog, setCatalog] = useState<LoadState<SeriesMetadata[]>>({ status: "loading" });
   const [catalogRequest, setCatalogRequest] = useState(0);
   const [search, setSearch] = useState("");
@@ -60,7 +62,7 @@ export function IndicatorsPage({ seriesId }: { seriesId?: string }) {
   useEffect(() => {
     if (catalog.status === "ready" && !seriesId && catalog.data.length) {
       const initial = catalog.data.find((item) => item.series_id === "UNRATE") ?? catalog.data[0];
-      window.location.hash = `#/indicators/${encodeURIComponent(initial.series_id)}`;
+      window.location.hash = `#/explore/indicators/${encodeURIComponent(initial.series_id)}`;
     }
   }, [catalog, seriesId]);
 
@@ -95,7 +97,7 @@ export function IndicatorsPage({ seriesId }: { seriesId?: string }) {
   const filtered = catalog.status === "ready" ? catalog.data.filter((item) => {
     const query = search.trim().toLocaleLowerCase();
     return (category === "all" || item.category === category)
-      && (!query || [item.series_id, item.name, item.short_name].some((value) => value?.toLocaleLowerCase().includes(query)));
+      && (!query || [item.series_id, item.name, item.short_name].some((value) => value && [value, t(value)].some((name) => name.toLocaleLowerCase().includes(query))));
   }) : [];
   const featuresState = selected && features.seriesId === selected.series_id ? features.state : { status: "loading" } as const;
   const availableFeatures = featuresState.status === "ready" ? featuresState.data.features.filter((name) => name !== "level") : [];
@@ -108,75 +110,76 @@ export function IndicatorsPage({ seriesId }: { seriesId?: string }) {
   return (
     <main className="indicators-page">
       <header className="indicators-header">
-        <p className="eyebrow">MacroLens</p>
-        <h1>Indicators</h1>
-        <p className="subtitle">Browse the MacroLens US indicator library and inspect individual series.</p>
+        <p className="eyebrow">{tText("MacroLens")}</p>
+        <Heading>{tText("Indicators")}</Heading>
+        <p className="subtitle">{tText("Browse the MacroLens US indicator library and inspect individual series.")}</p>
       </header>
-      <div className="indicators-notice"><strong>Current-vintage history.</strong> Historical observations use the latest stored values. Revised series may differ from originally published values. No trading signals.</div>
+      <div className="indicators-notice"><strong>{tText("Current-vintage history.")}</strong> {tText(" Historical observations use the latest stored values. Revised series may differ from originally published values. No trading signals.")}</div>
       <div className="indicators-layout">
-        <aside className="indicator-browser" aria-label="Indicator browser">
-          <label htmlFor="indicator-search">Search indicators</label>
-          <input id="indicator-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Name or series ID" />
-          <div className="indicator-filters" role="group" aria-label="Indicator category">
-            {indicatorCategories.map((item) => <button key={item.id} type="button" aria-pressed={category === item.id} onClick={() => setCategory(item.id)}>{item.label}</button>)}
+        <aside className="indicator-browser" aria-label={tLabel("Indicator browser")}>
+          <label htmlFor="indicator-search">{tText("Search indicators")}</label>
+          <input id="indicator-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={tLabel("Name or series ID")} />
+          <div className="indicator-filters" role="group" aria-label={tLabel("Indicator category")}>
+            {indicatorCategories.map((item) => <button key={item.id} type="button" aria-pressed={category === item.id} onClick={() => setCategory(item.id)}>{tText(item.label)}</button>)}
           </div>
-          {catalog.status === "loading" ? <p role="status">Loading indicators...</p> : null}
-          {catalog.status === "error" ? <div role="alert"><p>Unable to load indicators.</p><button type="button" onClick={() => setCatalogRequest((value) => value + 1)}>Retry</button></div> : null}
+          {catalog.status === "loading" ? <p role="status">{tText("Loading indicators...")}</p> : null}
+          {catalog.status === "error" ? <div role="alert"><p>{tText("Unable to load indicators.")}</p><button type="button" onClick={() => setCatalogRequest((value) => value + 1)}>{tText("Retry")}</button></div> : null}
           {catalog.status === "ready" ? (
             <>
-              <p className="indicator-browser__count">{filtered.length} {filtered.length === 1 ? "indicator" : "indicators"}</p>
+              <p className="indicator-browser__count">{tText(filtered.length)} {tText(filtered.length === 1 ? "indicator" : "indicators")}</p>
               <div className="indicator-list">
-                {filtered.map((item) => <a key={item.series_id} href={`#/indicators/${encodeURIComponent(item.series_id)}`} className={item.series_id === seriesId ? "is-selected" : ""} aria-current={item.series_id === seriesId ? "true" : undefined}>
-                  <strong>{item.series_id}</strong><span>{item.short_name || item.name}</span><small>{categoryLabel(item.category)} · {item.frequency}</small>
+                {filtered.map((item) => <a key={item.series_id} href={`#/explore/indicators/${encodeURIComponent(item.series_id)}`} className={item.series_id === seriesId ? "is-selected" : ""} aria-current={item.series_id === seriesId ? "true" : undefined}>
+                  <strong>{tText(item.series_id)}</strong><span>{tText(item.short_name || item.name)}</span><small>{tText(categoryLabel(item.category))} {tText(" · ")}{tText(item.frequency)}</small>
                 </a>)}
-                {!filtered.length ? <p>No indicators match your filters.</p> : null}
+                {!filtered.length ? <p>{tText("No indicators match your filters.")}</p> : null}
               </div>
             </>
           ) : null}
         </aside>
 
-        <section className="indicator-detail" aria-label="Indicator detail">
-          {catalog.status === "ready" && !selected && seriesId ? <div className="indicator-empty" role="alert"><h2>Indicator not found</h2><p>No active configured series matches {seriesId}.</p></div> : null}
-          {catalog.status === "ready" && !selected && !seriesId && !catalog.data.length ? <p>No active indicators are available.</p> : null}
+        <section className="indicator-detail" aria-label={tLabel("Indicator detail")}>
+          {catalog.status === "ready" && !selected && seriesId ? <div className="indicator-empty" role="alert"><h2>{tText("Indicator not found")}</h2><p>{tText("No active configured series matches ")}{tText(seriesId)}{tText(".")}</p></div> : null}
+          {catalog.status === "ready" && !selected && !seriesId && !catalog.data.length ? <p>{tText("No active indicators are available.")}</p> : null}
           {selected ? (
             <>
               <header className="indicator-detail__header">
-                <p className="eyebrow">{selected.series_id}</p>
-                <h2>{selected.name}</h2>
-                <p>{categoryLabel(selected.category)} · {selected.frequency} · {selected.unit}</p>
+                <p className="eyebrow">{tText(selected.series_id)}</p>
+                <h2>{tText(selected.name)}</h2>
+                <p>{tText(categoryLabel(selected.category))} {tText(" · ")}{tText(selected.frequency)} {tText(" · ")}{tText(selected.unit)}</p>
               </header>
               <div className="indicator-readings">
-                <div><span>Current value</span><strong>{current ? formatIndicatorValue(current.value as number, selected, feature) : "—"}</strong><small>Current observation date: {current ? formatObservationDate(current.observation_date, selected.frequency) : "No observation"}</small></div>
-                <div><span>Previous value</span><strong>{previous ? formatIndicatorValue(previous.value as number, selected, feature) : "—"}</strong><small>Previous observation date: {previous ? formatObservationDate(previous.observation_date, selected.frequency) : "No earlier observation"}</small></div>
+                <div><span>{tText("Current value")}</span><strong>{tText(current ? formatIndicatorValue(current.value as number, selected, feature) : "—")}</strong><small>{tText("Current observation date: ")}{tText(current ? formatObservationDate(current.observation_date, selected.frequency) : "No observation")}</small></div>
+                <div><span>{tText("Previous value")}</span><strong>{tText(previous ? formatIndicatorValue(previous.value as number, selected, feature) : "—")}</strong><small>{tText("Previous observation date: ")}{tText(previous ? formatObservationDate(previous.observation_date, selected.frequency) : "No earlier observation")}</small></div>
               </div>
               <div className="indicator-chart-controls">
-                <div role="group" aria-label="Transformation" className="indicator-transformations">
-                  <span>Measure</span>
-                  <button type="button" aria-pressed={feature === null} onClick={() => setFeatureChoice({ seriesId: selected.series_id, feature: null })}>Level</button>
-                  {availableFeatures.map((name) => <button key={name} type="button" aria-pressed={feature === name} onClick={() => setFeatureChoice({ seriesId: selected.series_id, feature: name })}>{featureLabel(name)}</button>)}
-                  {featuresState.status === "loading" ? <span role="status">Loading transformations...</span> : null}
-                  {featuresState.status === "error" ? <span role="alert">Transformations unavailable.</span> : null}
+                <div role="group" aria-label={tLabel("Transformation")} className="indicator-transformations">
+                  <span>{tText("Measure")}</span>
+                  <button type="button" aria-pressed={feature === null} onClick={() => setFeatureChoice({ seriesId: selected.series_id, feature: null })}>{tText("Level")}</button>
+                  {availableFeatures.map((name) => <button key={name} type="button" aria-pressed={feature === name} onClick={() => setFeatureChoice({ seriesId: selected.series_id, feature: name })}>{tText(featureLabel(name))}</button>)}
+                  {featuresState.status === "loading" ? <span role="status">{tText("Loading transformations...")}</span> : null}
+                  {featuresState.status === "error" ? <span role="alert">{tText("Transformations unavailable.")}</span> : null}
                 </div>
-                <div role="group" aria-label="Indicator time range" className="indicator-ranges">
-                  {ranges.map((years) => <button key={years} type="button" aria-pressed={range === years} onClick={() => setRange(years)}>{years}Y</button>)}
+                <div role="group" aria-label={tLabel("Indicator time range")} className="indicator-ranges">
+                  {ranges.map((years) => <button key={years} type="button" aria-pressed={range === years} onClick={() => setRange(years)}>{tText(`${years}Y`)}</button>)}
                 </div>
               </div>
               <div className="indicator-chart-panel">
-                <div className="indicator-chart-panel__heading"><h3>{feature ? featureLabel(feature) : "Observed level"}</h3><span>{selectedUnit(selected, feature)}</span></div>
-                {historyState.status === "loading" ? <p className="chart-state" role="status">Loading indicator history...</p> : null}
-                {historyState.status === "error" ? <p className="chart-state chart-state--error" role="alert">Unable to load indicator history.</p> : null}
-                {historyState.status === "ready" && !readings.length ? <p className="chart-state">No history available for this range.</p> : null}
+                <div className="indicator-chart-panel__heading"><h3>{tText(feature ? featureLabel(feature) : "Observed level")}</h3><span>{tText(selectedUnit(selected, feature))}</span></div>
+                {historyState.status === "loading" ? <p className="chart-state" role="status">{tText("Loading indicator history...")}</p> : null}
+                {historyState.status === "error" ? <p className="chart-state chart-state--error" role="alert">{tText("Unable to load indicator history.")}</p> : null}
+                {historyState.status === "ready" && !readings.length ? <p className="chart-state">{tText("No history available for this range.")}</p> : null}
                 {historyState.status === "ready" && readings.length ? <TimeSeriesChart key={historyKey} definition={indicatorChart(selected, feature)} rows={rows} valueFormatter={(value, compact) => formatIndicatorValue(value, selected, feature, compact)} /> : null}
               </div>
               <section className="indicator-about" aria-labelledby="indicator-about-heading">
-                <h3 id="indicator-about-heading">About this indicator</h3>
+                <h3 id="indicator-about-heading">{tText("About this indicator")}</h3>
                 <dl>
-                  <div><dt>Series ID</dt><dd>{selected.series_id}</dd></div>
-                  <div><dt>Series name</dt><dd>{selected.name}</dd></div>
-                  <div><dt>Category</dt><dd>{categoryLabel(selected.category)}</dd></div>
-                  <div><dt>Frequency</dt><dd>{selected.frequency}</dd></div>
-                  <div><dt>Source unit</dt><dd>{selected.unit}</dd></div>
-                  <div><dt>Available measures</dt><dd>Level{availableFeatures.length ? `, ${availableFeatures.map(featureLabel).join(", ")}` : ""}</dd></div>
+                  <div><dt>{tText("Series ID")}</dt><dd>{tText(selected.series_id)}</dd></div>
+                  <div><dt>{tText("Series name")}</dt><dd>{tText(selected.name)}</dd></div>
+                  <div><dt>{tText("Category")}</dt><dd>{tText(categoryLabel(selected.category))}</dd></div>
+                  <div><dt>{tText("Frequency")}</dt><dd>{tText(selected.frequency)}</dd></div>
+                  <div><dt>{tText("Source unit")}</dt><dd>{tText(selected.unit)}</dd></div>
+                  <div><dt>{tText("Source")}</dt><dd><a href={`https://fred.stlouisfed.org/series/${encodeURIComponent(selected.series_id)}`} target="_blank" rel="noreferrer">{tText("Source and series definition (FRED)")}</a></dd></div>
+                  <div><dt>{tText("Available measures")}</dt><dd>{tText("Level")}{tText(availableFeatures.length ? `, ${availableFeatures.map(featureLabel).join(", ")}` : "")}</dd></div>
                 </dl>
               </section>
             </>

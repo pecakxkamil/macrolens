@@ -6,6 +6,7 @@ from typing import Optional
 from app.database.connection import get_connection
 from app.database.sync_series import load_series_config
 from app.analytics.release_times import release_time_metadata
+from app.analytics.fomc_calendar import read_schedule
 
 
 CALENDAR_SQL = """
@@ -125,15 +126,20 @@ def list_calendar_events(
     selected = [event for event in events.values() if category is None or any(
         item["category"] == category for item in event["series"]
     )]
+    policy = read_schedule()
+    if category in (None, "financial_conditions"):
+        selected.extend({**event, "release_date": date.fromisoformat(event["release_date"])}
+                        for event in policy["events"] if str(start) <= event["release_date"] <= str(end))
     selected.sort(key=lambda event: (
         event["release_date"], IMPORTANCE_ORDER[event["importance"]],
-        event["release_name"], event["release_id"],
+        event["release_name"], str(event.get("event_id") or event["release_id"]),
     ))
     return {
         "start_date": start,
         "end_date": end,
         "category": category,
         "events": selected,
+        "policy_calendar": {key: policy[key] for key in ("status", "retrieved_at", "source_url")},
     }
 
 

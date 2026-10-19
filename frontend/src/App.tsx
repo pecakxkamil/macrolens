@@ -1,3 +1,7 @@
+import { LanguageSwitcher } from "./i18n/LanguageSwitcher";
+import { getLanguage, subscribeLanguage } from "./i18n/language";
+import { useSyncExternalStore } from "react";
+import { tText, tLabel } from "./i18n/language";
 import { createContext, lazy, Suspense, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import {
@@ -23,14 +27,12 @@ import {
   type MetricKey,
 } from "./metricMetadata";
 
+import { resolveRoute } from "./navigation/routes";
+import { EconomyBrief } from "./brief/EconomyBrief";
 import { InfoTooltip } from "./components/InfoTooltip";
 
-const MarketComparisonPage = lazy(() => import("./market-comparison/MarketComparisonPage").then((module) => ({ default: module.MarketComparisonPage })));
-const ChartsPage = lazy(() => import("./charts/ChartsPage").then((module) => ({ default: module.ChartsPage })));
-const RelationshipsPage = lazy(() => import("./relationships/RelationshipsPage").then((module) => ({ default: module.RelationshipsPage })));
-const IndicatorsPage = lazy(() => import("./indicators/IndicatorsPage").then((module) => ({ default: module.IndicatorsPage })));
-const MacroIndexPage = lazy(() => import("./macro-index/MacroIndexPage").then((module) => ({ default: module.MacroIndexPage })));
-const MacroStatePage = lazy(() => import("./state/MacroStatePage").then((module) => ({ default: module.MacroStatePage })));
+const ExploreDataPage = lazy(() => import("./navigation/ExploreDataPage").then((module) => ({ default: module.ExploreDataPage })));
+const ResearchPage = lazy(() => import("./navigation/ResearchPage").then((module) => ({ default: module.ResearchPage })));
 const CalendarPage = lazy(() => import("./calendar/CalendarPage").then((module) => ({ default: module.CalendarPage })));
 
 const freshnessLabels: Array<[keyof UsaEconomyNow["component_as_of_dates"], string]> = [
@@ -107,7 +109,7 @@ function storedCustomMetrics(): string[] {
 }
 
 function Badge({ value }: { value: string }) {
-  return <span className="badge">{value}</span>;
+  return <span className="badge">{tText(value)}</span>;
 }
 
 export function classificationTone(value: string): string {
@@ -138,7 +140,7 @@ function ClassificationPill({ value }: { value: string }) {
   const tone = classificationTone(value);
   return (
     <span className={`classification-pill classification-pill--${tone}`}>
-      {formatClassification(value)}
+      {tText(formatClassification(value))}
     </span>
   );
 }
@@ -235,31 +237,31 @@ function Metric({
   return (
     <div className="metric">
       <dt className="metric-label">
-        <span>{label}</span>
+        <span>{tText(label)}</span>
         <InfoTooltip metricKey={metricKey} />
       </dt>
       <dd className={`metric-value metric-value--${type}`}>
-        {type === "category" ? <ClassificationPill value={value} /> : value}
+        {tText(type === "category" ? <ClassificationPill value={value} /> : value)}
       </dd>
       {observationDate ? (
         <span className="metric-observation">
-          Observed {formatObservationDate(observationDate, observationFrequency)}
+          {tText("Observed ")}{tText(formatObservationDate(observationDate, observationFrequency))}
         </span>
       ) : null}
       {previous !== undefined ? (
         <span className="metric-previous">
-          Previous: {previous?.value ?? "—"}
+          {tText("Previous: ")}{tText(previous?.value ?? "—")}
           {previous ? (
             <span>
-              {" · "}
-              {formatObservationDate(previous.observationDate, previous.frequency)}
+              {tText(" · ")}
+              {tText(formatObservationDate(previous.observationDate, previous.frequency))}
             </span>
           ) : null}
         </span>
       ) : null}
       {detail ? (
         <span className={`metric-detail metric-detail--${detailType}`}>
-          {detailType === "category" ? <ClassificationPill value={detail} /> : detail}
+          {tText(detailType === "category" ? <ClassificationPill value={detail} /> : detail)}
         </span>
       ) : null}
     </div>
@@ -285,9 +287,9 @@ function DomainCard({
 
   return (
     <DomainContext.Provider value={domain}>
-      <section className="domain-card" aria-labelledby={`${title}-heading`}>
-        <h2 id={`${title}-heading`}>{title}</h2>
-        {children}
+      <section className="domain-card" aria-labelledby={`${domain}-heading`}>
+        <h2 id={`${domain}-heading`}>{tText(title)}</h2>
+        {tText(children)}
       </section>
     </DomainContext.Provider>
   );
@@ -302,8 +304,8 @@ function DomainSection({
 }) {
   return (
     <section className="domain-section">
-      <h3>{title}</h3>
-      <dl className="metric-grid">{children}</dl>
+      <h3>{tText(title)}</h3>
+      <dl className="metric-grid">{tText(children)}</dl>
     </section>
   );
 }
@@ -329,8 +331,8 @@ function ViewControl({
   return (
     <section className="view-control" aria-labelledby="view-control-heading">
       <div className="view-control__bar">
-        <h2 id="view-control-heading">Data view</h2>
-        <div className="segmented-control" role="group" aria-label="Dashboard data view">
+        <h2 id="view-control-heading">{tText("Data view")}</h2>
+        <div className="segmented-control" role="group" aria-label={tLabel("Dashboard data view")}>
           {(["all", "key", "custom"] as ViewMode[]).map((value) => (
             <button
               key={value}
@@ -339,16 +341,16 @@ function ViewControl({
               aria-pressed={mode === value}
               onClick={() => onModeChange(value)}
             >
-              {value === "all" ? "All data" : value === "key" ? "Key data" : "Custom"}
+              {tText(value === "all" ? "All data" : value === "key" ? "Key data" : "Custom")}
             </button>
           ))}
         </div>
       </div>
       {mode === "custom" ? (
-        <div className="custom-metrics" role="group" aria-label="Custom metric selection">
+        <div className="custom-metrics" role="group" aria-label={tLabel("Custom metric selection")}>
           {(Object.keys(domainMetricKeys) as DomainKey[]).map((domain) => (
             <fieldset key={domain}>
-              <legend>{domainLabels[domain]}</legend>
+              <legend>{tText(domainLabels[domain])}</legend>
               <div className="custom-metrics__options">
                 {domainMetricKeys[domain].map((key) => {
                   const id = `${domain}.${key}`;
@@ -359,7 +361,7 @@ function ViewControl({
                         checked={customMetrics.has(id)}
                         onChange={() => toggleMetric(id)}
                       />
-                      <span>{metricMetadata[key].label}</span>
+                      <span>{tText(metricMetadata[key].label)}</span>
                     </label>
                   );
                 })}
@@ -428,14 +430,14 @@ function Dashboard({
     <>
       <header className="page-header">
         <div>
-          <p className="eyebrow">MacroLens</p>
-          <h1>USA Economy Now</h1>
-          <p className="subtitle">Current US macroeconomic conditions</p>
+          <p className="eyebrow">{tText("MacroLens")}</p>
+          <h1>{tText("USA Economy Now")}</h1>
+          <p className="subtitle">{tText("Current US macroeconomic conditions")}</p>
         </div>
         <div className="status-panel">
-          <span>As of</span>
-          <strong>{formatDate(snapshot.as_of_date)}</strong>
-          <p>Current-state macro dashboard. No trading signals.</p>
+          <span>{tText("As of")}</span>
+          <strong>{tText(formatDate(snapshot.as_of_date))}</strong>
+          <p>{tText("Current-state macro dashboard. No trading signals.")}</p>
         </div>
       </header>
 
@@ -447,12 +449,12 @@ function Dashboard({
       />
 
       <section className="freshness" aria-labelledby="freshness-heading">
-        <h2 id="freshness-heading">Component Freshness</h2>
+        <h2 id="freshness-heading">{tText("Component Freshness")}</h2>
         <div className="freshness-grid">
           {freshnessLabels.map(([key, label]) => (
             <div key={key} className="freshness-item">
-              <span>{label}</span>
-              <strong>{formatDate(snapshot.component_as_of_dates[key])}</strong>
+              <span>{tText(label)}</span>
+              <strong>{tText(formatDate(snapshot.component_as_of_dates[key]))}</strong>
             </div>
           ))}
         </div>
@@ -460,8 +462,8 @@ function Dashboard({
 
       <FilterContext.Provider value={{ mode: viewMode, customMetrics }}>
       <main className="domain-grid">
-        <DomainCard domain="labor" title="LABOR">
-          <DomainSection title="Key readings">
+        <DomainCard domain="labor" title={tLabel("LABOR")}>
+          <DomainSection title={tLabel("Key readings")}>
             <Metric metricKey="unemploymentRate" value={formatPercent(labor.unemployment.level)} observationDate={labor.unemployment.observation_date} observationFrequency="monthly" previous={previousValue(history, "unemploymentRate", labor.unemployment.observation_date, formatPercent)} />
             <Metric metricKey="unemploymentLevel" value={unemploymentLevel.value} observationDate={unemploymentLevel.observationDate} observationFrequency={unemploymentLevel.frequency} previous={unemploymentLevel.previous} />
             <Metric metricKey="payrollLevel" value={payrollLevel.value} observationDate={payrollLevel.observationDate} observationFrequency={payrollLevel.frequency} previous={payrollLevel.previous} />
@@ -471,16 +473,16 @@ function Dashboard({
             <Metric metricKey="participationLevel" value={formatPercent(labor.labor_force_participation.level)} observationDate={labor.labor_force_participation.observation_date} observationFrequency="monthly" previous={previousValue(history, "participationLevel", labor.labor_force_participation.observation_date, formatPercent)} />
             <Metric metricKey="earningsYoy" value={formatPercent(labor.average_hourly_earnings.yoy)} observationDate={labor.average_hourly_earnings.observation_date} observationFrequency="monthly" previous={previousValue(history, "earningsYoy", labor.average_hourly_earnings.observation_date, formatPercent)} />
           </DomainSection>
-          <DomainSection title="Interpretation / momentum">
-            <Metric metricKey="laborOverall" value={labor.overall_momentum} type="category" detail={`${improvingVotes} improving · ${weakeningVotes} weakening`} />
-            <Metric metricKey="payrollMomentum" value={labor.payrolls.momentum} type="category" detail={`3M avg change: ${formatNumber(labor.payrolls.monthly_change_ma_3m, 0)}K · 6M: ${formatNumber(labor.payrolls.monthly_change_ma_6m, 0)}K`} />
-            <Metric metricKey="unemploymentMomentum" value={labor.unemployment.momentum} type="category" detail={`Current: ${formatPercent(labor.unemployment.level)} · 3M change: ${formatPercentagePoint(labor.unemployment.change_3m)}`} />
-            <Metric metricKey="initialClaimsMomentum" value={labor.initial_claims.momentum} type="category" detail={`4W avg: ${formatCompactCount(labor.initial_claims.moving_average_4w)} · 13W: ${formatCompactCount(labor.initial_claims.moving_average_13w)}`} />
+          <DomainSection title={tLabel("Interpretation / momentum")}>
+            <Metric metricKey="laborOverall" value={labor.overall_momentum} type="category" detail={tLabel(`${improvingVotes} improving · ${weakeningVotes} weakening`)} />
+            <Metric metricKey="payrollMomentum" value={labor.payrolls.momentum} type="category" detail={tLabel(`3M avg change: ${formatNumber(labor.payrolls.monthly_change_ma_3m, 0)}K · 6M: ${formatNumber(labor.payrolls.monthly_change_ma_6m, 0)}K`)} />
+            <Metric metricKey="unemploymentMomentum" value={labor.unemployment.momentum} type="category" detail={tLabel(`Current: ${formatPercent(labor.unemployment.level)} · 3M change: ${formatPercentagePoint(labor.unemployment.change_3m)}`)} />
+            <Metric metricKey="initialClaimsMomentum" value={labor.initial_claims.momentum} type="category" detail={tLabel(`4W avg: ${formatCompactCount(labor.initial_claims.moving_average_4w)} · 13W: ${formatCompactCount(labor.initial_claims.moving_average_13w)}`)} />
           </DomainSection>
         </DomainCard>
 
-        <DomainCard domain="inflation" title="INFLATION">
-          <DomainSection title="Key readings">
+        <DomainCard domain="inflation" title={tLabel("INFLATION")}>
+          <DomainSection title={tLabel("Key readings")}>
             <Metric metricKey="headlineCpiYoy" value={formatPercent(inflation.headline_cpi.yoy)} observationDate={inflation.headline_cpi.observation_date} observationFrequency="monthly" previous={previousValue(history, "headlineCpiYoy", inflation.headline_cpi.observation_date, formatPercent)} />
             <Metric metricKey="coreCpiYoy" value={formatPercent(inflation.core_cpi.yoy)} observationDate={inflation.core_cpi.observation_date} observationFrequency="monthly" previous={previousValue(history, "coreCpiYoy", inflation.core_cpi.observation_date, formatPercent)} />
             <Metric metricKey="headlinePceYoy" value={formatPercent(inflation.headline_pce.yoy)} observationDate={inflation.headline_pce.observation_date} observationFrequency="monthly" previous={previousValue(history, "headlinePceYoy", inflation.headline_pce.observation_date, formatPercent)} />
@@ -488,15 +490,15 @@ function Dashboard({
             <Metric metricKey="eciYoy" value={formatPercent(inflation.employment_cost_index.yoy)} observationDate={inflation.employment_cost_index.observation_date} observationFrequency="quarterly" previous={previousValue(history, "eciYoy", inflation.employment_cost_index.observation_date, formatPercent)} />
             <Metric metricKey="earningsYoy" value={formatPercent(inflation.average_hourly_earnings.yoy)} observationDate={inflation.average_hourly_earnings.observation_date} observationFrequency="monthly" previous={previousValue(history, "earningsYoy", inflation.average_hourly_earnings.observation_date, formatPercent)} />
           </DomainSection>
-          <DomainSection title="Interpretation / momentum">
-            <Metric metricKey="headlineCpiMomentum" value={inflation.headline_cpi.momentum} type="category" detail={`3M ann.: ${formatPercent(inflation.headline_cpi.annualized_3m)} · YoY: ${formatPercent(inflation.headline_cpi.yoy)}`} />
-            <Metric metricKey="coreCpiMomentum" value={inflation.core_cpi.momentum} type="category" detail={`3M ann.: ${formatPercent(inflation.core_cpi.annualized_3m)} · YoY: ${formatPercent(inflation.core_cpi.yoy)}`} />
-            <Metric metricKey="corePceMomentum" value={inflation.core_pce.momentum} type="category" detail={`3M ann.: ${formatPercent(inflation.core_pce.annualized_3m)} · YoY: ${formatPercent(inflation.core_pce.yoy)}`} />
+          <DomainSection title={tLabel("Interpretation / momentum")}>
+            <Metric metricKey="headlineCpiMomentum" value={inflation.headline_cpi.momentum} type="category" detail={tLabel(`3M ann.: ${formatPercent(inflation.headline_cpi.annualized_3m)} · YoY: ${formatPercent(inflation.headline_cpi.yoy)}`)} />
+            <Metric metricKey="coreCpiMomentum" value={inflation.core_cpi.momentum} type="category" detail={tLabel(`3M ann.: ${formatPercent(inflation.core_cpi.annualized_3m)} · YoY: ${formatPercent(inflation.core_cpi.yoy)}`)} />
+            <Metric metricKey="corePceMomentum" value={inflation.core_pce.momentum} type="category" detail={tLabel(`3M ann.: ${formatPercent(inflation.core_pce.annualized_3m)} · YoY: ${formatPercent(inflation.core_pce.yoy)}`)} />
           </DomainSection>
         </DomainCard>
 
-        <DomainCard domain="growth" title="GROWTH">
-          <DomainSection title="Key readings">
+        <DomainCard domain="growth" title={tLabel("GROWTH")}>
+          <DomainSection title={tLabel("Key readings")}>
             <Metric metricKey="realGdpQoq" value={formatPercent(growth.real_gdp.qoq_annualized)} observationDate={growth.real_gdp.observation_date} observationFrequency="quarterly" previous={previousValue(history, "realGdpQoq", growth.real_gdp.observation_date, formatPercent)} />
             <Metric metricKey="realGdpYoy" value={formatPercent(growth.real_gdp.yoy)} observationDate={growth.real_gdp.observation_date} observationFrequency="quarterly" previous={previousValue(history, "realGdpYoy", growth.real_gdp.observation_date, formatPercent)} />
             <Metric metricKey="cfnaiLevel" value={`${formatNumber(growth.cfnai.level)} / ${formatNumber(growth.cfnai.moving_average_3m)}`} observationDate={growth.cfnai.observation_date} observationFrequency="monthly" previous={previousValue(history, "cfnaiLevel", growth.cfnai.observation_date, formatNumber)} />
@@ -504,56 +506,56 @@ function Dashboard({
             <Metric metricKey="capacityLevel" value={formatPercent(growth.capacity_utilization.level)} observationDate={growth.capacity_utilization.observation_date} observationFrequency="monthly" previous={previousValue(history, "capacityLevel", growth.capacity_utilization.observation_date, formatPercent)} />
             <Metric metricKey="durableGoodsYoy" value={formatPercent(growth.durable_goods_orders.yoy)} observationDate={growth.durable_goods_orders.observation_date} observationFrequency="monthly" previous={previousValue(history, "durableGoodsYoy", growth.durable_goods_orders.observation_date, formatPercent)} />
           </DomainSection>
-          <DomainSection title="Interpretation / momentum">
-            <Metric metricKey="realGdpMomentum" value={growth.real_gdp.momentum} type="category" detail={`QoQ ann.: ${formatPercent(growth.real_gdp.qoq_annualized)} · YoY: ${formatPercent(growth.real_gdp.yoy)}`} />
-            <Metric metricKey="cfnaiPosition" value={growth.cfnai.position} type="category" detail={`3M avg: ${formatNumber(growth.cfnai.moving_average_3m)} · reference: 0`} />
-            <Metric metricKey="industrialMomentum" value={growth.industrial_production.momentum} type="category" detail={`3M ann.: ${formatPercent(growth.industrial_production.annualized_3m)} · YoY: ${formatPercent(growth.industrial_production.yoy)}`} />
-            <Metric metricKey="capacityDirection" value={growth.capacity_utilization.direction} type="category" detail={`3M change: ${formatPercentagePoint(growth.capacity_utilization.change_3m)}`} />
+          <DomainSection title={tLabel("Interpretation / momentum")}>
+            <Metric metricKey="realGdpMomentum" value={growth.real_gdp.momentum} type="category" detail={tLabel(`QoQ ann.: ${formatPercent(growth.real_gdp.qoq_annualized)} · YoY: ${formatPercent(growth.real_gdp.yoy)}`)} />
+            <Metric metricKey="cfnaiPosition" value={growth.cfnai.position} type="category" detail={tLabel(`3M avg: ${formatNumber(growth.cfnai.moving_average_3m)} · reference: 0`)} />
+            <Metric metricKey="industrialMomentum" value={growth.industrial_production.momentum} type="category" detail={tLabel(`3M ann.: ${formatPercent(growth.industrial_production.annualized_3m)} · YoY: ${formatPercent(growth.industrial_production.yoy)}`)} />
+            <Metric metricKey="capacityDirection" value={growth.capacity_utilization.direction} type="category" detail={tLabel(`3M change: ${formatPercentagePoint(growth.capacity_utilization.change_3m)}`)} />
           </DomainSection>
         </DomainCard>
 
-        <DomainCard domain="consumer" title="CONSUMER">
-          <DomainSection title="Key readings">
-            <Metric metricKey="retailYoy" value={formatPercent(consumer.retail_sales.yoy)} detail="Nominal series" observationDate={consumer.retail_sales.observation_date} observationFrequency="monthly" previous={previousValue(history, "retailYoy", consumer.retail_sales.observation_date, formatPercent)} />
+        <DomainCard domain="consumer" title={tLabel("CONSUMER")}>
+          <DomainSection title={tLabel("Key readings")}>
+            <Metric metricKey="retailYoy" value={formatPercent(consumer.retail_sales.yoy)} detail={tLabel("Nominal series")} observationDate={consumer.retail_sales.observation_date} observationFrequency="monthly" previous={previousValue(history, "retailYoy", consumer.retail_sales.observation_date, formatPercent)} />
             <Metric metricKey="consumptionYoy" value={formatPercent(consumer.real_consumption.yoy)} observationDate={consumer.real_consumption.observation_date} observationFrequency="monthly" previous={previousValue(history, "consumptionYoy", consumer.real_consumption.observation_date, formatPercent)} />
             <Metric metricKey="disposableIncomeYoy" value={formatPercent(consumer.real_disposable_income.yoy)} observationDate={consumer.real_disposable_income.observation_date} observationFrequency="monthly" previous={previousValue(history, "disposableIncomeYoy", consumer.real_disposable_income.observation_date, formatPercent)} />
             <Metric metricKey="savingRate" value={formatPercent(consumer.saving_rate.level)} observationDate={consumer.saving_rate.observation_date} observationFrequency="monthly" previous={previousValue(history, "savingRate", consumer.saving_rate.observation_date, formatPercent)} />
           </DomainSection>
-          <DomainSection title="Interpretation / momentum">
-            <Metric metricKey="retailMomentum" value={consumer.retail_sales.momentum} type="category" detail={`3M ann.: ${formatPercent(consumer.retail_sales.annualized_3m)} · YoY: ${formatPercent(consumer.retail_sales.yoy)}`} />
-            <Metric metricKey="consumptionMomentum" value={consumer.real_consumption.momentum} type="category" detail={`3M ann.: ${formatPercent(consumer.real_consumption.annualized_3m)} · YoY: ${formatPercent(consumer.real_consumption.yoy)}`} />
-            <Metric metricKey="savingRate" value={consumer.saving_rate.direction} type="category" detail={`3M change: ${formatPercentagePoint(consumer.saving_rate.change_3m)}`} />
+          <DomainSection title={tLabel("Interpretation / momentum")}>
+            <Metric metricKey="retailMomentum" value={consumer.retail_sales.momentum} type="category" detail={tLabel(`3M ann.: ${formatPercent(consumer.retail_sales.annualized_3m)} · YoY: ${formatPercent(consumer.retail_sales.yoy)}`)} />
+            <Metric metricKey="consumptionMomentum" value={consumer.real_consumption.momentum} type="category" detail={tLabel(`3M ann.: ${formatPercent(consumer.real_consumption.annualized_3m)} · YoY: ${formatPercent(consumer.real_consumption.yoy)}`)} />
+            <Metric metricKey="savingRate" value={consumer.saving_rate.direction} type="category" detail={tLabel(`3M change: ${formatPercentagePoint(consumer.saving_rate.change_3m)}`)} />
           </DomainSection>
         </DomainCard>
 
-        <DomainCard domain="housing" title="HOUSING">
-          <DomainSection title="Key readings">
+        <DomainCard domain="housing" title={tLabel("HOUSING")}>
+          <DomainSection title={tLabel("Key readings")}>
             <Metric metricKey="housingStartsLevel" value={formatSaarThousands(housing.housing_starts.level)} observationDate={housing.housing_starts.observation_date} observationFrequency="monthly" previous={previousValue(history, "housingStartsLevel", housing.housing_starts.observation_date, formatSaarThousands)} />
             <Metric metricKey="buildingPermitsLevel" value={formatSaarThousands(housing.building_permits.level)} observationDate={housing.building_permits.observation_date} observationFrequency="monthly" previous={previousValue(history, "buildingPermitsLevel", housing.building_permits.observation_date, formatSaarThousands)} />
             <Metric metricKey="newHomeSalesLevel" value={formatSaarThousands(housing.new_home_sales.level)} observationDate={housing.new_home_sales.observation_date} observationFrequency="monthly" previous={previousValue(history, "newHomeSalesLevel", housing.new_home_sales.observation_date, formatSaarThousands)} />
             <Metric metricKey="mortgageRate" value={formatPercent(housing.mortgage_rate.level)} observationDate={housing.mortgage_rate.observation_date} observationFrequency="weekly" previous={previousValue(history, "mortgageRate", housing.mortgage_rate.observation_date, formatPercent)} />
           </DomainSection>
-          <DomainSection title="Interpretation / momentum">
-            <Metric metricKey="housingStartsDirection" value={housing.housing_starts.direction} type="category" detail={`MoM: ${formatPercent(housing.housing_starts.mom)} · YoY: ${formatPercent(housing.housing_starts.yoy)}`} />
-            <Metric metricKey="permitsDirection" value={housing.building_permits.direction} type="category" detail={`MoM: ${formatPercent(housing.building_permits.mom)} · YoY: ${formatPercent(housing.building_permits.yoy)}`} />
-            <Metric metricKey="homeSalesDirection" value={housing.new_home_sales.direction} type="category" detail={`MoM: ${formatPercent(housing.new_home_sales.mom)} · YoY: ${formatPercent(housing.new_home_sales.yoy)}`} />
-            <Metric metricKey="mortgageDirection" value={housing.mortgage_rate.direction} type="category" detail={`4W change: ${formatPercentagePoint(housing.mortgage_rate.change_4w)}`} />
+          <DomainSection title={tLabel("Interpretation / momentum")}>
+            <Metric metricKey="housingStartsDirection" value={housing.housing_starts.direction} type="category" detail={tLabel(`MoM: ${formatPercent(housing.housing_starts.mom)} · YoY: ${formatPercent(housing.housing_starts.yoy)}`)} />
+            <Metric metricKey="permitsDirection" value={housing.building_permits.direction} type="category" detail={tLabel(`MoM: ${formatPercent(housing.building_permits.mom)} · YoY: ${formatPercent(housing.building_permits.yoy)}`)} />
+            <Metric metricKey="homeSalesDirection" value={housing.new_home_sales.direction} type="category" detail={tLabel(`MoM: ${formatPercent(housing.new_home_sales.mom)} · YoY: ${formatPercent(housing.new_home_sales.yoy)}`)} />
+            <Metric metricKey="mortgageDirection" value={housing.mortgage_rate.direction} type="category" detail={tLabel(`4W change: ${formatPercentagePoint(housing.mortgage_rate.change_4w)}`)} />
           </DomainSection>
         </DomainCard>
 
-        <DomainCard domain="financial" title="FINANCIAL CONDITIONS">
-          <DomainSection title="Key readings">
+        <DomainCard domain="financial" title={tLabel("FINANCIAL CONDITIONS")}>
+          <DomainSection title={tLabel("Key readings")}>
             <Metric metricKey="fedFunds" value={formatPercent(financialConditions.fed_funds_rate.level)} observationDate={financialConditions.fed_funds_rate.observation_date} observationFrequency="daily" previous={previousValue(history, "fedFunds", financialConditions.fed_funds_rate.observation_date, formatPercent)} />
             <Metric metricKey="treasury2y" value={formatPercent(financialConditions.treasury_2y.level)} observationDate={financialConditions.treasury_2y.observation_date} observationFrequency="daily" previous={previousValue(history, "treasury2y", financialConditions.treasury_2y.observation_date, formatPercent)} />
             <Metric metricKey="treasury10y" value={formatPercent(financialConditions.treasury_10y.level)} observationDate={financialConditions.treasury_10y.observation_date} observationFrequency="daily" previous={previousValue(history, "treasury10y", financialConditions.treasury_10y.observation_date, formatPercent)} />
             <Metric metricKey="realYield10y" value={formatPercent(financialConditions.real_yield_10y.level)} observationDate={financialConditions.real_yield_10y.observation_date} observationFrequency="daily" previous={previousValue(history, "realYield10y", financialConditions.real_yield_10y.observation_date, formatPercent)} />
             <Metric metricKey="curveSpread" value={formatPercentagePoint(financialConditions.yield_curve_2s10s.spread)} observationDate={financialConditions.yield_curve_2s10s.observation_date} observationFrequency="daily" previous={null} />
-            <Metric metricKey="nfciLevel" value={formatNumber(financialConditions.nfci.level)} detail="Reference: 0" observationDate={financialConditions.nfci.observation_date} observationFrequency="weekly" previous={previousValue(history, "nfciLevel", financialConditions.nfci.observation_date, formatNumber)} />
+            <Metric metricKey="nfciLevel" value={formatNumber(financialConditions.nfci.level)} detail={tLabel("Reference: 0")} observationDate={financialConditions.nfci.observation_date} observationFrequency="weekly" previous={previousValue(history, "nfciLevel", financialConditions.nfci.observation_date, formatNumber)} />
           </DomainSection>
-          <DomainSection title="Interpretation / momentum">
-            <Metric metricKey="curveShape" value={financialConditions.yield_curve_2s10s.shape} type="category" detail={`Spread: ${formatPercentagePoint(financialConditions.yield_curve_2s10s.spread)}`} />
-            <Metric metricKey="nfciPosition" value={financialConditions.nfci.position} type="category" detail={`Level: ${formatNumber(financialConditions.nfci.level)} · reference: 0`} />
-            <Metric metricKey="nfciDirection" value={financialConditions.nfci.direction} type="category" detail={`4W change: ${formatNumber(financialConditions.nfci.change_4w)}`} />
+          <DomainSection title={tLabel("Interpretation / momentum")}>
+            <Metric metricKey="curveShape" value={financialConditions.yield_curve_2s10s.shape} type="category" detail={tLabel(`Spread: ${formatPercentagePoint(financialConditions.yield_curve_2s10s.spread)}`)} />
+            <Metric metricKey="nfciPosition" value={financialConditions.nfci.position} type="category" detail={tLabel(`Level: ${formatNumber(financialConditions.nfci.level)} · reference: 0`)} />
+            <Metric metricKey="nfciDirection" value={financialConditions.nfci.direction} type="category" detail={tLabel(`4W change: ${formatNumber(financialConditions.nfci.change_4w)}`)} />
           </DomainSection>
         </DomainCard>
       </main>
@@ -561,13 +563,13 @@ function Dashboard({
 
       <div className="methodology-note">
         <Badge value="Deterministic classifications only" />
-        <span>No forecasts or investment recommendations are generated.</span>
+        <span>{tText("No forecasts or investment recommendations are generated.")}</span>
       </div>
     </>
   );
 }
 
-function Overview() {
+export function DetailedOverview({ initialSnapshot }: { initialSnapshot?: UsaEconomyNow }) {
   const [snapshot, setSnapshot] = useState<UsaEconomyNow | null>(null);
   const [history, setHistory] = useState<DashboardHistory>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -592,7 +594,7 @@ function Overview() {
     setIsLoading(true);
     setError(null);
 
-    Promise.all([fetchUsaEconomyNow(), fetchDashboardHistory()])
+    Promise.all([initialSnapshot ? Promise.resolve(initialSnapshot) : fetchUsaEconomyNow(), fetchDashboardHistory()])
       .then(([data, historyData]) => {
         if (isActive) {
           setSnapshot(data);
@@ -618,7 +620,7 @@ function Overview() {
   if (isLoading) {
     return (
       <div className="app-shell">
-        <div className="loading-panel">Loading USA Economy Now...</div>
+        <div className="loading-panel">{tText("Loading USA Economy Now...")}</div>
       </div>
     );
   }
@@ -627,11 +629,10 @@ function Overview() {
     return (
       <div className="app-shell">
         <div className="error-panel" role="alert">
-          <h1>MacroLens</h1>
-          <p>{error}</p>
+          <h1>{tText("MacroLens")}</h1>
+          <p>{tText(error)}</p>
           <button type="button" onClick={() => setRequestId((current) => current + 1)}>
-            Retry
-          </button>
+            {tText("Retry")}</button>
         </div>
       </div>
     );
@@ -653,51 +654,36 @@ function Overview() {
   );
 }
 
-function currentSection(hash: string): "overview" | "state" | "macro-index" | "market-comparison" | "charts" | "relationships" | "indicators" | "calendar" {
-  if (hash === "#/market-comparison" || hash === "#/market-comparison/") return "market-comparison";
-  if (hash === "#/macro-index" || hash === "#/macro-index/") return "macro-index";
-  if (hash === "#/state" || hash === "#/state/") return "state";
-  if (hash === "#/charts" || hash === "#/charts/") return "charts";
-  if (hash === "#/relationships" || hash === "#/relationships/") return "relationships";
-  if (hash === "#/indicators" || hash === "#/indicators/" || hash.startsWith("#/indicators/")) return "indicators";
-  if (hash === "#/calendar" || hash === "#/calendar/") return "calendar";
-  return "overview";
-}
-
 export default function App() {
+  useSyncExternalStore(subscribeLanguage, getLanguage);
   const [hash, setHash] = useState(() => window.location.hash);
-  const section = currentSection(hash);
-  let seriesId: string | undefined;
-  if (section === "indicators") {
-    try { seriesId = decodeURIComponent(hash.slice("#/indicators/".length)) || undefined; }
-    catch { seriesId = "Invalid series ID"; }
-  }
+  const route = resolveRoute(hash);
   useEffect(() => {
     const handleHashChange = () => setHash(window.location.hash);
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
+  useEffect(() => {
+    if (window.location.hash !== route.hash) {
+      window.history.replaceState(null, "", route.hash);
+      setHash(route.hash);
+    }
+  }, [hash, route.hash]);
 
-  return (
-    <>
-      <nav className="app-navigation" aria-label="Main navigation">
-        <a href="#/" aria-current={section === "overview" ? "page" : undefined}>Overview</a>
-        <a href="#/state" aria-current={section === "state" ? "page" : undefined}>Macro State</a>
-        <a href="#/macro-index" aria-current={section === "macro-index" ? "page" : undefined}>Macro Index</a>
-        <a href="#/market-comparison" aria-current={section === "market-comparison" ? "page" : undefined}>Market Comparison</a>
-        <a href="#/charts" aria-current={section === "charts" ? "page" : undefined}>Charts</a>
-        <a href="#/relationships" aria-current={section === "relationships" ? "page" : undefined}>Relationships</a>
-        <a href="#/indicators" aria-current={section === "indicators" ? "page" : undefined}>Indicators</a>
-        <a href="#/calendar" aria-current={section === "calendar" ? "page" : undefined}>Calendar</a>
-      </nav>
-      {section === "market-comparison" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading Market Comparison...</div>}><MarketComparisonPage /></Suspense></div>
-        : section === "macro-index" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading Macro Index...</div>}><MacroIndexPage /></Suspense></div>
-        : section === "state" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading Macro State...</div>}><MacroStatePage /></Suspense></div>
-        : section === "charts" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading charts...</div>}><ChartsPage /></Suspense></div>
-        : section === "relationships" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading relationships...</div>}><RelationshipsPage /></Suspense></div>
-        : section === "indicators" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading indicators...</div>}><IndicatorsPage seriesId={seriesId} /></Suspense></div>
-        : section === "calendar" ? <div className="app-shell"><Suspense fallback={<div className="loading-panel">Loading calendar...</div>}><CalendarPage /></Suspense></div>
-        : <Overview />}
-    </>
-  );
+  return <>
+    <LanguageSwitcher />
+    <nav className="app-navigation" aria-label={tLabel("Main navigation")}>
+      <a href="#/" aria-current={route.section === "overview" ? "page" : undefined}>{tText("Overview")}</a>
+      <a href="#/explore/indicators" aria-current={route.section === "explore" ? "page" : undefined}>{tText("Explore Data")}</a>
+      <a href="#/research/mci" aria-current={route.section === "research" ? "page" : undefined}>{tText("Research")}</a>
+    </nav>
+    <div className="app-shell">
+      <Suspense fallback={<p className="loading-panel">{tText("Loading section...")}</p>}>
+        {route.section === "explore" ? <ExploreDataPage route={route} />
+          : route.section === "research" ? <ResearchPage route={route} />
+          : route.view === "calendar" ? <><a className="back-link" href="#/">{tText("Back to Overview")}</a><CalendarPage /></>
+          : <EconomyBrief />}
+      </Suspense>
+    </div>
+  </>;
 }

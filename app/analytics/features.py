@@ -35,6 +35,8 @@ FEATURES_BY_SERIES = {
     "HSN1F": ("level", "mom", "yoy", "moving_average_3m"),
     "MORTGAGE30US": ("level", "change_4w", "change_13w", "moving_average_4w"),
     "DFF": ("level",),
+    "DFEDTARL": ("level",),
+    "DFEDTARU": ("level",),
     "DGS2": ("level",),
     "DGS10": ("level",),
     "DFII10": ("level",),

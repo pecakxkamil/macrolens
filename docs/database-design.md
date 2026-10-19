@@ -35,7 +35,7 @@ Key fields:
 
 ## computed_features
 
-Stores calculated analytical features such as moving averages, period changes, growth rates, and future derived metrics. This table is storage only; feature calculations are not implemented yet.
+Stores implemented v1 analytical features such as moving averages, period changes and growth rates. Calculations are implemented in app/analytics and persisted with their calculation as-of date and methodology version. These stored current-vintage features are separate from PIT reconstruction.
 
 Key fields:
 
@@ -47,7 +47,7 @@ Key fields:
 - `methodology_version`: version of the feature calculation methodology, allowing calculations to evolve later without losing reproducibility.
 - `computed_at`: timestamp when the feature row was calculated.
 
-The uniqueness constraint on `series_id`, `observation_date`, `as_of_date`, `feature_name`, and `methodology_version` prevents duplicate calculations for the same point-in-time feature while allowing new methodology versions to coexist with prior results.
+The uniqueness constraint on `series_id`, `observation_date`, `as_of_date`, `feature_name`, and `methodology_version` prevents duplicate calculations for the same stored feature calculation while allowing new methodology versions to coexist with prior results.
 
 ## economic_releases, series_release_map, release_dates
 

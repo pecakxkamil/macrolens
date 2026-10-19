@@ -1,3 +1,4 @@
+import { getLocale, getLanguage, t } from "./i18n/language";
 export function formatDate(value?: string): string {
   return value || "-";
 }
@@ -18,19 +19,19 @@ export function formatObservationDate(value?: string, frequency?: string): strin
   const normalizedFrequency = frequency?.toLowerCase();
 
   if (normalizedFrequency === "quarterly") {
-    return `Q${Math.floor((month - 1) / 3) + 1} ${year}`;
+    return `${getLanguage() === "pl" ? "kw. " : "Q"}${Math.floor((month - 1) / 3) + 1} ${year}`;
   }
 
   const date = new Date(Date.UTC(year, month - 1, day));
   if (normalizedFrequency === "monthly") {
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(getLocale(), {
       month: "short",
       year: "numeric",
       timeZone: "UTC",
     }).format(date);
   }
 
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(getLocale(), {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -43,7 +44,7 @@ export function formatNumber(value?: number, fractionDigits = 2): string {
     return "-";
   }
 
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(getLocale(), {
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,
   }).format(value);
@@ -54,7 +55,7 @@ export function formatPercent(value?: number): string {
 }
 
 export function formatPercentagePoint(value?: number): string {
-  return `${formatNumber(value)} pp`;
+  return `${formatNumber(value)} ${getLanguage() === "pl" ? "pkt proc." : "pp"}`;
 }
 
 export function formatCompactCount(value?: number): string {
@@ -62,7 +63,7 @@ export function formatCompactCount(value?: number): string {
     return "-";
   }
 
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(getLocale(), {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(value);
@@ -70,13 +71,13 @@ export function formatCompactCount(value?: number): string {
 
 export function formatThousandsAsMillions(value?: number): string {
   return typeof value === "number" && !Number.isNaN(value)
-    ? `${formatNumber(value / 1000, 1)}M`
+    ? `${formatNumber(value / 1000, 1)}${getLanguage() === "pl" ? " mln" : "M"}`
     : "-";
 }
 
 export function formatSaarThousands(value?: number): string {
   return typeof value === "number" && !Number.isNaN(value)
-    ? `${formatNumber(value / 1000, 2)}M SAAR`
+    ? `${formatNumber(value / 1000, 2)}${getLanguage() === "pl" ? " mln (SAAR)" : "M SAAR"}`
     : "-";
 }
 

@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
-import App from "./App";
+import { DetailedOverview as App } from "./App";
 import { type UsaEconomyNow } from "./api/macrolens";
 import { formatObservationDate } from "./format";
 
@@ -331,7 +331,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("MacroLens dashboard", () => {
+describe("MacroLens detailed dashboard", () => {
   test("page renders MacroLens and USA Economy Now", async () => {
     mockFetchSuccess();
 

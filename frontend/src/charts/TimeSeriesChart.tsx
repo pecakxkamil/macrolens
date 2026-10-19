@@ -1,3 +1,4 @@
+import { tText, tLabel } from "../i18n/language";
 import { useState } from "react";
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { ChartDefinition } from "./chartDefinitions";
@@ -21,7 +22,7 @@ export function TimeSeriesChart({ definition, rows, valueFormatter }: {
 
   return (
     <>
-      <div className="chart-legend" role="group" aria-label={`${definition.title} series visibility`}>
+      <div className="chart-legend" role="group" aria-label={tLabel(`${definition.title} series visibility`)}>
         {definition.series.map((series) => {
           const isVisible = !hidden.includes(series.id);
           const latest = [...rows].reverse().find((row) => typeof row[series.id] === "number");
@@ -31,19 +32,19 @@ export function TimeSeriesChart({ definition, rows, valueFormatter }: {
               type="button"
               className={`chart-legend__button${isVisible ? " is-active" : ""}`}
               aria-pressed={isVisible}
-              aria-label={`${isVisible ? "Hide" : "Show"} ${series.label}`}
+              aria-label={tLabel(`${isVisible ? "Hide" : "Show"} ${series.label}`)}
               onClick={() => setHidden((current) => current.includes(series.id)
                 ? current.filter((id) => id !== series.id) : [...current, series.id])}
             >
               <span className="chart-legend__swatch" style={{ backgroundColor: series.color }} />
-              <span>{series.label}</span>
-              {latest ? <span className="chart-legend__latest">{formatValue(latest[series.id] as number)} · {formatChartDate(latest.observation_date, definition)}</span> : null}
+              <span>{tText(series.label)}</span>
+              {latest ? <span className="chart-legend__latest">{tText(formatValue(latest[series.id] as number))} {tText(" · ")}{tText(formatChartDate(latest.observation_date, definition))}</span> : null}
             </button>
           );
         })}
       </div>
-      {visible.length === 0 ? <p className="chart-state">Select a series above to display it.</p> : (
-        <div className="chart-plot" role="region" aria-label={`${definition.title} time series chart`}>
+      {visible.length === 0 ? <p className="chart-state">{tText("Select a series above to display it.")}</p> : (
+        <div className="chart-plot" role="region" aria-label={tLabel(`${definition.title} time series chart`)}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart accessibilityLayer data={rows} margin={{ top: 12, right: 12, left: 2, bottom: 6 }}>
               <CartesianGrid stroke="#2b3746" strokeDasharray="3 4" vertical={false} />
@@ -57,18 +58,18 @@ export function TimeSeriesChart({ definition, rows, valueFormatter }: {
                   if (!active || !label || !payload?.length) return null;
                   return (
                     <div className="chart-tooltip">
-                      <strong>{formatChartDate(String(label), definition)}</strong>
+                      <strong>{tText(formatChartDate(String(label), definition))}</strong>
                       {(payload as readonly TooltipEntry[]).map((entry) => {
                         const series = definition.series.find((item) => item.id === entry.dataKey);
                         return series && typeof entry.value === "number" ? (
-                          <div key={series.id}><span style={{ color: entry.color }}>{series.label}</span><b>{formatValue(entry.value)}</b></div>
+                          <div key={series.id}><span style={{ color: entry.color }}>{tText(series.label)}</span><b>{tText(formatValue(entry.value))}</b></div>
                         ) : null;
                       })}
                     </div>
                   );
                 }}
               />
-              {visible.map((series) => <Line key={series.id} type="linear" dataKey={series.id} name={series.label} stroke={series.color} strokeWidth={2} dot={false} activeDot={{ r: 4 }} connectNulls={false} isAnimationActive={false} />)}
+              {visible.map((series) => <Line key={series.id} type="linear" dataKey={series.id} name={tLabel(series.label)} stroke={series.color} strokeWidth={2} dot={false} activeDot={{ r: 4 }} connectNulls={false} isAnimationActive={false} />)}
             </LineChart>
           </ResponsiveContainer>
         </div>

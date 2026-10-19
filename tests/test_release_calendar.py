@@ -47,6 +47,11 @@ class FakeConnection:
         self.closed = True
 
 
+@pytest.fixture(autouse=True)
+def no_local_policy_snapshot(monkeypatch):
+    monkeypatch.setattr(release_calendar, "read_schedule", lambda: {"status": "not_synced", "events": [], "retrieved_at": None, "source_url": "https://www.federalreserve.gov/"})
+
+
 def event_rows():
     return [
         (date(2026, 9, 28), 10, "Consumer Price Index", "https://www.bls.gov/cpi/", *SERIES_CPI),

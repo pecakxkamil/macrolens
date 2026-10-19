@@ -1,3 +1,4 @@
+import { tText, tLabel } from "../i18n/language";
 import { useEffect, useState } from "react";
 import {
   fetchCalendar,
@@ -23,7 +24,7 @@ function sourceUrl(value: string | null): string | null {
 function ImportanceIndicator({ importance }: { importance: CalendarEvent["importance"] }) {
   const label = `${importance[0].toUpperCase()}${importance.slice(1)} importance`;
   return <span className={`calendar-importance calendar-importance--${importance}`}>
-    <span className="calendar-importance__dot" aria-hidden="true" />{label}
+    <span className="calendar-importance__dot" aria-hidden="true" />{tText(label)}
   </span>;
 }
 
@@ -43,15 +44,15 @@ function ContextReading({ series, history }: { series: SeriesMetadata; history?:
   const { latest, previous } = readingContext(history);
   return (
     <div className="calendar-context-reading">
-      <div><strong>{series.short_name || series.name}</strong><span>{series.series_id}</span></div>
-      {history === undefined ? <p role="status">Loading readings...</p> : history === null ? <p>Readings unavailable.</p> : (
+      <div><strong>{tText(series.short_name || series.name)}</strong><span>{tText(series.series_id)}</span></div>
+      {history === undefined ? <p role="status">{tText("Loading readings...")}</p> : history === null ? <p>{tText("Readings unavailable.")}</p> : (
         <dl>
-          <div><dt>Latest stored reading</dt><dd>{latest ? formatIndicatorValue(latest.value, series, null) : "—"}</dd></div>
-          <div><dt>Previous observation</dt><dd>{previous ? formatIndicatorValue(previous.value, series, null) : "—"}</dd></div>
-          <div><dt>Latest observation date</dt><dd>{latest ? formatObservationDate(latest.date, series.frequency) : "—"}</dd></div>
+          <div><dt>{tText("Latest stored reading")}</dt><dd>{tText(latest ? formatIndicatorValue(latest.value, series, null) : "—")}</dd></div>
+          <div><dt>{tText("Previous observation")}</dt><dd>{tText(previous ? formatIndicatorValue(previous.value, series, null) : "—")}</dd></div>
+          <div><dt>{tText("Latest observation date")}</dt><dd>{tText(latest ? formatObservationDate(latest.date, series.frequency) : "—")}</dd></div>
         </dl>
       )}
-      <a href={`#/indicators/${encodeURIComponent(series.series_id)}`}>View indicator</a>
+      <a href={`#/explore/indicators/${encodeURIComponent(series.series_id)}`}>{tText("View indicator")}</a>
     </div>
   );
 }
@@ -65,6 +66,7 @@ function ReleaseDetailPanel({ event }: { event: CalendarEvent }) {
     const controller = new AbortController();
     setDetail({ status: "loading" });
     setHistories({});
+    if (event.release_id === null) return () => controller.abort();
     fetchReleaseDetail(event.release_id, controller.signal)
       .then(async (data) => {
         if (controller.signal.aborted) return;
@@ -85,16 +87,16 @@ function ReleaseDetailPanel({ event }: { event: CalendarEvent }) {
   }, [event.release_id, requestId]);
 
   return (
-    <div className="calendar-release-detail" aria-label={`${event.release_name} details`}>
-      {detail.status === "loading" ? <p role="status">Loading release details...</p> : null}
-      {detail.status === "error" ? <div role="alert"><p>Unable to load release details.</p><button type="button" onClick={() => setRequestId((value) => value + 1)}>Retry details</button></div> : null}
+    <div className="calendar-release-detail" aria-label={tLabel(`${event.release_name} details`)}>
+      {detail.status === "loading" ? <p role="status">{tText("Loading release details...")}</p> : null}
+      {detail.status === "error" ? <div role="alert"><p>{tText("Unable to load release details.")}</p><button type="button" onClick={() => setRequestId((value) => value + 1)}>{tText("Retry details")}</button></div> : null}
       {detail.status === "ready" ? (
         <>
-          <h4>{detail.data.release_name}</h4>
-          <p>Release date: {formatCalendarDate(event.release_date)}</p>
-          {sourceUrl(detail.data.source_link) ? <a href={sourceUrl(detail.data.source_link)!} target="_blank" rel="noopener noreferrer">Source link</a> : null}
-          <p className="calendar-context-note">Readings below are latest stored current-vintage context. They are not historical release-vintage values.</p>
-          <h5>Affected MacroLens indicators</h5>
+          <h4>{tText(detail.data.release_name)}</h4>
+          <p>{tText("Release date: ")}{tText(formatCalendarDate(event.release_date))}</p>
+          {sourceUrl(detail.data.source_link) ? <a href={sourceUrl(detail.data.source_link)!} target="_blank" rel="noopener noreferrer">{tText("Source link")}</a> : null}
+          <p className="calendar-context-note">{tText("Readings below are latest stored current-vintage context. They are not historical release-vintage values.")}</p>
+          <h5>{tText("Affected MacroLens indicators")}</h5>
           <div className="calendar-context-grid">{detail.data.series.map((series) => <ContextReading key={series.series_id} series={series} history={histories[series.series_id]} />)}</div>
         </>
       ) : null}
@@ -104,21 +106,28 @@ function ReleaseDetailPanel({ event }: { event: CalendarEvent }) {
 
 function ReleaseCard({ event, expanded, onToggle, today }: { event: CalendarEvent; expanded: boolean; onToggle: () => void; today: string }) {
   const status = dateStatus(event.release_date, today);
-  const categories = [...new Set(event.series.map((series) => series.category))];
+  const categories = event.event_type === "fomc_decision" ? ["financial_conditions"] : [...new Set(event.series.map((series) => series.category))];
   return (
     <article className={`calendar-release-card calendar-release-card--${status.toLowerCase()}`}>
       <div className="calendar-release-card__top">
-        <div><h3>{event.release_name}</h3><span>{formatCalendarDate(event.release_date)} · {formatPolandTime(event.release_datetime_utc)}</span></div>
-        <span className="calendar-status">{status}</span>
+        <div><h3>{tText(event.release_name)}</h3><span>{tText(formatCalendarDate(event.release_date))} {tText(" · ")}{tText(formatPolandTime(event.release_datetime_utc))}</span></div>
+        <span className="calendar-status">{tText(status)}</span>
       </div>
       <ImportanceIndicator importance={event.importance} />
-      <div className="calendar-category-badges">{categories.map((category) => <span key={category}>{categoryLabel(category)}</span>)}</div>
-      <ul className="calendar-series-list">{event.series.map((series) => <li key={series.series_id}><strong>{series.series_id}</strong><span>{series.short_name || series.name}</span></li>)}</ul>
+      <div className="calendar-category-badges">{categories.map((category) => <span key={category}>{tText(categoryLabel(category))}</span>)}</div>
+      <ul className="calendar-series-list">{event.series.map((series) => <li key={series.series_id}><strong>{tText(series.series_id)}</strong><span>{tText(series.short_name || series.name)}</span></li>)}</ul>
       <div className="calendar-release-card__actions">
-        <button type="button" aria-expanded={expanded} onClick={onToggle}>{expanded ? "Hide details" : "View details"}</button>
-        {sourceUrl(event.source_link) ? <a href={sourceUrl(event.source_link)!} target="_blank" rel="noopener noreferrer">Source</a> : null}
+        <button type="button" aria-expanded={expanded} onClick={onToggle}>{tText(expanded ? "Hide details" : "View details")}</button>
+        {sourceUrl(event.source_link) ? <a href={sourceUrl(event.source_link)!} target="_blank" rel="noopener noreferrer">{tText("Source")}</a> : null}
       </div>
-      {expanded ? <ReleaseDetailPanel key={`${event.release_id}-${event.release_date}`} event={event} /> : null}
+      {expanded ? event.event_type === "fomc_decision" ? <div className="calendar-release-detail">
+        <p>{tText("Official Federal Reserve policy decision; final day of the scheduled meeting.")}</p>
+        <p>{tText("Meeting dates: ")}{event.meeting_start_date} {tText(" through ")}{event.meeting_end_date}</p>
+        <p>{tText("Schedule retrieved: ")}{event.retrieved_at}</p>
+        <p>{tText("Source timezone: ")}{event.source_timezone ?? tText("Time unavailable")}</p>
+        {sourceUrl(event.time_source_url ?? null) ? <a href={event.time_source_url!} target="_blank" rel="noopener noreferrer">{tText("Official time source")}</a> : null}
+        <p>{tText("Stored schedules may change. Refresh is separate from page loading.")}</p>
+      </div> : <ReleaseDetailPanel key={`${event.release_id}-${event.release_date}`} event={event} /> : null}
     </article>
   );
 }
@@ -148,36 +157,38 @@ export function CalendarPage() {
   return (
     <main className="calendar-page">
       <header className="calendar-header">
-        <p className="eyebrow">MacroLens</p>
-        <h1>Macro Calendar</h1>
-        <p className="subtitle">Scheduled US economic releases relevant to MacroLens indicators.</p>
+        <p className="eyebrow">{tText("MacroLens")}</p>
+        <h1>{tText("Macro Calendar")}</h1>
+        <p className="subtitle">{tText("Scheduled US economic releases relevant to MacroLens indicators.")}</p>
       </header>
-      <p className="calendar-notice">Release dates are sourced from FRED and underlying data providers. Scheduled times for supported releases come from official publisher schedules and may change; FRED does not guarantee publication times. Consensus estimates are not included. No trading signals.</p>
-      <p className="calendar-time-note">Times shown in Poland local time (Europe/Warsaw).</p>
-      <div className="calendar-importance-legend" aria-label="Release importance legend">
+      <p className="calendar-notice">{tText("Release dates are sourced from FRED and underlying data providers. Scheduled times for supported releases come from official publisher schedules and may change; FRED does not guarantee publication times. Consensus estimates are not included. No trading signals.")}</p>
+      <p className="calendar-notice">{tText("FOMC decisions use the separately stored official Federal Reserve schedule. Only explicitly confirmed times are shown.")}</p>
+      {state.status === "ready" && state.data.policy_calendar && state.data.policy_calendar.status !== "available" ? <p className="calendar-notice">{tText("FOMC schedule unavailable; macro release coverage is shown separately.")}</p> : null}
+      <p className="calendar-time-note">{tText("Times shown in Poland local time (Europe/Warsaw).")}</p>
+      <div className="calendar-importance-legend" aria-label={tLabel("Release importance legend")}>
         <ImportanceIndicator importance="high" />
         <ImportanceIndicator importance="medium" />
         <ImportanceIndicator importance="low" />
-        <span className="calendar-importance-legend__note">Colors indicate release importance, not market direction.</span>
+        <span className="calendar-importance-legend__note">{tText("Colors indicate release importance, not market direction.")}</span>
       </div>
       <div className="calendar-controls">
-        <div className="calendar-week-controls" role="group" aria-label="Calendar week">
-          <button type="button" onClick={() => { setAnchor(shiftDate(anchor, -7)); setSelected(null); }}>Previous week</button>
-          <button type="button" onClick={() => { setAnchor(todayIso()); setSelected(null); }}>This week</button>
-          <button type="button" onClick={() => { setAnchor(shiftDate(anchor, 7)); setSelected(null); }}>Next week</button>
+        <div className="calendar-week-controls" role="group" aria-label={tLabel("Calendar week")}>
+          <button type="button" onClick={() => { setAnchor(shiftDate(anchor, -7)); setSelected(null); }}>{tText("Previous week")}</button>
+          <button type="button" onClick={() => { setAnchor(todayIso()); setSelected(null); }}>{tText("This week")}</button>
+          <button type="button" onClick={() => { setAnchor(shiftDate(anchor, 7)); setSelected(null); }}>{tText("Next week")}</button>
         </div>
-        <span className="calendar-week-label">{formatCalendarDate(startDate)} – {formatCalendarDate(endDate)}</span>
+        <span className="calendar-week-label">{tText(formatCalendarDate(startDate))} {tText(" – ")}{tText(formatCalendarDate(endDate))}</span>
       </div>
-      <div className="calendar-category-filters" role="group" aria-label="Calendar category">
-        {indicatorCategories.map((item) => <button key={item.id} type="button" aria-pressed={category === item.id} onClick={() => { setCategory(item.id); setSelected(null); }}>{item.label}</button>)}
+      <div className="calendar-category-filters" role="group" aria-label={tLabel("Calendar category")}>
+        {indicatorCategories.map((item) => <button key={item.id} type="button" aria-pressed={category === item.id} onClick={() => { setCategory(item.id); setSelected(null); }}>{tText(item.label)}</button>)}
       </div>
-      {state.status === "loading" ? <div className="calendar-state" role="status">Loading calendar...</div> : null}
-      {state.status === "error" ? <div className="calendar-state" role="alert"><p>Unable to load calendar.</p><button type="button" onClick={() => setRequestId((value) => value + 1)}>Retry</button></div> : null}
-      {state.status === "ready" && !groups.length ? <div className="calendar-state">No tracked MacroLens releases in this period.</div> : null}
-      {groups.map((group) => <section key={group.date} className="calendar-day" aria-label={formatAgendaDate(group.date)}>
-        <h2>{formatAgendaDate(group.date)}</h2>
+      {state.status === "loading" ? <div className="calendar-state" role="status">{tText("Loading calendar...")}</div> : null}
+      {state.status === "error" ? <div className="calendar-state" role="alert"><p>{tText("Unable to load calendar.")}</p><button type="button" onClick={() => setRequestId((value) => value + 1)}>{tText("Retry")}</button></div> : null}
+      {state.status === "ready" && !groups.length ? <div className="calendar-state">{tText("No tracked MacroLens releases in this period.")}</div> : null}
+      {groups.map((group) => <section key={group.date} className="calendar-day" aria-label={tLabel(formatAgendaDate(group.date))}>
+        <h2>{tText(formatAgendaDate(group.date))}</h2>
         <div className="calendar-day__events">{group.events.map((event) => {
-          const key = `${event.release_id}:${event.release_date}`;
+          const key = event.event_id ?? `${event.release_id}:${event.release_date}`;
           return <ReleaseCard key={key} event={event} today={today} expanded={selected === key} onToggle={() => setSelected((current) => current === key ? null : key)} />;
         })}</div>
       </section>)}

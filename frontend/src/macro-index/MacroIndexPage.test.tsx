@@ -53,10 +53,10 @@ describe("Macro Conditions Index v1", () => {
     mockApi();
     window.location.hash = "#/";
     render(<App />);
-    fireEvent.click(screen.getByRole("link", { name: "Macro Index" }));
+    fireEvent.click(screen.getByRole("link", { name: "Research" }));
     expect(await screen.findByRole("heading", { name: "Macro Conditions Index" })).toBeInTheDocument();
     expect(await screen.findByRole("region", { name: "Current Macro Conditions Index" })).toHaveTextContent("50.0 / 100");
-    expect(screen.getByRole("link", { name: "Macro Index" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Research" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByText("Point-in-time uses only data vintages available by each historical month-end.")).toBeInTheDocument();
     expect(screen.getByText(/not an investable or backtest signal/)).toBeInTheDocument();
     expect(screen.queryByText(/Trading signal:|Recession probability:|Bullish|Bearish|Risk-on|Risk-off/i)).not.toBeInTheDocument();
@@ -113,7 +113,7 @@ describe("Macro Conditions Index v1", () => {
       await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => String(url).includes(`start_date=${rangeStartDate(years)}`))).toBe(true));
     }
     fireEvent.click(within(group).getByRole("button", { name: "Max" }));
-    await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith("/mci/point-in-time/history"))).toBe(true));
+    await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => new URL(String(url)).pathname.endsWith("/mci/point-in-time/history") && !new URL(String(url)).searchParams.has("start_date"))).toBe(true));
     expect(fetchMock.mock.calls.filter(([url]) => String(url).endsWith("/us/mci/point-in-time"))).toHaveLength(1);
   });
 
@@ -167,4 +167,15 @@ describe("Macro Conditions Index v1", () => {
     expect(await screen.findByRole("region", { name: "Current Macro Conditions Index" })).toHaveTextContent("50.0 / 100");
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
+});
+
+
+test("known PIT coverage remains visible while the monthly history is loading", async () => {
+  const data = { ...current, coverage: { first_valid_as_of_date: "2011-05-31", backfilled_through: "2026-10-09", missing_series: [], series: {} } };
+  vi.stubGlobal("fetch", vi.fn().mockImplementation((input: string) => String(input).includes("/history") ? new Promise(() => undefined) : Promise.resolve({ ok: true, json: async () => data })));
+  openIndex();
+  const coverage = await screen.findByRole("region", { name: "Point-in-time coverage" });
+  expect(coverage).toHaveTextContent("First valid historical MCI: 2011-05-31");
+  expect(coverage).not.toHaveTextContent("Loading coverage...");
+  expect(screen.getByText("Loading index history...")).toBeInTheDocument();
 });

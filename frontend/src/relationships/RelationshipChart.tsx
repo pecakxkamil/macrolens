@@ -1,3 +1,4 @@
+import { tText, tLabel, getLocale } from "../i18n/language";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { RelationshipKey, RelationshipResponse } from "../api/macrolens";
 import { relationshipAxisPlan } from "./relationshipAxes";
@@ -11,26 +12,27 @@ const colors: Record<RelationshipKey, string> = {
   third: "#b6a2d8",
 };
 
-const numberFormat = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
+
 
 export function RelationshipChart({ response, labels, mode }: {
   response: RelationshipResponse;
   labels: Record<RelationshipKey, string>;
   mode: ComparisonMode;
 }) {
+  const numberFormat = new Intl.NumberFormat(getLocale(), { maximumFractionDigits: 2 });
   const rows = relationshipChartRows(response);
   const indexed = mode === "indexed";
   const { axes, axisFor } = relationshipAxisPlan(response.indicators, mode);
 
   return (
     <>
-      <div className="relationship-chart-legend" aria-label="Chart series">
+      <div className="relationship-chart-legend" aria-label={tLabel("Chart series")}>
         {response.indicators.map((indicator) => <span key={indicator.key}>
           <span className="relationship-chart-legend__swatch" style={{ backgroundColor: colors[indicator.key] }} />
-          {labels[indicator.key]}{indexed ? " · index" : ` · ${indicator.unit}`}
+          {tText(labels[indicator.key])}{tText(indexed ? " · index" : ` · ${indicator.unit}`)}
         </span>)}
       </div>
-      <div className="relationship-chart-plot" role="region" aria-label="Aligned relationship time series chart">
+      <div className="relationship-chart-plot" role="region" aria-label={tLabel("Aligned relationship time series chart")}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart accessibilityLayer data={rows} margin={{ top: 12, right: 8, left: 0, bottom: 6 }}>
             <CartesianGrid stroke="#2b3746" strokeDasharray="3 4" vertical={false} />
@@ -38,12 +40,12 @@ export function RelationshipChart({ response, labels, mode }: {
             {axes.map((axis) => <YAxis key={axis.id} yAxisId={axis.id} orientation={axis.orientation} width={indexed ? 58 : 60} tickFormatter={(value: number) => numberFormat.format(value)} tick={{ fill: indexed || axis.members.length > 1 ? "#9eacbd" : colors[axis.members[0]], fontSize: 11 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />)}
             <Tooltip isAnimationActive={false} cursor={{ stroke: "#708197", strokeDasharray: "3 3" }} content={({ active, label, payload }) => {
               if (!active || !label || !payload?.length) return null;
-              return <div className="chart-tooltip"><strong>{String(label)}</strong>{payload.map((entry) => {
+              return <div className="chart-tooltip"><strong>{tText(String(label))}</strong>{payload.map((entry) => {
                 const key = String(entry.dataKey).replace(/_index$/, "") as RelationshipKey;
                 const indicator = response.indicators.find((item) => item.key === key);
                 return indicator && typeof entry.value === "number" ? <div key={key}>
-                  <span style={{ color: colors[key] }}>{labels[key]}</span>
-                  <b>{numberFormat.format(entry.value)}{indexed ? "" : indicator.unit === "percent" ? "%" : ""}</b>
+                  <span style={{ color: colors[key] }}>{tText(labels[key])}</span>
+                  <b>{tText(numberFormat.format(entry.value))}{tText(indexed ? "" : indicator.unit === "percent" ? "%" : "")}</b>
                 </div> : null;
               })}</div>;
             }} />
@@ -52,7 +54,7 @@ export function RelationshipChart({ response, labels, mode }: {
               yAxisId={axisFor[indicator.key]}
               type="linear"
               dataKey={indexed ? `${indicator.key}_index` : indicator.key}
-              name={labels[indicator.key]}
+              name={tLabel(labels[indicator.key])}
               stroke={colors[indicator.key]}
               strokeWidth={2}
               dot={false}

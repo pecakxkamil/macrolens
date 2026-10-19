@@ -51,9 +51,9 @@ describe("Market Comparison Lab v1", () => {
     const fetchMock = mockApi();
     window.location.hash = "#/market-comparison";
     render(<App />);
-    expect(await screen.findByRole("heading", { name: "Market Comparison Lab" }, { timeout: 3000 })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Macro-Market Analysis" }, { timeout: 3000 })).toBeInTheDocument();
     await screen.findByTestId("market-chart");
-    expect(screen.getByRole("link", { name: "Market Comparison" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Research" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("checkbox", { name: "Nasdaq Composite" })).toBeChecked();
     expect(screen.getByRole("checkbox", { name: "Bitcoin" })).not.toBeChecked();
     expect(screen.getByRole("button", { name: "Point-in-time" })).toHaveAttribute("aria-pressed", "true");

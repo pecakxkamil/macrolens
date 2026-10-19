@@ -135,3 +135,21 @@ def test_loader_boundaries_pit_default_and_existing_comparison_unchanged(monkeyp
     before = market.build_comparison(rows, prices, load_market_assets())
     lab.build_analysis(rows, prices, load_market_assets())
     assert before == market.build_comparison(rows, prices, load_market_assets())
+
+
+@pytest.mark.parametrize("window", [24, 36])
+def test_completed_month_reporting_bound_preserves_pairs_rolling_and_market_comparison(window):
+    rows, prices = fixtures(81)  # Last macro/price month is September 2025.
+    prices["NASDAQCOM"].append({"observation_date": "2025-10-15", "value": 9000})
+    available = date(2025, 10, 19)
+    options = {"available_through": available, "rolling_window": window, "start_date": date(2020, 10, 19)}
+    default = build(rows, prices, **options)
+    bounded = build(rows, prices, end_date=date(2025, 9, 30), **options)
+    assert default["assets"] == bounded["assets"]
+    assert default["coverage"] == bounded["coverage"]
+    assert default["anchor_count"] == bounded["anchor_count"]
+    assert default["available_through"] == bounded["available_through"]
+    unbounded_comparison = market.build_comparison(rows, prices, load_market_assets(), start_date=date(2020, 10, 19))
+    bounded_comparison = market.build_comparison(rows, prices, load_market_assets(), start_date=date(2020, 10, 19), end_date=date(2025, 9, 30))
+    for key in ["rows", "statistics", "base_date", "base_values"]:
+        assert unbounded_comparison[key] == bounded_comparison[key]

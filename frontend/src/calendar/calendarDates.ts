@@ -1,3 +1,4 @@
+import { getLocale, getLanguage, t } from "../i18n/language";
 import type { CalendarEvent } from "../api/macrolens";
 
 export function todayIso(today = new Date()): string {
@@ -34,13 +35,13 @@ export function dateStatus(releaseDate: string, today: string): "Past" | "Today"
 }
 
 export function formatAgendaDate(date: string): string {
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(getLocale(), {
     weekday: "long", month: "short", day: "numeric", timeZone: "UTC",
   }).format(parseIso(date));
 }
 
 export function formatCalendarDate(date: string): string {
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(getLocale(), {
     month: "short", day: "numeric", year: "numeric", timeZone: "UTC",
   }).format(parseIso(date));
 }
@@ -49,7 +50,7 @@ export function formatPolandTime(utcDateTime: string | null): string {
   if (!utcDateTime) return "Time unavailable";
   const instant = new Date(utcDateTime);
   if (Number.isNaN(instant.getTime())) return "Time unavailable";
-  const time = new Intl.DateTimeFormat("en-GB", {
+  const time = new Intl.DateTimeFormat(getLanguage() === "pl" ? "pl-PL" : "en-GB", {
     hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Europe/Warsaw",
   }).format(instant);
   return `${time} PL`;
@@ -62,7 +63,7 @@ export function groupCalendarEvents(events: CalendarEvent[]): Array<{ date: stri
     a.release_date.localeCompare(b.release_date)
     || importanceOrder[a.importance] - importanceOrder[b.importance]
     || a.release_name.localeCompare(b.release_name)
-    || a.release_id - b.release_id
+    || (a.release_id !== null && b.release_id !== null ? a.release_id - b.release_id : (a.event_id ?? "").localeCompare(b.event_id ?? ""))
   )) {
     const group = groups.get(event.release_date) ?? [];
     group.push(event);

@@ -2,13 +2,17 @@
 
 MacroLens currently defines v1 mechanical feature calculations for configured economic series.
 
-These are mechanical feature calculations only. Macro-state scoring and economic interpretation methodology are still not designed and should not be invented.
+Existing deterministic domain classifications and Macro State evidence interpret these mechanical features. Economy Brief reuses that logic; it adds no classification system or composite score. MCI methodology is documented separately below.
 
 Methodology version: `v1`
 
+## Product organization
+
+Overview combines Economy Brief and Macro State; Explore Data contains the single-indicator explorer and curated charts; Research contains Macro Conditions Index, Macro-Market Analysis (including lead/lag) and Indicator Relationships. The full calendar is an auxiliary Overview view. This presentation structure changes no formulas, weights, vintage rules, normalization, correlations or synchronization methods. See [architecture](architecture.md) for routing and [README](../README.md) for setup.
+
 ## Macro Calendar
 
-Calendar v1 maps active configured series to FRED economic releases and stores the release dates published by FRED and underlying sources. It includes scheduled dates without observations when FRED provides them. Dates are displayed without times or time zones. A source-published date does not necessarily mean the observations were available on FRED or ALFRED that day.
+Calendar v1 maps active configured series to FRED economic releases and stores the release dates published by FRED and underlying sources. It includes scheduled dates without observations when FRED provides them. Known publisher-convention release times are represented with source timezone America/New_York and displayed in Europe/Warsaw; unknown times remain unavailable. A source-published date does not necessarily mean the observations were available on FRED or ALFRED that day.
 
 Release details may show latest stored and previous observations as current-vintage context. They do not reconstruct actual values at the historical release date. Consensus, surprises, and release-vintage comparisons are outside Calendar v1.
 
@@ -22,8 +26,8 @@ for viewing how the latest available dataset evolves across observation dates.
 Current-vintage history is not point-in-time historical reconstruction. Revised
 economic series may differ from the values originally published, so these chart
 endpoints must not be interpreted as showing what was known at each historical
-date. True point-in-time reconstruction remains planned and will require
-vintage-aware / ALFRED ingestion and feature computation.
+date. The separate PIT MCI reconstructs its own 15 components from ALFRED;
+this does not make these chart endpoints or other snapshots point-in-time.
 
 ## PAYEMS
 
@@ -106,7 +110,7 @@ the unemployment rate expressed as a percentage.
 - `qoq`: ((current value / previous observation) - 1) * 100
 - `yoy`: ((current value / value 4 observations earlier) - 1) * 100
 
-Inflation state, hot/cold classification, and inflation scoring are not designed yet.
+This module supplies existing inflation momentum classifications. It adds no hot/cold label; separate MCI component scoring is documented below.
 
 ## GDPC1
 
@@ -118,7 +122,7 @@ Inflation state, hot/cold classification, and inflation scoring are not designed
 - `level`: current value
 - `moving_average_3m`: arithmetic mean of current and previous 2 observations
 
-CFNAI is an official index where zero indicates historical trend growth, positive values indicate above-average growth, and negative values indicate below-average growth. MacroLens does not create a Growth classification from CFNAI yet.
+CFNAI is an official index where zero indicates historical trend growth, positive values indicate above-average growth, and negative values indicate below-average growth. MacroLens classifies CFNAI position from its three-month average relative to zero, as documented under CFNAI Position below.
 
 ## INDPRO
 
@@ -138,7 +142,7 @@ CFNAI is an official index where zero indicates historical trend growth, positiv
 - `yoy`: ((current value / value 12 observations earlier) - 1) * 100
 - `moving_average_3m`: arithmetic mean of current and previous 2 observations
 
-Growth state, growth scoring, strong/weak/recessionary classification, and investment signals are not designed yet.
+This module supplies existing growth momentum and trend classifications. It adds no strong/weak/recessionary label or investment signal; separate MCI scoring is documented below.
 
 ## RSAFS
 
@@ -172,7 +176,7 @@ DSPIC96 is a real disposable-income series.
 
 PSAVERT is a saving-rate level, not a growth series.
 
-Consumer state, consumer scoring, strong/weak classification, sentiment-based classification, and investment signals are not designed yet.
+This module supplies existing consumer momentum classifications. It adds no strong/weak or sentiment label and no investment signal; separate MCI scoring is documented below.
 
 ## HOUST
 
@@ -210,7 +214,7 @@ New Home Sales is a seasonally adjusted annual rate level series. `mom` and `yoy
 
 Mortgage-rate changes are expressed in percentage points, not relative percentage changes. These features are descriptive only and are not interpreted as automatically good or bad.
 
-Housing state, housing scoring, strong/weak/hot/cold classification, affordability scoring, recession labels, and investment signals are not designed yet.
+This module supplies existing housing direction classifications. It adds no strong/weak/hot/cold label, affordability score, recession label or investment signal; separate MCI scoring is documented below.
 
 ## DFF
 
@@ -246,7 +250,7 @@ NFCI zero is the historical-average reference. Positive NFCI indicates tighter-t
 
 The 2s10s Treasury spread will later be calculated as `DGS10 - DGS2` using synchronized observations with identical `observation_date`. MacroLens does not subtract independently selected latest DGS10 and DGS2 observations, does not forward-fill either Treasury series to force alignment, and does not use a separate FRED yield-spread series.
 
-Financial Conditions State, financial conditions scoring, Fed-decision inference, bullish/bearish rate labels, recession predictions, and investment signals are not designed yet.
+This module supplies existing curve-shape and NFCI position/direction classifications. It adds no Fed-decision inference, bullish/bearish label, recession prediction or investment signal; separate MCI scoring is documented below.
 
 ## Financial Conditions Snapshot
 
@@ -316,7 +320,7 @@ All domain methodologies remain unchanged. USA Economy Now does not average doma
 
 Economic domains have different release schedules. For that reason, USA Economy Now exposes `component_as_of_dates` for every domain. The top-level `as_of_date` is a view/reference date: when a date is requested explicitly, it is that requested date; otherwise, it is the maximum top-level `as_of_date` across the component snapshots. It is not a claim that every underlying observation shares the same date.
 
-The current USA Economy Now snapshot is supported using the feature rows available in the current feature store. An explicit historical `as_of_date` is usable only when the required feature rows exist under that as-of constraint for all required domains. MacroLens storage is not yet a complete point-in-time vintage history. True historical reconstruction will require the planned vintage-aware / ALFRED layer; MacroLens must not substitute current revised data, forward-fill missing historical features, or recompute historical snapshots from today's revised data and call them point-in-time snapshots.
+The current USA Economy Now snapshot is supported using the feature rows available in the current feature store. An explicit historical `as_of_date` is usable only when the required feature rows exist under that as-of constraint for all required domains. The current feature store is not a complete historical USA Economy Now reconstruction. The existing ALFRED layer reconstructs the separate PIT MCI components only; MacroLens must not substitute current revised data, forward-fill missing historical features, or recompute historical snapshots from today's revised data and call them point-in-time snapshots.
 
 ## Housing Snapshot
 
@@ -936,7 +940,7 @@ trading signals, optimized weights, or strategy P&L.
 
 ## Macro?Market Lead/Lag Analysis v1
 
-The separate Lead / Lag Analysis section of `#/market-comparison` uses existing
+The separate Lead / Lag Analysis section of `#/research/macro-market` uses existing
 Nasdaq Composite (`NASDAQCOM`) and Bitcoin (`CBBTCUSD`) observations only. PIT
 MCI is the default; current-vintage is explicitly optional. No MCI construction,
 weights, ingestion or original Market Comparison alignment is changed.
@@ -986,3 +990,175 @@ Read-only endpoint: `GET /api/v1/market-comparison/lead-lag` with `assets`,
 and `rolling_window=24|36`. Both existing assets are returned by default;
 the UI requests its selected analysis asset. Asset whitelist, dates, history
 mode and rolling window are validated. No schema change or data sync is needed.
+
+
+## Economy Brief v1
+
+Overview (`#/`) presents 17 current-vintage comparison rows and an official Fed target-range block in six compact domain cards,
+with at most three explicitly selected indicators per domain. It retains the
+Overview / Explore Data / Research navigation and EN/PL switch. Cards show
+numbers and comparisons, without domain interpretations, momentum tags, repeated
+comparison summaries or per-indicator methodology panels. Broader series and
+transformation details remain in Explore Data; MCI and historical analyses remain
+in Research. Indicator names link to exploration and source links expose series
+definitions. Calendar and next FOMC/CME context remain below the cards.
+
+`GET /api/v1/economy/us/brief` still aggregates the existing snapshot and projects
+Macro State from it. These classifications are unchanged and retained for audit.
+The `reading_comparisons` section supplies the 17 main comparisons using one
+shared query over existing stored features. Current-vintage selection preserves
+`as_of_date DESC, computed_at DESC, id DESC` for each observation and methodology
+v1. The database returns only the required windows/four daily observations and
+an optional newer null-period marker, not full histories. The existing six-item
+`changes` section is retained, deriving its YoY entries from same-period contexts without another history query.
+
+Every comparison uses the same series and transformation throughout: payroll
+monthly change, claims 4W average, CPI/PCE MoM, GDP QoQ annualized, CFNAI 3M
+average, industrial-production/consumption/income/nominal-retail MoM and the
+existing rates/levels. The seven monthly MoM rows include smaller YoY context
+joined by the same series ID and exact observation month for each column.
+Missing context remains missing, without falling back to a different month.
+The existing stored MoM calculation is used directly; no MoM is derived from YoY.
+Official FRED metadata confirms SA monthly CPIAUCSL/CPILFESL/PCEPILFE/INDPRO/RSAFS
+and SAAR monthly PCEC96/DSPIC96 levels. Annual-rate level scaling does not add
+a second annualization to the existing MoM ratio. See README for source links
+and metadata verification/refresh instructions. Selection anchors to the latest finite stored observation
+of each measure, independently of the page date:
+
+| Frequency | Previous | Three periods earlier | Missing periods |
+| --- | --- | --- | --- |
+| Monthly | Exact prior calendar month | Exact third prior calendar month | Missing; no substitution |
+| Quarterly | Exact prior quarter | Exact third prior quarter | Missing; no substitution |
+| Weekly | Seven days earlier | 21 days earlier | Missing; no substitution |
+| Daily | Previous available finite observation | Third earlier available finite observation | Count available observations; show exact dates |
+
+Daily offsets are neither calendar-day nor business-day offsets: for example,
+DFF in Explore Data can contain weekend observations while Treasury yields may not. The curve
+uses synchronized same-date DGS10 minus DGS2 observations before selecting its
+previous/third-prior observations. Missing or nonfinite values are never zero;
+calendar gaps are never compressed or interpolated. A newer stored missing
+period does not replace a finite reading; its date remains in audit metadata.
+
+Changes are arithmetic differences in the displayed measure, not additional
+growth-rate calculations. Percentage rates/growth use percentage points, index
+levels use index points, and other levels retain their units. The shared unit
+beside an indicator applies to its three values and same-unit difference;
+percentage-point differences are labeled separately from percent readings.
+Older values are current-vintage revisions, not original values known at release.
+
+The arrow always follows the numerical sign, including for indicators where a
+rise is conventionally unfavorable. Only the arrow/difference is colored by a
+small explicit presentation map: unemployment/claims rises red and falls green;
+employment/real activity/real spending rises green and falls red; inflation
+MoM direction stays neutral for all signs; lower monthly inflation alone is
+not assigned an improved classification. Fed/mortgage rates, spreads, nominal retail sales and NFCI are
+neutral. Unchanged and unavailable changes are neutral. There are no economic
+thresholds, new classifications, scores or trading signals in this display.
+
+The Fed target block uses only official DFEDTARL/DFEDTARU raw stored histories,
+with both values joined on their observation date and lower <= upper validated.
+It does not derive a target from DFF. A server-side cursor stops consuming paired
+history at the latest contiguous range transition or a gap. An adjacent valid
+previous pair is required to establish **Effective since** and **Last rate change**.
+Changes are calculated in basis points for each bound, with separate moves if
+the range width changes. An unchanged daily range is not a new decision; no last
+FOMC decision date is inferred. A gap or incomplete regime history leaves the
+change/effective date unknown. Invalid latest bounds do not fall back to older
+ranges or DFF. Observation cutoffs and source ingestion timestamps remain separate
+from the effective date and current page assembly time; no uniform age threshold
+or freshness guarantee is added. New target-bound series are ordinary data inputs
+for this block and Explore Data, not MCI/PIT components. No schema change is needed.
+
+The next seven calendar days include today in Europe/Warsaw and the following
+six dates. Existing release importance, supported time metadata and low-importance
+grouping remain unchanged. FOMC uses the separately stored official Federal
+Reserve schedule, with the next decision independent of the seven-day window.
+Known UTC instants use standard Europe/Warsaw conversion, including US/Polish
+DST mismatches; unknown times remain explicit. An unavailable calendar differs
+from a successful empty stored calendar. FedWatch remains an external link.
+
+**Download report** creates a UTF-8 Markdown file from the same prepared comparison
+objects used by the screen, including all three values, periods and differences.
+Its short main section contains the six domains and upcoming releases/FOMC.
+Source details, full comparison metadata, snapshot/classification evidence and
+limitations follow in the audit appendix. No PIT request is made by Overview;
+PIT MCI remains in Research. Downloading never refetches data or recalculates PIT.
+The existing optional external-AI instruction is text only; there is no AI
+integration, model configuration, report archive or scheduler.
+
+Report preparation time and data assembly time remain separate from observation
+periods, publication dates, vintage dates and feature calculation dates. No
+publication date is inferred and no common freshness threshold is introduced.
+Section failures remain explicit and isolated: history comparisons/calendar can
+remain usable when snapshot/state is unavailable. A failed comparison section
+shows missing cells, never snapshot values with fabricated earlier readings.
+Transport failure shows the existing error/retry state. No ingestion, database
+schema, backend classification, MCI/PIT or Research methodology was changed.
+
+For setup and local review commands see the [README](../README.md). Check the six
+cards, calendar and downloaded report using `/api/v1/economy/us/brief`, including
+exact expected periods for missing cells, at desktop and narrow widths.
+
+### Economy Brief presentation and classification context
+
+The backend Macro State synthesis/evidence and classification bases are preserved
+in the API and report audit appendix. They are not shown on the numeric cards or
+at the start of the report. A numerical period-to-period arrow does not inherit
+an unrelated momentum classification. Calculation metadata and complete ISO
+timestamps remain available for audit. Availability and recency are distinct;
+snapshot/calculation dates do not prove publication dates or newer releases.
+
+The brief API also projects `classification_basis` from the existing snapshot,
+without querying more observations or recomputing any classification. It includes
+the actual inputs, feature names, observation period, calculation date and rule:
+
+- Payroll momentum compares 3-month with 6-month average job gains.
+- Unemployment momentum uses the 3-month rate change, not the latest monthly change.
+- Claims momentum compares 4-week with 13-week averages; lower is improving.
+- Inflation, consumer and industrial-production momentum compare the current
+  3-month annualized pace with YoY for the same ending observation period.
+- GDP momentum compares the current quarter's QoQ annualized rate with that
+  quarter's YoY rate, not with the prior quarter's annualized rate.
+- CFNAI position uses its 3-month average relative to zero.
+- Capacity utilization and saving-rate directions use 3-month changes;
+  housing activity uses month-to-month changes; mortgage direction uses 4 weeks.
+- Yield-curve shape is the sign of the 10Y-minus-2Y spread. NFCI position uses
+  its level relative to zero and NFCI direction uses its 4-week change.
+- Overall labor momentum retains the existing rule: at least two improving
+  components means improving, at least two weakening means weakening, else mixed.
+
+Thus a higher successive CPI YoY reading can coexist with decelerating momentum;
+a lower successive GDP quarterly rate can coexist with accelerating momentum.
+These describe different comparisons. The report keeps their actual values and
+rules separate; displayed readings do not inherit unrelated classification tags.
+Classification calculations use the original unrounded features.
+
+Repeated low-importance calendar releases are grouped on Overview with all dates
+and expandable entries. Source events and the full calendar are unchanged, and
+the report retains every event. Identical source URLs are listed once. Markdown
+uses blank-separated headings, paragraphs and lists, literal date brackets and
+intra-word underscores, without redundant escaping. Download still uses only
+the loaded data and makes no additional request.
+
+
+## Interface languages (EN / PL)
+
+The upper-right EN / PL switch changes the interface language across Overview,
+Macro State, Macro Index, Market Comparison (including lead/lag), Charts,
+Indicators and Calendar. It includes controls, accessibility labels, chart labels,
+tooltips, indicator descriptions, classifications, API evidence and methodology
+text. The initial language remains English; preference is stored locally under
+`macrolens.language`, restored after reload and synchronized between browser tabs.
+
+Switching preserves the current route, selected indicators, ranges and other
+controls; it does not fetch the same data again. Polish formatting uses `pl-PL`
+for numbers/dates and Polish large-number abbreviations. Release times still use
+Europe/Warsaw with timezone-aware DST handling. Indicator search accepts both
+Polish displayed names and original English names/series IDs.
+
+Economy Brief Markdown follows the selected language and the same loaded data.
+Technical series IDs, raw feature identifiers, API parameters, formulas and
+source URLs remain unchanged; backend data and classification/MCI calculations
+are not translated or modified. Translation is local and deterministic, with no
+translation service or AI integration. Unknown externally supplied names retain
+their source spelling until a translation is added to the bundled dictionary.

@@ -77,11 +77,16 @@ def load_series_config() -> dict:
     return config
 
 
-def main() -> int:
+def main(series_ids=None) -> int:
     connection = None
 
     try:
         series_config = load_series_config()
+        if series_ids:
+            unknown = set(series_ids) - series_config.keys()
+            if unknown:
+                raise RuntimeError("Unknown configured series: " + ", ".join(sorted(unknown)))
+            series_config = {key: series_config[key] for key in dict.fromkeys(series_ids)}
         connection = get_connection()
 
         with connection.cursor() as cursor:
@@ -113,4 +118,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:] or None))

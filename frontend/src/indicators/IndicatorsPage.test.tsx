@@ -61,11 +61,11 @@ describe("Indicator Explorer", () => {
     mockApi();
     window.location.hash = "#/";
     render(<App />);
-    fireEvent.click(screen.getByRole("link", { name: "Indicators" }));
+    fireEvent.click(screen.getByRole("link", { name: "Explore Data" }));
     expect(await screen.findByRole("heading", { name: "Indicators" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Indicators" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Explore Data" })).toHaveAttribute("aria-current", "page");
     expect(await screen.findByRole("link", { name: /UNRATE Unemployment Rate/ })).toBeInTheDocument();
-    await waitFor(() => expect(window.location.hash).toBe("#/indicators/UNRATE"));
+    await waitFor(() => expect(window.location.hash).toBe("#/explore/indicators/UNRATE"));
   });
 
   test("search matches ID, full name, and short name; category filters instantly", async () => {
@@ -93,7 +93,7 @@ describe("Indicator Explorer", () => {
     const browser = await screen.findByRole("complementary", { name: "Indicator browser" });
     fireEvent.click(await within(browser).findByRole("link", { name: /UNEMPLOY Unemployed Persons/ }));
     expect(await screen.findByRole("heading", { name: "Unemployment Level" })).toBeInTheDocument();
-    expect(window.location.hash).toBe("#/indicators/UNEMPLOY");
+    expect(window.location.hash).toBe("#/explore/indicators/UNEMPLOY");
     expect(within(browser).getByRole("link", { name: /UNEMPLOY Unemployed Persons/ })).toHaveAttribute("aria-current", "true");
     window.location.hash = "#/indicators/UNRATE";
     expect(await screen.findByRole("heading", { name: "Unemployment Rate" })).toBeInTheDocument();
@@ -113,6 +113,7 @@ describe("Indicator Explorer", () => {
     expect(screen.getByText("Current observation date: Aug 2026")).toBeInTheDocument();
     expect(screen.getByText("Previous observation date: Jul 2026")).toBeInTheDocument();
     expect(screen.getByText("Previous value")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Source and series definition (FRED)" })).toHaveAttribute("href", "https://fred.stlouisfed.org/series/UNRATE");
     expect(formatIndicatorValue(7000, series[1], null)).toBe("7.0M");
     expect(formatIndicatorValue(159100, series[1], null)).toBe("159.1M");
     expect(formatIndicatorValue(206000, { ...series[1], unit: "number" }, null)).toBe("206K");

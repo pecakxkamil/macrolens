@@ -1,3 +1,4 @@
+import { getLanguage } from "../i18n/language";
 import type { SeriesMetadata } from "../api/macrolens";
 import { formatCompactCount, formatNumber, formatSaarThousands, formatThousandsAsMillions } from "../format";
 
@@ -56,17 +57,17 @@ export function selectedUnit(metadata: SeriesMetadata, feature: string | null): 
 export function formatIndicatorValue(value: number, metadata: SeriesMetadata, feature: string | null, compact = false): string {
   const unit = selectedUnit(metadata, feature);
   if (unit === "percent") return `${formatNumber(value, compact ? 1 : 2)}%`;
-  if (unit === "percentage points") return `${formatNumber(value, 2)} pp`;
+  if (unit === "percentage points") return `${formatNumber(value, 2)} ${getLanguage() === "pl" ? "pkt proc." : "pp"}`;
   if (unit === "index points") return `${formatNumber(value, 2)} points`;
-  if (unit.includes("seasonally adjusted annual rate")) return compact ? `${formatNumber(value / 1000, 1)}M` : formatSaarThousands(value);
+  if (unit.includes("seasonally adjusted annual rate")) return compact ? `${formatNumber(value / 1000, 1)}${getLanguage() === "pl" ? " mln" : "M"}` : formatSaarThousands(value);
   if (unit.startsWith("thousands")) {
     return isAbsoluteChange(feature)
-      ? `${formatNumber(value, compact ? 0 : 0)}K`
+      ? `${formatNumber(value, compact ? 0 : 0)}${getLanguage() === "pl" ? " tys." : "K"}`
       : formatThousandsAsMillions(value);
   }
   if (unit === "number") return formatCompactCount(value);
   if (unit.includes("dollars per hour")) return `$${formatNumber(value, 2)}`;
-  if (unit.startsWith("millions of dollars")) return `$${formatNumber(value / 1000, compact ? 0 : 1)}B`;
-  if (unit.startsWith("billions of")) return `$${formatNumber(value / 1000, compact ? 0 : 1)}T`;
+  if (unit.startsWith("millions of dollars")) return `$${formatNumber(value / 1000, compact ? 0 : 1)}${getLanguage() === "pl" ? " mld" : "B"}`;
+  if (unit.startsWith("billions of")) return `$${formatNumber(value / 1000, compact ? 0 : 1)}${getLanguage() === "pl" ? " bln" : "T"}`;
   return formatNumber(value, compact ? 1 : 2);
 }
