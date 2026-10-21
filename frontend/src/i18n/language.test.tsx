@@ -1,6 +1,10 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
 import App from "../App";
+// Compile the real first research route during collection. Translation assertions
+// must not spend their DOM wait budget on cold nested Vite/Recharts imports.
+import "../navigation/ResearchPage";
+import "../macro-index/MacroIndexPage";
 import { getLanguage, setLanguage, t, tText, tLabel, getLocale } from "./language";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { InfoTooltip } from "../components/InfoTooltip";

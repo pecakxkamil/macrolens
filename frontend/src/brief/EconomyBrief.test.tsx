@@ -106,7 +106,7 @@ test.each([
 test("color applies to the arrow/difference and rising unemployment remains numerically up", async () => {
   mockApi(); render(<EconomyBrief />); const region = await screen.findByRole("region", { name: "Unemployment rate" });
   expect(region.querySelector(".overview-change")).toHaveClass("overview-change--negative");
-  expect(region.querySelector(".overview-change")).toHaveTextContent("\u2191 +0.1 pp");
+  expect(region.querySelector(".overview-change")).toHaveTextContent("\u2191 0.1 pp");
   expect(region.querySelector(".overview-value--latest strong")).toHaveTextContent("4.2");
   expect(region.querySelector(".overview-value--latest strong")?.className).toBe("");
 });
@@ -182,7 +182,7 @@ test("transport error allows retry and disables export until data arrives", asyn
 });
 
 test("small differences remain exact in details while the main display rounds consistently", () => {
-  expect(readingNumber(.00001, "percentage points")).toBe("0");
+  expect(readingNumber(.00001, "percentage points")).toBe("0.00");
   const item = fixture().reading_comparisons!.data!.find(row => row.component === "headline_cpi")!;
   item.change = .00001;
   expect(prepareReading(item.component, item.series_id, item).exactDifference).toBe("+0.00001 pp");
@@ -219,7 +219,7 @@ test("level differences share the row unit while rate changes retain explicit pe
   const housing = data.reading_comparisons!.data!.find(item => item.component === "housing_starts")!;
   const prepared = prepareReading(housing.component, housing.series_id, housing);
   expect(prepared.unit).toBe("thousand homes/year (annualized)");
-  expect(prepared.compactChange).toContain("thousand homes");
+  expect(prepared.compactChange).toBe("0 k");
   expect(prepared.change).toContain("thousand homes/year (annualized)");
   const unemployment = data.reading_comparisons!.data![1];
   expect(prepareReading(unemployment.component, unemployment.series_id, unemployment).compactChange).toContain("pp");
@@ -234,7 +234,7 @@ test("seven monthly activity/inflation rows compare MoM and show same-month YoY 
     expect(points[0].querySelector("strong")).toHaveTextContent("0.3");
     expect(points[1].querySelector("strong")).toHaveTextContent("0.1");
     expect(points[0].querySelector(".overview-yoy")).toHaveTextContent("3.20% YoY");
-    expect(region.querySelector(".overview-change")).toHaveTextContent("+0.2 pp");
+    expect(region.querySelector(".overview-change")).toHaveTextContent("+0.2 percentage points");
     expect(item.context_yoy!.current!.observation_date).toBe(item.current!.observation_date);
   }
   expect(data.reading_comparisons!.data!.filter(row => row.feature_name === "mom")).toHaveLength(7);
@@ -292,7 +292,7 @@ test.each([.00001, -.00001, .0049, -.0049, 0])("rate delta %s has no directional
   item.change = delta;
   const reading = prepareReading(item.component, item.series_id, item);
   expect(reading.arrow).toBe("\u2014"); expect(reading.compactChange).toBe("\u2014"); expect(reading.tone).toBe("neutral");
-  expect(readingReportLine(reading)).toContain(reading.exactDifference);
+  expect(readingReportLine(reading)).toContain(reading.change);
 });
 
 test("a visible rate change keeps a keyboard-accessible exact tooltip using the existing component", async () => {
@@ -303,10 +303,10 @@ test("a visible rate change keeps a keyboard-accessible exact tooltip using the 
   expect(button).toHaveTextContent("\u2191"); expect(button).not.toHaveTextContent("0.0051");
   button.focus(); expect(button).toHaveFocus();
   const tooltip = document.getElementById(button.getAttribute("aria-describedby")!);
-  expect(tooltip).toHaveAttribute("role", "tooltip"); expect(tooltip).toHaveTextContent("+0.0051 pp");
+  expect(tooltip).toHaveAttribute("role", "tooltip"); expect(tooltip).toHaveTextContent("+0.0051 percentage points");
   fireEvent.click(button); expect(button).toHaveAttribute("aria-expanded", "true");
   fireEvent.keyDown(button, { key: "Escape" }); expect(button).toHaveAttribute("aria-expanded", "false");
-  expect(briefMarkdown(briefModel(data), data, data.assembled_at)).toContain("+0.0051 pp");
+  expect(briefMarkdown(briefModel(data), data, data.assembled_at)).toContain("+0.0051 percentage points");
 });
 
 test("compact calendar omits coverage and unknown times; five Polish publications have correct wording and no empty list", async () => {
@@ -337,4 +337,95 @@ test("a newer stored missing period shows a domain-specific notice also preserve
 test("rounded negative zero is never displayed as a negative rate", () => {
   expect(readingNumber(-.00001, "percent")).toBe("0.00");
   setLanguage("pl"); expect(readingNumber(-.00001, "percent")).toBe("0,00");
+});
+
+
+test.each([
+  ["en", "payrolls", 29, "29 k"], ["pl", "payrolls", 29, "29 tys."],
+  ["en", "initial_claims", 198500, "198,500 people"], ["pl", "initial_claims", 198500, "198\u00a0500 os."],
+  ["en", "housing_starts", 1275, "1,275 k"], ["pl", "building_permits", 1403, "1\u00a0403 tys."],
+  ["en", "headline_cpi", .65, "0.65%"], ["pl", "headline_cpi", .65, "0,65%"],
+  ["en", "unemployment", 4.2, "4.2%"], ["pl", "unemployment", 4.2, "4,2%"],
+  ["en", "yield_curve_2s10s", .33, "0.33 pp"], ["pl", "yield_curve_2s10s", .33, "0,33 pp"],
+  ["en", "nfci", -.5, "-0.50"], ["pl", "cfnai", -.5, "-0,50"],
+] as const)("%s %s includes the compact unit at every displayed value", (language, component, value, expected) => {
+  setLanguage(language);
+  const item = fixture().reading_comparisons!.data!.find(row => row.component === component)!;
+  for (const point of [item.current!, item.previous!, item.three_periods_ago!]) point.value = value;
+  const reading = prepareReading(component, item.series_id, item);
+  for (const point of [reading.current, reading.previous, reading.earlier]) expect(point.display).toBe(expected);
+});
+
+test.each(["payrolls", "initial_claims", "housing_starts", "mortgage_rate", "yield_curve_2s10s"])("%s compact difference uses magnitude without a repeated direction sign", component => {
+  const item = fixture().reading_comparisons!.data!.find(row => row.component === component)!;
+  for (const delta of [-104,104]) {
+    item.change = delta;
+    const reading = prepareReading(component, item.series_id, item);
+    expect(reading.compactChange).toMatch(delta < 0 ? /^\u2193 / : /^\u2191 /);
+    expect(reading.compactChange).not.toMatch(/[+-]/);
+    expect(reading.change).toMatch(delta < 0 ? /^-104 / : /^\+104 /);
+    expect(reading.tooltip).toContain(reading.change);
+  }
+});
+
+test("lower positive retail MoM describes slower growth rather than a fall in sales", () => {
+  const item = fixture().reading_comparisons!.data!.find(row => row.component === "retail_sales")!;
+  item.current!.value = .77; item.previous!.value = 1.13; item.change = .77-1.13;
+  const reading = prepareReading(item.component, item.series_id, item);
+  expect(reading.current.display).toBe("0.77%"); expect(reading.arrow).toBe("\u2193");
+  expect(reading.tooltip).toContain("Rate lower than in the previous month.");
+  expect(reading.tooltip).toContain("Previous rate: 1.13%"); expect(reading.tooltip).toContain("Current rate: 0.77%");
+  expect(reading.tooltip).toContain("Difference: -0.36 percentage points."); expect(reading.tone).toBe("neutral");
+  setLanguage("pl"); const pl = briefMarkdown(briefModel({ ...fixture(), reading_comparisons: { status: "ready", data: [item], error: null } }), fixture(), "2026-10-19T12:00:00Z");
+  expect(pl).toContain("-0,36 pkt proc.");
+});
+
+test("GDP uses a quarterly rate comparison and claims uses a weekly value comparison", () => {
+  const data = fixture();
+  const gdp = data.reading_comparisons!.data!.find(row => row.component === "real_gdp")!;
+  gdp.current!.value = 2.22; gdp.previous!.value = 2.49; gdp.change = 2.22-2.49;
+  const quarterly = prepareReading(gdp.component,gdp.series_id,gdp);
+  expect(quarterly.tooltip).toContain("Rate lower than in the previous quarter.");
+  expect(quarterly.tooltip).not.toContain("previous month"); expect(quarterly.change).toBe("-0.27 percentage points");
+  const claims = data.reading_comparisons!.data!.find(row => row.component === "initial_claims")!;
+  claims.current!.value = 198500; claims.previous!.value = 198250; claims.change = 250;
+  const level = prepareReading(claims.component,claims.series_id,claims);
+  expect(level.compactChange).toBe("\u2191 250 people"); expect(level.tooltip).toContain("Value higher than in the previous week.");
+  expect(level.tooltip).not.toContain("rate:"); expect(level.tooltip).toContain("Current value: 198,500 people");
+});
+
+test("missing values have no appended units or comparison arrows, while index and rate zero stay numeric", () => {
+  for (const item of fixture().reading_comparisons!.data!) {
+    item.current = item.previous = item.three_periods_ago = null; item.change = null;
+    const reading = prepareReading(item.component,item.series_id,item);
+    for (const point of [reading.current,reading.previous,reading.earlier]) expect(point.display).toBe("\u2014");
+    expect(reading.hasChange).toBe(false); expect(reading.compactChange).toBe("\u2014");
+  }
+  expect(readingNumber(0,"index")).toBe("0.00"); expect(readingNumber(-.00001,"index")).toBe("0.00");
+});
+
+test("all rendered values include units and level changes reuse the keyboard tooltip without report abbreviations", async () => {
+  const data = fixture(); mockApi(data); render(<EconomyBrief />); await screen.findByRole("heading",{name:"Labor"});
+  const model = briefModel(data);
+  for (const reading of model.domains.flatMap(domain=>domain.compact)) {
+    const region = screen.getByRole("region",{name:reading.label});
+    for (const [i,point] of [reading.current,reading.previous,reading.earlier].entries()) expect(region.querySelectorAll("strong")[i]).toHaveTextContent(point.display);
+    const button = within(region).getByRole("button",{name:`${reading.label}: ${reading.labels.change}`});
+    button.focus(); expect(button).toHaveFocus();
+    expect(document.getElementById(button.getAttribute("aria-describedby")!)).toHaveTextContent(reading.tooltip);
+  }
+  const housing = model.domains[4].compact[0];
+  expect(readingReportLine(housing)).toContain("thousand homes/year (annualized)");
+  expect(readingReportLine(housing)).not.toContain(" k");
+});
+
+test("FOMC and seven-day releases share one event block with one collapsed provenance block", async () => {
+  mockApi(); render(<EconomyBrief />); const region = await screen.findByRole("region",{name:"Upcoming events"});
+  expect(within(region).getByRole("heading",{name:"Next FOMC decision"})).toBeInTheDocument();
+  expect(within(region).getByRole("heading",{name:"Upcoming releases - next 7 days"})).toBeInTheDocument();
+  expect(within(region).getByText(/2026-10-18.*2026-10-24/)).toBeInTheDocument();
+  expect(within(region).getByRole("link",{name:"View full calendar"})).toHaveAttribute("href","#/overview/calendar");
+  const details = region.querySelector(".overview-event-details")!;
+  expect(details).not.toHaveAttribute("open"); expect(details.querySelector("summary")).toHaveTextContent("Event sources and schedule details");
+  expect(region.querySelectorAll(".overview-event-details")).toHaveLength(1);
 });

@@ -27,7 +27,7 @@ export function InfoTooltip(props: InfoTooltipProps) {
         onClick={() => setIsOpen((current) => !current)}
         onKeyDown={handleKeyDown}
       >
-        {tText(props.trigger ?? "i")}</button>
+        {props.trigger ?? "i"}</button>
       <span id={tooltipId} role="tooltip" className="info-tooltip__content">
         <span>{tText(props.description ?? metadata!.description)}</span>
         {metadata?.methodology ? <span>{tText(metadata?.methodology)}</span> : null}

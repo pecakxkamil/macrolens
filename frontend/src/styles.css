@@ -901,9 +901,9 @@ h3 {
 
 /* Overview prioritizes readings; research and methodology remain in their existing views. */
 .economy-brief { display: grid; gap: 20px; }
-.overview-header { align-items: center; margin-bottom: 8px; }
+.overview-header { grid-template-columns: minmax(0, 1fr) auto; align-items: center; margin-bottom: 8px; }
 .overview-header h1 { margin: 0; font-size: 2rem; }
-.overview-header button { width: auto; min-width: 150px; }
+.overview-header button { width: auto; min-width: 0; justify-self: start; padding: .65rem 1rem; }
 .overview-data-note { color: #a8b8ce; font-size: .8rem; }
 .overview-data-note p { margin: 0; line-height: 1.5; }
 .brief-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
@@ -919,8 +919,8 @@ h3 {
 .overview-values th { font-size: .66rem; font-weight: 400; line-height: 1.35; text-align: left; vertical-align: bottom; padding: 0 4px 5px 0; color: #9baec5; }
 .overview-values td { vertical-align: top; padding: 0 4px 0 0; overflow-wrap: anywhere; }
 .overview-value { display: flex; flex-wrap: wrap; gap: 3px 6px; align-items: baseline; }
-.overview-value--latest strong { font-size: 1.16rem; color: #f0f4fa; }
-.overview-value--earlier strong { font-size: .87rem; font-weight: 400; color: #a8b8ce; }
+.overview-value--latest strong { font-size: 1.45rem; color: #f0f4fa; }
+.overview-value--earlier strong { font-size: .85rem; font-weight: 400; color: #a8b8ce; }
 .overview-values time { display: block; margin-top: 4px; color: #94a6bd; font-size: .67rem; line-height: 1.35; }
 .overview-change { font-size: .68rem; color: #a8b8ce; }
 .overview-change--positive { color: #81d5a0; }
@@ -964,7 +964,7 @@ h3 {
 .overview-yoy { display: block; margin-top: 4px; color: #9baec5; font-size: .7rem; }
 .overview-fed-target { border-bottom: 1px solid #29384a; padding-bottom: 12px; margin-bottom: 12px; }
 .overview-fed-target h3 { font-size: .85rem; font-weight: 500; color: #dce6f3; margin: 0 0 8px; }
-.overview-target-value { font-size: 1.16rem; color: #f0f4fa; font-variant-numeric: tabular-nums; }
+.overview-target-value { font-size: 1.45rem; color: #f0f4fa; font-variant-numeric: tabular-nums; }
 .overview-fed-target dl { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 8px 0; }
 .overview-fed-target dt, .overview-target-dates, .overview-target-sources { color: #9baec5; font-size: .67rem; }
 .overview-fed-target dd { margin: 3px 0 0; font-size: .8rem; color: #c5d2e3; }
@@ -973,3 +973,13 @@ h3 {
 
 .overview-change .info-tooltip__trigger { border: 0; border-radius: 3px; color: inherit; font: inherit; height: auto; min-width: 1.25rem; padding: 2px; width: auto; }
 .overview-change .info-tooltip__content { left: -80px; max-width: min(250px, calc(100vw - 4rem)); }
+
+.overview-number { white-space: nowrap; }
+.overview-inline-unit { font-size: max(.65em, .68rem); font-weight: 400; color: inherit; white-space: nowrap; }
+.overview-events h3 { font-size: .9rem; font-weight: 500; margin: 0 0 .6rem; color: #b9c9de; }
+.overview-policy p { margin-bottom: .5rem; }
+.overview-policy strong { color: #f0f4fa; font-size: 1.05rem; }
+.overview-calendar { border-top: 1px solid #29384a; margin-top: 1rem; padding-top: 1rem; }
+.overview-event-details { margin-top: 1rem; color: #a8b8ce; }
+.overview-event-details summary { margin-bottom: .6rem; }
+@media (max-width: 600px) { .overview-header { grid-template-columns: minmax(0, 1fr); gap: .75rem; } }

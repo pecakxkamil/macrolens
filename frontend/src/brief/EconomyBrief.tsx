@@ -19,7 +19,7 @@ export function downloadReport(markdown: string, generatedAt: string) {
 }
 function ReadingRow({ reading }: { reading: PreparedReading }) {
   const point = (value: PreparedReading["current"], latest = false) => <td className={latest ? "overview-value--latest" : "overview-value--earlier"}>
-    <div className="overview-value"><strong>{tText(value.value)}</strong>{latest ? <span className={`overview-change overview-change--${reading.tone}`} aria-label={tLabel(`${reading.labels.change}: ${reading.change}`)}>{reading.rate ? <InfoTooltip label={`${reading.label}: ${reading.labels.change}`} description={`${reading.labels.change}: ${reading.exactDifference}`} trigger={reading.arrow} /> : tText(reading.compactChange)}</span> : null}</div>
+    <div className="overview-value"><strong><span className="overview-number">{value.value}</span>{value.suffix ? <small className="overview-inline-unit">{value.suffix}</small> : null}</strong>{latest ? <span className={`overview-change overview-change--${reading.tone}`} >{reading.hasChange ? <InfoTooltip label={`${reading.label}: ${reading.labels.change}`} description={reading.tooltip} trigger={reading.compactChange} /> : reading.compactChange}</span> : null}</div>
     {value.yoy !== undefined ? <small className="overview-yoy">{tText(value.yoy)}{value.yoy === "\u2014" ? "" : "%"} {tText("YoY")}</small> : null}
     <time dateTime={value.date}>{tText(value.period)}</time>
   </td>;
@@ -69,21 +69,27 @@ export function EconomyBrief() {
       <section aria-label={tLabel("Economy across six domains")}><div className="brief-grid">{model.domains.map((domain) => <article key={domain.key} className="domain-card overview-domain" aria-label={tLabel(`${domain.name} brief`)}>
         <h2>{tText(domain.name)}</h2>{domain.freshnessIssues.map(reading => <p role="status" className="market-note" key={reading.key}>{tText(`${reading.label}: Newer stored period ${reading.raw!.latest_stored_observation_date} has no available reading.`)}</p>)}{domain.key === "financial_conditions" ? <FedTargetBlock target={model.fedTarget} /> : null}{domain.compact.map((reading) => <ReadingRow key={reading.key} reading={reading} />)}
       </article>)}</div></section>
-      <section className="brief-scope" aria-labelledby="brief-policy"><h2 id="brief-policy">{tText("Next FOMC decision")}</h2>
-        <p><strong>{tText(model.policy.headline)}</strong></p>
-        <a href={model.policy.fedwatchUrl} target="_blank" rel="noreferrer">{tText("View market probabilities on CME FedWatch")}</a>
-        <details><summary>{tText("FOMC schedule source and dates")}</summary><p>{tText(model.policy.note)}</p><p>{tText(model.policy.metadata)}</p>
-          <p>{tText("Stored schedules may change. Refresh is separate from page loading.")}</p>
+      <section className="market-chart-panel overview-events" aria-labelledby="brief-events">
+        <h2 id="brief-events">{tText("Upcoming events")}</h2>
+        <div className="overview-policy" aria-labelledby="brief-policy"><h3 id="brief-policy">{tText("Next FOMC decision")}</h3>
+          <p><strong>{tText(model.policy.headline)}</strong></p>
+          <a href={model.policy.fedwatchUrl} target="_blank" rel="noreferrer">{tText("View market probabilities on CME FedWatch")}</a>
+        </div>
+        <div className="overview-calendar" aria-labelledby="brief-calendar"><h3 id="brief-calendar">{tText("Upcoming releases - next 7 days")}</h3>
+          <p className="market-note">{tText(data.calendar_start_date)} {tText(" through ")}{tText(data.calendar_end_date)} {tText(" (including today). Times in Poland.")}</p>
+          {model.calendarItems.length || model.calendarGroups.length ? <>
+            {model.calendarItems.length ? <ul>{model.calendarItems.map((event) => <li key={event}>{tText(event)}</li>)}</ul> : null}
+            {model.calendarGroups.map((group) => <details key={group.name}><summary>{tText(group.summary)}</summary><ul>{group.events.map((event) => <li key={event}>{tText(event)}</li>)}</ul></details>)}
+          </> : <p>{tText(model.calendar[0])}</p>}
+          <a href="#/overview/calendar">{tText("View full calendar")}</a>
+        </div>
+        <details className="overview-event-details"><summary>{tText("Event sources and schedule details")}</summary>
+          <p>{tText(model.policy.note)}</p><p>{tText(model.policy.metadata)}</p>
           <a href={model.policy.sourceUrl} target="_blank" rel="noreferrer">{tText("Official Federal Reserve FOMC calendar")}</a>
           {model.policy.timeSourceUrl ? <p><a href={model.policy.timeSourceUrl} target="_blank" rel="noreferrer">{tText("Official time source")}</a></p> : null}
+          <p>{tText("Stored schedules may change. Refresh is separate from page loading.")}</p>
+          <p>{tText(calendarNote)}</p><ul>{model.calendar.map((event) => <li key={event}>{tText(event)}</li>)}</ul>
         </details>
-      </section>
-      <section className="market-chart-panel" aria-labelledby="brief-calendar"><h2 id="brief-calendar">{tText("Upcoming releases - next 7 days")}</h2><p>{tText(data.calendar_start_date)} {tText(" through ")}{tText(data.calendar_end_date)} {tText(" (including today). Times in Poland.")}</p>
-        {model.calendarItems.length || model.calendarGroups.length ? <>
-          {model.calendarItems.length ? <ul>{model.calendarItems.map((event) => <li key={event}>{tText(event)}</li>)}</ul> : null}
-          {model.calendarGroups.map((group) => <details key={group.name}><summary>{tText(group.summary)}</summary><ul>{group.events.map((event) => <li key={event}>{tText(event)}</li>)}</ul></details>)}
-        </> : <p>{tText(model.calendar[0])}</p>}
-        <details><summary>{tText("Full release details and time conventions")}</summary><p>{tText(calendarNote)}</p><ul>{model.calendar.map((event) => <li key={event}>{tText(event)}</li>)}</ul></details><a href="#/overview/calendar">{tText("View full calendar")}</a>
       </section>
     </main> : null}
   </>;
