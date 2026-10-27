@@ -255,6 +255,10 @@ git diff
 
 Tests cover data handling, feature/classification rules, PIT reconstruction, API responses, research calculations, routing, UI states and report export. The production bundle is generated in `frontend/dist`; a successful build is not a substitute for browser review. No test-coverage percentage or performance benchmark is claimed.
 
+### Continuous integration
+
+[MacroLens CI](.github/workflows/ci.yml) runs the full backend suite and the frontend suite/production build on pushes and pull requests to `main`, with an optional manual run. It uses standard Ubuntu GitHub-hosted runners, Python 3.12 and Node.js 22. Python installs the existing requirements; npm uses the committed lockfile with `npm ci`. No provider API keys, PostgreSQL service or application data are needed. Test guards reject real network/database access rather than silently falling back to local services. See [CI setup and verification](docs/ci.md) for commands, the initial local results, limitations and the first GitHub-run checklist.
+
 ## Limits and scope
 
 Implemented: the pipeline, six deterministic domain snapshots, numeric Overview/Markdown export, indicator exploration/curated charts, release calendar, current-vintage and PIT MCI, Nasdaq/Bitcoin comparison and lead/lag research, and indicator relationships.
