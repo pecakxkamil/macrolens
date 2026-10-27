@@ -15,6 +15,8 @@ from zoneinfo import ZoneInfo
 
 import httpx
 from app.analytics.fomc_calendar import SNAPSHOT_PATH, SOURCE_URL
+from app.source_checks import availability_check
+from app.ingestion.request_budget import before_request
 
 
 @dataclass
@@ -136,11 +138,24 @@ def make_event(start, end, release_time, retrieved_at, time_source_url=None):
 
 
 def sync_schedule(client, path=None, raw_root=None, now=None):
+    with availability_check("fed:calendar", {"provider": "Federal Reserve", "scope": "meeting dates and explicitly published decision times"}) as check:
+        result = _sync_schedule(client, path, raw_root, now, check["scope"])
+        check["scope"]["dates"] = [event["release_date"] for event in result["events"]]
+        unknown = [event["release_date"] for event in result["events"]
+                   if event["release_date"] >= (now or datetime.now(timezone.utc)).date().isoformat() and not event["release_time"]]
+        if unknown:
+            check.update(status="partial", error_code="decision_times_unavailable")
+            check["scope"]["missing_times"] = unknown
+        return result
+
+
+def _sync_schedule(client, path=None, raw_root=None, now=None, check_scope=None):
     now = now or datetime.now(timezone.utc)
     target = Path(path or SNAPSHOT_PATH)
     raw = Path(raw_root or target.parents[1] / "raw/federal_reserve/fomc") / (now.strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex)
     raw.mkdir(parents=True, exist_ok=False)
     def fetch(url):
+        before_request("Federal Reserve")
         response = client.get(url)
         # Preserve response and provenance before parsing, including failed responses.
         name = url.rsplit("/", 1)[-1]
@@ -149,7 +164,8 @@ def sync_schedule(client, path=None, raw_root=None, now=None):
         response.raise_for_status()
         return response.text
     meetings = parse_meetings(fetch(SOURCE_URL), now.year)
-    events, pages = [], {}
+    events, pages, page_errors = [], {}, {}
+    time_checks = []
     for start, end in meetings:
         release_time = None
         if end >= now.astimezone(ZoneInfo("America/New_York")).date():
@@ -157,10 +173,17 @@ def sync_schedule(client, path=None, raw_root=None, now=None):
             if url not in pages:
                 try:
                     pages[url] = fetch(url)
-                except httpx.HTTPError:
+                except httpx.HTTPError as error:
                     pages[url] = ""
+                    page_errors[url] = (error.response.status_code if isinstance(error, httpx.HTTPStatusError) else None)
             release_time = parse_decision_time(pages[url], end)
+            time_checks.append({"release_date": end.isoformat(),
+                "fetch_status": "error" if url in page_errors else "success",
+                "http_status": page_errors.get(url),
+                "time_status": "confirmed" if release_time else "unconfirmed"})
         events.append(make_event(start, end, release_time, now.isoformat(), monthly_url(end)))
+    if check_scope is not None:
+        check_scope["time_checks"] = time_checks
     payload = {"version": 1, "source_url": SOURCE_URL, "retrieved_at": now.isoformat(), "events": events}
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary = target.with_name(target.name + "." + uuid.uuid4().hex + ".tmp")

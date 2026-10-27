@@ -182,3 +182,19 @@ describe("Indicator Explorer", () => {
     ]);
   });
 });
+
+
+test("local ISM catalog uses its own source and exposes exact short history without percentage measures", async () => {
+  const meta: SeriesMetadata = {series_id:"ISM_SERVICES_PMI",name:"ISM Services PMI",short_name:"Services PMI",category:"growth",frequency:"monthly",unit:"index",source:"ism",source_url:"https://www.ismworld.org/",description:"Services diffusion index.",attribution:"Local personal use."};
+  vi.stubGlobal("fetch",vi.fn(async (input: string | URL) => {
+    const url = String(input);
+    return {ok:true,json:async()=>url.endsWith("/api/v1/series") ? {series:[meta]} : url.endsWith("/features") ? {features:[]} : {history_type:"current_vintage",observations:[{observation_date:"2026-01-01",value:31},{observation_date:"2026-02-01",value:33}]}};
+  }));
+  openIndicators("#/explore/indicators/ISM_SERVICES_PMI");
+  expect(await screen.findByText(/Available history: 2026-01-01 through 2026-02-01/)).toHaveTextContent("2 observations");
+  expect(screen.getByRole("link",{name:"Institute for Supply Management (ISM)"})).toHaveAttribute("href","https://www.ismworld.org/");
+  expect(screen.getByText("Services diffusion index.")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button",{name:"5Y"}));
+  expect(await screen.findByText(/Available history: 2026-01-01 through 2026-02-01/)).toHaveTextContent("2 observations");
+  expect(screen.queryByRole("option",{name:"YoY"})).not.toBeInTheDocument();
+});

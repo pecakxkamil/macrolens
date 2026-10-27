@@ -10,8 +10,9 @@ const mappings = [
   ["#/indicators/UNRATE", "#/explore/indicators/UNRATE", "explore", "Indicators"],
   ["#/macro-index", "#/research/mci", "research", "Macro Conditions Index"],
   ["#/market-comparison", "#/research/macro-market", "research", "Macro-Market Analysis"],
-  ["#/relationships", "#/research/relationships", "research", "Indicator Relationships"],
-  ["#/calendar", "#/overview/calendar", "overview", "Macro Calendar"],
+  ["#/relationships", "#/research/relationships", "research", "Compare Data"],
+  ["#/calendar", "#/calendar", "calendar", "Calendar"],
+  ["#/overview/calendar", "#/calendar", "calendar", "Calendar"],
 ] as const;
 
 afterEach(() => { cleanup(); window.location.hash = ""; vi.unstubAllGlobals(); });
@@ -23,8 +24,8 @@ test.each(mappings)("legacy %s resolves and renders its matching destination", a
   await screen.findByRole("heading", { name: heading }, { timeout: 5000 });
   await waitFor(() => expect(window.location.hash).toBe(hash));
   const nav = screen.getByRole("navigation", { name: "Main navigation" });
-  expect(within(nav).getAllByRole("link").map((link) => link.textContent)).toEqual(["Overview", "Explore Data", "Research"]);
-  const active = section === "overview" ? "Overview" : section === "explore" ? "Explore Data" : "Research";
+  expect(within(nav).getAllByRole("link").map((link) => link.textContent)).toEqual(["Overview", "Calendar", "Explore Data", "Research"]);
+  const active = section === "overview" ? "Overview" : section === "calendar" ? "Calendar" : section === "explore" ? "Explore Data" : "Research";
   expect(within(nav).getByRole("link", { name: active })).toHaveAttribute("aria-current", "page");
   expect(screen.queryByRole("heading", { name: "Macro State" })).not.toBeInTheDocument();
 });
@@ -32,13 +33,17 @@ test.each(mappings)("legacy %s resolves and renders its matching destination", a
 test("simple view switches and hash history keep the active main section in sync", async () => {
   vi.stubGlobal("fetch", vi.fn(() => new Promise(() => undefined)));
   window.location.hash = "#/research"; render(<App />);
+  await screen.findByRole("heading", { name: "Compare Data" });
+  expect(resolveRoute("#/research")).toMatchObject({ hash: "#/research/relationships", view: "relationships" });
+  expect(within(screen.getByRole("navigation", { name: "Research views" })).getAllByRole("link").map(link => link.textContent)).toEqual(["Compare Data", "MCI Index", "MCI vs Markets"]);
+  fireEvent.click(screen.getByRole("link", { name: "MCI Index" }));
   await screen.findByRole("heading", { name: "Macro Conditions Index" });
   expect(screen.getByText(/50 is a reference value, not a validated boundary/)).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("link", { name: "Macro-Market Analysis" }));
+  fireEvent.click(screen.getByRole("link", { name: "MCI vs Markets" }));
   await screen.findByRole("heading", { name: "Macro-Market Analysis" });
   expect(screen.getByRole("region", { name: "Research question" })).toHaveTextContent("Nasdaq and Bitcoin");
-  fireEvent.click(screen.getByRole("link", { name: "Indicator Relationships" }));
-  await screen.findByRole("heading", { name: "Indicator Relationships" });
+  fireEvent.click(screen.getByRole("link", { name: "Compare Data" }));
+  await screen.findByRole("heading", { name: "Compare Data" });
   expect(screen.queryByText("Loading current index...")).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("link", { name: "Explore Data" }));
   await screen.findByRole("heading", { name: "Indicators" });
@@ -49,11 +54,12 @@ test("simple view switches and hash history keep the active main section in sync
   expect(screen.getByRole("link", { name: "Research" })).toHaveAttribute("aria-current", "page");
 });
 
-test("auxiliary calendar returns to Overview without a calendar main tab", async () => {
+test("calendar is a main tab and the old address remains compatible", async () => {
   vi.stubGlobal("fetch", vi.fn(() => new Promise(() => undefined)));
   window.location.hash = "#/overview/calendar"; render(<App />);
-  await screen.findByRole("heading", { name: "Macro Calendar" });
-  fireEvent.click(screen.getByRole("link", { name: "Back to Overview" }));
+  await screen.findByRole("heading", { name: "Calendar" });
+  expect(screen.getByRole("link",{name:"Calendar"})).toHaveAttribute("aria-current","page");
+  fireEvent.click(screen.getByRole("link", { name: "Overview" }));
   await screen.findByRole("heading", { name: "USA Economy Now" });
   expect(screen.getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
 });

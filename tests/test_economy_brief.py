@@ -15,6 +15,9 @@ def snapshot():
 
 
 def stub_sections(monkeypatch, snapshot):
+    from app.analytics import overview_refresh
+    monkeypatch.setattr(overview_refresh, "read_brief", lambda: brief.build_brief())
+    monkeypatch.setattr(brief, "load_source_checks", lambda today: {"status": "not_recorded", "checked_at": None, "sources": []})
     monkeypatch.setattr(brief, "load_fed_target", lambda today: {"availability": "unavailable"})
     monkeypatch.setattr(brief, "policy_outlook", lambda now: {"schedule_status": "not_synced", "next_decision": None})
     monkeypatch.setattr(brief.usa_economy_now, 'build_usa_economy_now', lambda: snapshot)
@@ -94,6 +97,7 @@ def test_bulk_query_uses_same_vintage_order_once(monkeypatch):
         def close(self): calls.append('closed')
     from app.analytics import overview_readings
     monkeypatch.setattr(overview_readings, 'get_connection', Connection)
+    monkeypatch.setattr(overview_readings, 'load_series_history', lambda *args, **kwargs: {'observations': []})
     result = brief.load_comparisons(date(2026, 10, 18))
     sql, params = calls[0]
     assert len(calls) == 2 and len(result) == 6
@@ -189,3 +193,16 @@ def test_basis_covers_every_exposed_classification_and_cross_current(snapshot):
             if key.split('.')[0] in {'job_openings', 'labor_force_participation', 'durable_goods_orders'}: continue
             component, field = key.split('.') if '.' in key else ('overall', key)
             assert any(item['component'] == component and item['field'] == field and item['classification'] == classification for item in basis[domain])
+
+
+def test_api_exposes_check_provenance_without_provider_requests(monkeypatch, snapshot):
+    stub_sections(monkeypatch, snapshot)
+    from app.analytics.source_checks import summarize_checks
+    from tests.test_source_checks import successful, TODAY
+    checks = summarize_checks([successful('fred:UNRATE')], TODAY)
+    calls = []
+    monkeypatch.setattr(brief, 'load_source_checks', lambda day: calls.append(day) or checks)
+    body = TestClient(app).get('/api/v1/economy/us/brief').json()
+    assert len(calls) == 1 and body['source_checks'] == checks
+    assert body['source_checks']['status'] == 'partial'
+    assert body['source_checks']['checked_at'] != body['assembled_at']

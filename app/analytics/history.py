@@ -82,7 +82,8 @@ def _validate_date_range(
 
 
 def _series_metadata(series_id: str) -> dict:
-    config = load_series_config()
+    from app.local_ism import SERIES
+    config = {**load_series_config(), **SERIES}
     if series_id not in config:
         raise UnknownSeriesError(f"Unknown series: {series_id}")
 
@@ -103,6 +104,10 @@ def load_series_history(
     """Load one latest-stored value per observation date for a series."""
     metadata = _series_metadata(series_id)
     _validate_date_range(start_date, end_date)
+
+    from app.local_ism import SERIES, load_history
+    if series_id in SERIES:
+        return load_history(series_id, start_date, end_date)
 
     connection = get_connection()
     try:

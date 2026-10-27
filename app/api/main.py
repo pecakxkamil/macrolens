@@ -43,7 +43,7 @@ app = FastAPI(title="MacroLens API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list(DEVELOPMENT_CORS_ORIGINS),
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -266,10 +266,20 @@ def get_calendar(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
     category: Optional[str] = None,
+    include_readings: bool = False,
 ) -> dict:
+    if include_readings:
+        from app.analytics.calendar_agenda import calendar_agenda
+        return _calendar_response(lambda: calendar_agenda(start_date,end_date,category=category))
     return _calendar_response(
         lambda: release_calendar.list_calendar_events(start_date, end_date, category)
     )
+
+
+@app.get("/api/v1/relationships/sources")
+def get_relationship_sources() -> dict:
+    from app.analytics.relationship_sources import list_sources
+    return _relationships_response(list_sources)
 
 
 @app.get("/api/v1/relationships/compare")
@@ -323,6 +333,38 @@ def get_macro_market_lead_lag(assets: str = "NASDAQCOM,CBBTCUSD", start_date: Op
 
 @app.get("/api/v1/economy/us/brief")
 def get_economy_brief() -> dict:
-    from app.analytics import economy_brief
-    # Section failures remain explicit in a partial 200 response.
-    return jsonable_encoder(economy_brief.build_brief())
+    from app.analytics.overview_refresh import read_brief
+    return jsonable_encoder(read_brief())
+
+
+@app.post("/api/v1/economy/us/brief/refresh")
+def request_overview_refresh(calendar_start_date: Optional[date] = None, calendar_end_date: Optional[date] = None) -> dict:
+    from app.analytics.overview_refresh import coordinator
+    try:
+        return coordinator.request(calendar_start_date,calendar_end_date) if calendar_start_date or calendar_end_date else coordinator.request()
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from None
+    except Exception:
+        raise HTTPException(status_code=503, detail="Availability check unavailable; stored data remain accessible.") from None
+
+
+@app.get("/api/v1/economy/us/brief/refresh")
+def overview_refresh_status() -> dict:
+    from app.analytics.overview_refresh import coordinator
+    try:
+        return coordinator.status()
+    except Exception:
+        raise HTTPException(status_code=503, detail="Availability check status unavailable.") from None
+
+
+@app.get("/api/v1/economy/us/brief/history")
+def overview_publication_history(revision: str, key: str, start_date: Optional[date] = None, end_date: Optional[date] = None) -> dict:
+    from uuid import UUID
+    from app.analytics.overview_refresh import read_chart
+    try:
+        UUID(revision)
+        return jsonable_encoder(read_chart(revision, key, start_date, end_date))
+    except KeyError:
+        raise HTTPException(status_code=409, detail="Overview snapshot expired or chart unavailable; reload Overview.") from None
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid Overview chart request.") from None

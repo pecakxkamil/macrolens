@@ -1,0 +1,337 @@
+{
+  "version": 1,
+  "periods": [
+    {
+      "release_id": 50,
+      "series_ids": [
+        "PAYEMS",
+        "UNRATE",
+        "CES0500000003"
+      ],
+      "release_date": "2026-09-04",
+      "reference_period": "2026-08-01",
+      "source_url": "https://www.bls.gov/schedule/2026/home.htm",
+      "retrieved_at": "2026-10-26T22:03:01.017305+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "review_note": "HTTP client receives 403; dates and explicit reference periods verified on the official BLS page. This is schedule evidence, not result evidence."
+    },
+    {
+      "release_id": 50,
+      "series_ids": [
+        "PAYEMS",
+        "UNRATE",
+        "CES0500000003"
+      ],
+      "release_date": "2026-10-02",
+      "reference_period": "2026-09-01",
+      "source_url": "https://www.bls.gov/schedule/2026/home.htm",
+      "retrieved_at": "2026-10-26T22:03:01.017305+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "review_note": "HTTP client receives 403; dates and explicit reference periods verified on the official BLS page. This is schedule evidence, not result evidence."
+    },
+    {
+      "release_id": 50,
+      "series_ids": [
+        "PAYEMS",
+        "UNRATE",
+        "CES0500000003"
+      ],
+      "release_date": "2026-11-06",
+      "reference_period": "2026-10-01",
+      "source_url": "https://www.bls.gov/schedule/2026/home.htm",
+      "retrieved_at": "2026-10-26T22:03:01.017305+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "review_note": "HTTP client receives 403; dates and explicit reference periods verified on the official BLS page. This is schedule evidence, not result evidence."
+    },
+    {
+      "release_id": 10,
+      "series_ids": [
+        "CPIAUCSL",
+        "CPILFESL"
+      ],
+      "release_date": "2026-09-11",
+      "reference_period": "2026-08-01",
+      "source_url": "https://www.bls.gov/schedule/2026/home.htm",
+      "retrieved_at": "2026-10-26T22:03:01.017305+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "review_note": "HTTP client receives 403; dates and explicit reference periods verified on the official BLS page. This is schedule evidence, not result evidence."
+    },
+    {
+      "release_id": 10,
+      "series_ids": [
+        "CPIAUCSL",
+        "CPILFESL"
+      ],
+      "release_date": "2026-10-14",
+      "reference_period": "2026-09-01",
+      "source_url": "https://www.bls.gov/schedule/2026/home.htm",
+      "retrieved_at": "2026-10-26T22:03:01.017305+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "review_note": "HTTP client receives 403; dates and explicit reference periods verified on the official BLS page. This is schedule evidence, not result evidence."
+    },
+    {
+      "release_id": 10,
+      "series_ids": [
+        "CPIAUCSL",
+        "CPILFESL"
+      ],
+      "release_date": "2026-11-10",
+      "reference_period": "2026-10-01",
+      "source_url": "https://www.bls.gov/schedule/2026/home.htm",
+      "retrieved_at": "2026-10-26T22:03:01.017305+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "review_note": "HTTP client receives 403; dates and explicit reference periods verified on the official BLS page. This is schedule evidence, not result evidence."
+    },
+    {
+      "release_id": 46,
+      "series_ids": [
+        "PPIFIS"
+      ],
+      "release_date": "2026-09-10",
+      "reference_period": "2026-08-01",
+      "source_url": "https://www.bls.gov/schedule/2026/home.htm",
+      "retrieved_at": "2026-10-26T22:03:01.017305+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "review_note": "HTTP client receives 403; dates and explicit reference periods verified on the official BLS page. This is schedule evidence, not result evidence."
+    },
+    {
+      "release_id": 46,
+      "series_ids": [
+        "PPIFIS"
+      ],
+      "release_date": "2026-10-15",
+      "reference_period": "2026-09-01",
+      "source_url": "https://www.bls.gov/schedule/2026/home.htm",
+      "retrieved_at": "2026-10-26T22:03:01.017305+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "review_note": "HTTP client receives 403; dates and explicit reference periods verified on the official BLS page. This is schedule evidence, not result evidence."
+    },
+    {
+      "release_id": 46,
+      "series_ids": [
+        "PPIFIS"
+      ],
+      "release_date": "2026-11-13",
+      "reference_period": "2026-10-01",
+      "source_url": "https://www.bls.gov/schedule/2026/home.htm",
+      "retrieved_at": "2026-10-26T22:03:01.017305+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "review_note": "HTTP client receives 403; dates and explicit reference periods verified on the official BLS page. This is schedule evidence, not result evidence."
+    },
+    {
+      "release_id": 11,
+      "series_ids": [
+        "ECIALLCIV"
+      ],
+      "release_date": "2026-10-30",
+      "reference_period": "2026-07-01",
+      "source_url": "https://www.bls.gov/schedule/news_release/eci.htm",
+      "retrieved_at": "2026-10-26T22:03:01.017305+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "review_note": "HTTP client receives 403; dates and explicit reference periods verified on the official BLS page. This is schedule evidence, not result evidence."
+    },
+    {
+      "release_id": 192,
+      "series_ids": [
+        "JTSJOL"
+      ],
+      "release_date": "2026-09-01",
+      "reference_period": "2026-07-01",
+      "release_time": "10:00:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/2026/09_sched_list.htm",
+      "retrieved_at": "2026-10-27T12:29:15+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "capture_path": "data/raw/calendar-key-2026-10-27/bls-official-web-capture.json",
+      "review_note": "One-time review of the saved official page response. Backend HTTP remains 403; this is not an automatic fetch or result evidence."
+    },
+    {
+      "release_id": 192,
+      "series_ids": [
+        "JTSJOL"
+      ],
+      "release_date": "2026-09-29",
+      "reference_period": "2026-08-01",
+      "release_time": "10:00:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/2026/09_sched_list.htm",
+      "retrieved_at": "2026-10-27T12:29:15+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "capture_path": "data/raw/calendar-key-2026-10-27/bls-official-web-capture.json",
+      "review_note": "One-time review of the saved official page response. Backend HTTP remains 403; this is not an automatic fetch or result evidence."
+    },
+    {
+      "release_id": 192,
+      "series_ids": [
+        "JTSJOL"
+      ],
+      "release_date": "2026-11-03",
+      "reference_period": "2026-09-01",
+      "release_time": "10:00:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/2026/11_sched_list.htm",
+      "retrieved_at": "2026-10-27T12:29:15+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "capture_path": "data/raw/calendar-key-2026-10-27/bls-official-web-capture.json",
+      "review_note": "One-time review of the saved official page response. Backend HTTP remains 403; this is not an automatic fetch or result evidence."
+    },
+    {
+      "release_id": 192,
+      "series_ids": [
+        "JTSJOL"
+      ],
+      "release_date": "2026-12-01",
+      "reference_period": "2026-10-01",
+      "release_time": "10:00:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/news_release/jolts.htm",
+      "retrieved_at": "2026-10-27T12:29:15+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "capture_path": "data/raw/calendar-key-2026-10-27/bls-official-web-capture.json",
+      "review_note": "One-time review of the saved official page response. Backend HTTP remains 403; this is not an automatic fetch or result evidence."
+    },
+    {
+      "release_id": 46,
+      "series_ids": [
+        "PPIFIS"
+      ],
+      "release_date": "2026-11-13",
+      "reference_period": "2026-10-01",
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/news_release/ppi.htm",
+      "retrieved_at": "2026-10-27T12:29:15+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "capture_path": "data/raw/calendar-key-2026-10-27/bls-official-web-capture.json",
+      "review_note": "One-time review of the saved official page response. Backend HTTP remains 403; this is not an automatic fetch or result evidence."
+    },
+    {
+      "release_id": 46,
+      "series_ids": [
+        "PPIFIS"
+      ],
+      "release_date": "2026-12-15",
+      "reference_period": "2026-11-01",
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/news_release/ppi.htm",
+      "retrieved_at": "2026-10-27T12:29:15+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "capture_path": "data/raw/calendar-key-2026-10-27/bls-official-web-capture.json",
+      "review_note": "One-time review of the saved official page response. Backend HTTP remains 403; this is not an automatic fetch or result evidence."
+    },
+    {
+      "release_id": 11,
+      "series_ids": [
+        "ECIALLCIV"
+      ],
+      "release_date": "2026-10-30",
+      "reference_period": "2026-07-01",
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/news_release/eci.htm",
+      "retrieved_at": "2026-10-27T12:29:15+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "capture_path": "data/raw/calendar-key-2026-10-27/bls-official-web-capture.json",
+      "review_note": "One-time review of the saved official page response. Backend HTTP remains 403; this is not an automatic fetch or result evidence."
+    },
+    {
+      "release_id": 46,
+      "series_ids": [
+        "PPIFIS"
+      ],
+      "release_date": "2026-09-10",
+      "reference_period": "2026-08-01",
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/2026/09_sched_list.htm",
+      "retrieved_at": "2026-10-27T12:29:15+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "capture_path": "data/raw/calendar-key-2026-10-27/bls-official-web-capture.json",
+      "review_note": "One-time review of the saved official page response. Backend HTTP remains 403; this is not an automatic fetch or result evidence."
+    },
+    {
+      "release_id": 46,
+      "series_ids": [
+        "PPIFIS"
+      ],
+      "release_date": "2026-10-15",
+      "reference_period": "2026-09-01",
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/2026/10_sched_list.htm",
+      "retrieved_at": "2026-10-27T12:46:18+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "capture_path": "data/raw/calendar-key-2026-10-27/bls-october-web-capture.json",
+      "review_note": "One-time review of the saved official page response. Backend HTTP remains 403; this is not an automatic fetch or result evidence."
+    }
+  ],
+  "rules": [
+    {
+      "id": "dol_weekly_claims",
+      "valid_from": "2026-01-02",
+      "valid_through": "2027-12-31",
+      "source_url": "https://oui.doleta.gov/unemploy/archive.asp",
+      "methodology_url": "https://www.dol.gov/sites/dolgov/files/ETA/handbooks/2017/ETHand401_5th.pdf",
+      "report_example_url": "https://www.dol.gov/ui/data.pdf",
+      "retrieved_at": "2026-10-27T10:30:10.180670+00:00",
+      "source_timezone": "America/New_York",
+      "release_time": "08:30:00",
+      "initial_reference": "Saturday before the publication week Thursday; Wednesday holiday substitutions keep that Saturday",
+      "continuing_reference": "One week before initial claims reference week",
+      "exceptions": {
+        "2026-11-25": "08:30:00",
+        "2027-11-10": "08:30:00",
+        "2027-11-24": "08:30:00"
+      },
+      "cancelled_dates": [
+        "2026-11-26",
+        "2027-11-11",
+        "2027-11-25"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "release_id": 27,
+      "series_ids": [
+        "PERMIT"
+      ],
+      "release_date": "2026-10-27",
+      "reference_period": "2026-09-01",
+      "estimate_stage": "revised_permits",
+      "release_time": "08:00:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.census.gov/construction/bps/permitsbyusreg_cust.xls",
+      "schedule_source_url": "https://www.census.gov/construction/bps/schedule.html",
+      "retrieved_at": "2026-10-27T13:37:44.397314+00:00",
+      "binding_method": "reviewed_revised_permits_file",
+      "retrieval_method": "backend_http_document_review",
+      "reported_value": 1398,
+      "unit": "thousand homes/year (SAAR)",
+      "sheet": "Units SA",
+      "capture_path": "data/raw/calendar-finalization-2026-10-27/bps_national.xls",
+      "raw_sha256": "fc6ca43eb9d3fefec98fae6fed897ef4e05360ab531d9a68c5d3c514aaf64d96",
+      "review_note": "Revised BPS current file for September, linked from the official BPS current-data page, checked against the dated revised-permits schedule. Diagnostic publication evidence only; FRED remains the reading source."
+    }
+  ]
+}

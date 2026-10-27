@@ -5,6 +5,7 @@ import sys
 from datetime import date, timedelta
 
 from app.database.connection import get_connection
+from app.source_checks import availability_check
 from app.database.sync_series import load_series_config
 from app.ingestion.fred_releases import (
     RELEASE_DATE_PAGE_SIZE,
@@ -91,12 +92,22 @@ def collect_release_dates(release_id: int, start_date: date, end_date: date) -> 
     return [selected[key] for key in sorted(selected)]
 
 
-def sync_release_calendar(start_date: date, end_date: date) -> dict:
+def sync_release_calendar(start_date: date, end_date: date, series_ids=None) -> dict:
+    with availability_check("fred:calendar", {"provider": "FRED", "start_date": str(start_date), "end_date": str(end_date)}) as check:
+        return _sync_release_calendar(start_date, end_date, check, series_ids)
+
+
+def _sync_release_calendar(start_date: date, end_date: date, check, requested_series=None) -> dict:
     if start_date > end_date:
         raise ValueError("start_date must be on or before end_date.")
 
     today = date.today()
     series_ids = active_configured_series_ids()
+    if requested_series is not None:
+        series_ids = [sid for sid in series_ids if sid in requested_series]
+    check["scope"]["series_ids"] = series_ids
+    if not series_ids:
+        check.update(status="partial", error_code="no_active_series")
     releases = {}
     mappings = {}
     for series_id in series_ids:

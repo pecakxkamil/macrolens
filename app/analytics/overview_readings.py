@@ -1,5 +1,6 @@
 """Bounded current-vintage comparisons for the curated Overview readings."""
 from datetime import date, timedelta
+from app.analytics.history import load_series_history
 from app.analytics.features import METHODOLOGY_VERSION
 from app.analytics.relationships import _finite_value
 from app.database.connection import get_connection
@@ -8,12 +9,16 @@ from app.database.connection import get_connection
 READINGS = (
     ("labor", "payrolls", "PAYEMS", "monthly_change", "Payroll monthly change", "monthly", "thousands", "thousands"),
     ("labor", "unemployment", "UNRATE", "level", "Unemployment rate", "monthly", "percent", "percentage points"),
-    ("labor", "initial_claims", "ICSA", "moving_average_4w", "Initial claims, 4W average", "weekly", "persons", "persons"),
+    ("labor", "initial_claims", "ICSA", "raw", "Initial jobless claims", "weekly", "claims", "claims"),
+    ("labor", "job_openings", "JTSJOL", "level", "JOLTS job openings", "monthly", "thousands of openings", "thousands of openings"),
+    ("labor", "average_hourly_earnings", "CES0500000003", "mom", "Average hourly earnings MoM", "monthly", "percent", "percentage points"),
     ("inflation", "headline_cpi", "CPIAUCSL", "mom", "CPI MoM", "monthly", "percent", "percentage points"),
     ("inflation", "core_cpi", "CPILFESL", "mom", "Core CPI MoM", "monthly", "percent", "percentage points"),
     ("inflation", "core_pce", "PCEPILFE", "mom", "Core PCE MoM", "monthly", "percent", "percentage points"),
+    ("inflation", "producer_ppi", "PPIFIS", "mom", "Producer inflation PPI MoM", "monthly", "percent", "percentage points"),
     ("growth", "real_gdp", "GDPC1", "qoq_annualized", "Real GDP QoQ annualized", "quarterly", "percent", "percentage points"),
-    ("growth", "cfnai", "CFNAI", "moving_average_3m", "CFNAI, 3M average", "monthly", "index", "index points"),
+    ("growth", "manufacturing_pmi", "ISM_MANUFACTURING_PMI", "raw", "Manufacturing PMI", "monthly", "index", "index points"),
+    ("growth", "services_pmi", "ISM_SERVICES_PMI", "raw", "Services PMI", "monthly", "index", "index points"),
     ("growth", "industrial_production", "INDPRO", "mom", "Industrial production MoM", "monthly", "percent", "percentage points"),
     ("consumer", "real_consumption", "PCEC96", "mom", "Real consumption MoM", "monthly", "percent", "percentage points"),
     ("consumer", "real_disposable_income", "DSPIC96", "mom", "Real disposable income MoM", "monthly", "percent", "percentage points"),
@@ -42,7 +47,7 @@ def compare_overview_readings(rows):
     rows = normalized
     result = []
     for domain, component, series, feature, label, frequency, unit, change_unit in READINGS:
-        available = {str(day): {"value": _finite_value(value), "feature_as_of_date": str(as_of)}
+        available = {str(day): {"value": _finite_value(value), "feature_as_of_date": str(as_of) if as_of is not None else None}
                      for sid, fname, day, as_of, value in rows if sid == series and fname == feature}
         finite_dates = sorted(day for day, row in available.items() if row["value"] is not None)
         latest = finite_dates[-1] if finite_dates else None
@@ -58,16 +63,17 @@ def compare_overview_readings(rows):
             return None
         previous_day, earlier_day = target(1), target(3)
         current, previous, earlier = point(latest), point(previous_day), point(earlier_day)
-        def yoy_point(day):
-            matches = [row for row in rows if row[0] == series and row[1] == "yoy" and str(row[2]) == day]
+        def context_point(context_feature, day):
+            matches = [row for row in rows if row[0] == series and row[1] == context_feature and str(row[2]) == day]
             if not matches or _finite_value(matches[-1][4]) is None:
                 return None
-            return {"observation_date": day, "feature_as_of_date": str(matches[-1][3]), "value": _finite_value(matches[-1][4])}
-        context = {"current": yoy_point(latest), "previous": yoy_point(previous_day), "three_periods_ago": yoy_point(earlier_day)} if feature == "mom" else None
+            return {"observation_date": day, "feature_as_of_date": str(matches[-1][3]) if matches[-1][3] is not None else None, "value": _finite_value(matches[-1][4])}
+        context = {"current": context_point("yoy", latest), "previous": context_point("yoy", previous_day), "three_periods_ago": context_point("yoy", earlier_day)} if feature == "mom" and series != "PPIFIS" else None
         interval = {"daily": "available observation", "weekly": "calendar week", "monthly": "calendar month", "quarterly": "calendar quarter"}[frequency]
         result.append({"domain": domain, "component": component, "series_id": series, "feature_name": feature,
                        "label": label, "frequency": frequency, "unit": unit, "change_unit": change_unit,
                        "current": current, "previous": previous, "three_periods_ago": earlier, "context_yoy": context,
+                       "context_moving_average_4w": context_point("moving_average_4w", latest) if series == "ICSA" and feature == "raw" else None,
                        "expected_previous_observation_date": previous_day,
                        "expected_three_periods_ago_date": earlier_day,
                        "latest_stored_observation_date": max(available, default=None),
@@ -77,8 +83,9 @@ def compare_overview_readings(rows):
 
 
 def load_reading_comparisons(today):
-    sources = [(spec[2], spec[3], spec[5]) for spec in READINGS if spec[3] != "spread"]
-    sources += [(spec[2], "yoy", "monthly") for spec in READINGS if spec[3] == "mom"]
+    sources = [(spec[2], spec[3], spec[5]) for spec in READINGS if spec[3] not in ("spread", "raw")]
+    sources += [(spec[2], "yoy", "monthly") for spec in READINGS if spec[3] == "mom" and spec[2] != "PPIFIS"]
+    sources += [("ICSA", "moving_average_4w", "weekly")]
     sources += [("DGS2", "level", "daily"), ("DGS10", "level", "daily")]
     placeholders = ",".join(["(%s,%s,%s)"] * len(sources))
     # One query selects current-vintage values before bounding the result. The
@@ -133,6 +140,25 @@ def load_reading_comparisons(today):
     try:
         with connection.cursor() as cursor:
             cursor.execute(sql, params)
-            return compare_overview_readings(cursor.fetchall())
+            rows = cursor.fetchall()
     finally:
         connection.close()
+    # Raw ICSA is an observation history, not a fabricated level feature. Its
+    # computation date is not applicable; keep that metadata explicitly null.
+    raw = load_series_history("ICSA", end_date=today)
+    rows.extend(("ICSA", "raw", point["observation_date"], None, point["value"]) for point in raw["observations"])
+    from app.local_ism import SERIES
+    local_histories = {}
+    for sid in SERIES:
+        local_histories[sid] = load_series_history(sid, end_date=today)
+        rows.extend((sid, "raw", p["observation_date"], None, p["value"]) for p in local_histories[sid]["observations"])
+    result = compare_overview_readings(rows)
+    for item in result:
+        if item["series_id"] in local_histories:
+            points = {str(p["observation_date"]): p for p in local_histories[item["series_id"]]["observations"]}
+            for key in ("current", "previous", "three_periods_ago"):
+                if item[key]:
+                    item[key].update({k: v for k, v in points[item[key]["observation_date"]].items() if k not in ("value", "observation_date")})
+            item["source_url"] = item["current"]["source_url"] if item["current"] else SERIES[item["series_id"]]["source_url"]
+            item["attribution"] = SERIES[item["series_id"]]["attribution"]
+    return result

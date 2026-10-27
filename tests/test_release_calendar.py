@@ -122,8 +122,9 @@ def test_calendar_groups_series_once_orders_dates_and_filters(monkeypatch):
     assert len(result["events"]) == 2
     assert [event["release_date"] for event in result["events"]] == [date(2026, 9, 28), date(2026, 9, 29)]
     assert result["events"][0]["date_precision"] == "date"
-    assert result["events"][0]["release_time"] == "08:30:00"
-    assert result["events"][0]["source_timezone"] == "America/New_York"
+    # This fixture has only a FRED date, without publisher period/time evidence.
+    assert result["events"][0]["release_time"] is None
+    assert result["events"][0]["source_timezone"] is None
     assert [event["importance"] for event in result["events"]] == ["high", "high"]
     assert [series["series_id"] for series in result["events"][0]["series"]] == ["CPIAUCSL", "CPILFESL"]
     assert connection.cursor_instance.params[:2] == (start, end)
@@ -232,9 +233,9 @@ def test_calendar_api_response_includes_mapped_importance(monkeypatch):
     ]
     known, unknown, unsupported = response.json()["events"]
     assert known["release_date"] == "2026-09-28"
-    assert known["release_time"] == "08:30:00"
-    assert known["source_timezone"] == "America/New_York"
-    assert known["release_datetime_utc"] == "2026-09-28T12:30:00Z"
+    assert known["release_time"] is None
+    assert known["source_timezone"] is None
+    assert known["release_datetime_utc"] is None
     for event in (unknown, unsupported):
         assert event["release_date"] == "2026-09-28"
         assert event["release_time"] is None
@@ -266,3 +267,12 @@ def test_calendar_api_clean_errors_and_release_detail(monkeypatch):
     response = client.get("/api/v1/releases/10")
     assert response.status_code == 503
     assert "SELECT" not in response.text and "password" not in response.text
+
+def test_technical_fred_fomc_updates_are_not_policy_decisions(monkeypatch):
+    original=[(date(2026,10,31),101,'FOMC Press Release','http://www.federalreserve.gov/fomc/',*SERIES_PAYROLL),
+              (date(2026,11,1),101,'FOMC Press Release','http://www.federalreserve.gov/fomc/',*SERIES_PAYROLL)]
+    connection=FakeConnection([list(original)])
+    monkeypatch.setattr(release_calendar,'get_connection',lambda:connection)
+    result=release_calendar.list_calendar_events(date(2026,10,26),date(2026,11,1))
+    assert result['events']==[] and len(original)==2
+    assert not any('DELETE' in sql for sql,_ in connection.cursor_instance.calls)

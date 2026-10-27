@@ -14,7 +14,7 @@ Overview combines Economy Brief and Macro State; Explore Data contains the singl
 
 Calendar v1 maps active configured series to FRED economic releases and stores the release dates published by FRED and underlying sources. It includes scheduled dates without observations when FRED provides them. Known publisher-convention release times are represented with source timezone America/New_York and displayed in Europe/Warsaw; unknown times remain unavailable. A source-published date does not necessarily mean the observations were available on FRED or ALFRED that day.
 
-Release details may show latest stored and previous observations as current-vintage context. They do not reconstruct actual values at the historical release date. Consensus, surprises, and release-vintage comparisons are outside Calendar v1.
+The Calendar main tab binds results only to confirmed reference periods, preferring stored date-level vintages and labelling current-vintage fallbacks. It does not claim exact intraday actual-at-release values. The original un-enriched calendar API remains compatible. See Main calendar: event-result provenance below. Consensus and surprise calculations are not integrated.
 
 ## Historical Chart Data
 
@@ -557,15 +557,19 @@ Each snapshot component includes `observation_date` and `feature_as_of_date` so 
 - CIVPART: includes `level`, `change_3m`, and `moving_average_3m`; `change_3m` > 0 is `rising`, `change_3m` < 0 is `falling`, and `change_3m` == 0 is `stable`.
 - CES0500000003: includes `mom`, `yoy`, and `annualized_3m` values only.
 
-## Macro Relationships v1
+## Macro Relationships comparison lab
 
-Relationships uses the existing raw observation and computed-feature history loaders. Both provide the latest stored value for each observation date (`history_type = current_vintage`), so revised values can differ from those available at the time. The comparison does not reconstruct historical vintages.
+Relationships is a current-vintage comparison of 2-3 configured histories: active macro series with available stored transformations, and the existing Nasdaq Composite/Bitcoin prices. It uses the lowest selected frequency and the latest finite observation **inside** each ISO day/week, calendar month or quarter. There is no carry from earlier periods and no interpolation. Actual source observation dates are retained in tooltips. Observation periods are not publication dates; this is not a PIT backtest.
 
-For two or three selected histories, the backend chooses the lowest frequency: quarterly before monthly, monthly before weekly, weekly before daily. It groups observation dates into calendar quarters, calendar months, ISO weeks, or exact days at that frequency. Within each period and each history, it takes the latest dated non-null finite observation. No missing period is filled, and each aligned period appears once. Alignment uses economic observation dates, not publication dates; it applies no lead, lag, or causal interpretation.
+Correlation is Pearson r on pairwise-overlapping original selected measures, before display indexing. Pair counts and first/last paired periods are reported separately for every pair; fewer than three pairs or zero variance returns null. Levels/prices may share trends and must not be described as return relationships or predictive evidence.
 
-The response keeps periods with at least one selected value. Each pair's `overlapping_observation_count` counts only periods with both values. Pearson correlation is computed from those paired values only; it is null with fewer than three pairs or if either side has zero variance. With three indicators, the API reports all three pairwise comparisons. Date filters are passed to the existing history loaders before grouping.
+Actual-value axes follow compatible display units. Index-100 display requires raw/level measures, strictly positive values throughout the selected aligned histories, and a shared period. Growth features, absolute changes, moving averages, all percent rate levels and centered CFNAI/NFCI are deliberately excluded; no new normalization replaces them. When eligible, the first shared period supplies a separate baseline for each series. Indexing never changes correlation inputs.
 
-Actual-value mode uses separate chart axes for differing units. Indexed mode uses 100 at the first period where all selected values are present and nonzero; every displayed value is divided by its own baseline value and multiplied by 100. If no shared nonzero baseline exists, indexed mode is unavailable. The index is a visual comparison of relative changes, not a measure of economic strength. Correlation describes historical co-movement, not causation or future market moves.
+The global v1 feature formulas still use row shifts and rolling windows. Relationships therefore checks each non-level point's complete dependency window against its own stored computation snapshot using the existing `load_point_in_time_snapshot` loader. Only exact consecutive calendar dates may fill that window, including history before the requested display range. A missing period, extra irregular date, unsupported frequency/window or missing feature-as-of metadata excludes the point. Source snapshots are reused for points with the same series/as-of date. Exclusion counts are explicit; no feature is recomputed or imputed. This restriction does not repair or change global feature history, MCI/PIT, Overview or other analytics.
+
+Window lengths match existing formulas: MoM/QoQ/payroll change require 2 source periods; annualized 3M and payroll change 3M average require 4; payroll change 6M average requires 7; moving averages require their configured 3/4/13 periods; absolute changes require lag+1; YoY requires all 13 monthly, 5 quarterly or 53 weekly periods. Raw and stored level values need no shifted-window check.
+
+The API accepts only configured macro sources/transforms and the two existing assets, with asset price histories only. No arbitrary provider identifiers or asset transformations are accepted. Source metadata, unit mapping and histories are reused; Market Comparison's month-end carry and Lead/Lag's price-age/window policies remain separate.
 
 ## Macro State v1
 
@@ -1133,9 +1137,9 @@ These describe different comparisons. The report keeps their actual values and
 rules separate; displayed readings do not inherit unrelated classification tags.
 Classification calculations use the original unrounded features.
 
-Repeated low-importance calendar releases are grouped on Overview with all dates
-and expandable entries. Source events and the full calendar are unchanged, and
-the report retains every event. Identical source URLs are listed once. Markdown
+Overview lists at most four editorially selected upcoming events, plus the next
+FOMC decision separately when it falls outside the seven-day window. Routine
+releases remain in the full calendar; the report retains every stored event. Identical source URLs are listed once. Markdown
 uses blank-separated headings, paragraphs and lists, literal date brackets and
 intra-word underscores, without redundant escaping. Download still uses only
 the loaded data and makes no additional request.
@@ -1162,3 +1166,193 @@ source URLs remain unchanged; backend data and classification/MCI calculations
 are not translated or modified. Translation is local and deterministic, with no
 translation service or AI integration. Unknown externally supplied names retain
 their source spelling until a translation is added to the bundled dictionary.
+
+
+### Overview event stars
+
+Overview uses the central configuration in `frontend/src/brief/upcomingEvents.ts`.
+Key editorial events (FOMC, Employment Situation, CPI, Personal Income and
+Outlays/PCE and GDP) display three stars. Tracked editorial events (Retail Sales
+and weekly Claims) display two stars. For events outside these explicit aliases,
+source importance maps high to three, medium to two and low to one star; an
+unknown class remains unavailable. Editorial tiers take precedence: for example,
+Claims remains `high` in the source/API while its Overview presentation is two
+stars. Neither source classes nor the existing event selection order are changed.
+These are MacroLens editorial labels, not Investing.com ratings or a model of
+price impact. Stars have a localized accessible label, including unknown values.
+Full units and schedules remain in the report and expandable details.
+
+
+### Overview labor readings
+
+Labor displays PAYEMS `monthly_change` (thousand jobs), UNRATE `level` (percent),
+ICSA raw weekly observations (claim counts), JTSJOL `level` (stored thousands of
+openings, displayed as millions), and CES0500000003 `mom` (percent), with same-month
+stored `yoy` as context. Monthly comparisons require the preceding calendar month;
+ICSA requires exactly the preceding week. Missing periods are not substituted.
+
+Raw ICSA uses the existing current-vintage `load_series_history` loader, not an
+invented computed `level` feature. Its feature computation date is null because
+no computation occurred. The stored 4W average appears only when its observation
+date equals the primary raw claims date; the arrow and difference use raw claims.
+Existing classification and MCI averages are unchanged. Stored JOLTS and wage
+features are read without recalculation. JOLTS and wage directions are neutral.
+
+Overview has no per-domain comparison disclosures. Indicator links lead to the
+existing Explore Data history, source and definition section. Markdown retains
+all three primary comparisons, full units, exact differences, sources and dated
+contexts; promoted JOLTS and wage readings are not repeated as extra state readings.
+No current-vintage values are described as actual-at-release or source-fresh merely
+because of their retrieval timestamps.
+
+
+### PPI Final Demand (PPIFIS)
+
+Official metadata checked on 2026-10-22:
+[PPIFIS on FRED](https://fred.stlouisfed.org/series/PPIFIS), primary publisher
+[BLS PPI](https://www.bls.gov/ppi/). The series is monthly and seasonally adjusted,
+with index base Nov 2009=100. It is the Final Demand aggregate, not All Commodities
+or an industry PPI. Raw stored observations retain index levels.
+
+Only the existing MoM feature is registered: `100 * (index_t / index_(t-1) - 1)`.
+PPIFIS requires adjacent calendar months; a missing prior month produces no value.
+The formula is shared with existing features; legacy v1 calculations are unchanged.
+The generic Relationships monthly-continuity guard also applies to PPIFIS.
+
+Overview and Markdown show current/previous MoM, observation periods and the
+change in those rates in percentage points, with neutral direction styling. PPI
+has no YoY context in this stage and is not an input to existing classifications
+or either MCI mode. Unclassified PPI does not reduce assessment completeness.
+
+Full available history is ingested through the existing immutable RAW/validation
+pipeline and trusted-ALFRED-protected upsert. Source metadata and a short definition
+are available in the existing catalog/indicator view. Release-calendar synchronization
+uses the existing series-to-release mapping and release/date uniqueness constraints.
+No additional release timing, priority, consensus or actual-at-release is inferred.
+MoM derived from published index precision may differ from BLS's displayed one-decimal
+rate; compare the same observation months and source vintage before attributing any
+difference to rounding. Current-vintage observations can contain revisions.
+
+
+## Local ISM PMI release imports
+
+ISM_MANUFACTURING_PMI and ISM_SERVICES_PMI are monthly diffusion index levels (index points), sourced from ISM releases on PR Newswire, not FRED/ALFRED. They are raw-only: no percent MoM/YoY and no ratio indexing. They do not enter Macro State classifications or MCI/PIT. CFNAI remains available in research and its existing computations.
+
+Apply the additive, idempotent tables with `.\.venv\Scripts\python.exe -m app.database.init_db`.
+From the repository root:
+
+```powershell
+$manufacturingUrl = 'https://www.prnewswire.com/news-releases/manufacturing-pmi-at-54-5-september-2026-ism-manufacturing-pmi-report-302894520.html'
+$servicesUrl = 'https://www.prnewswire.com/news-releases/services-pmi-at-54-9-september-2026-ism-services-pmi-report-302898421.html'
+.\.venv\Scripts\python.exe -m app.ingestion.import_ism manufacturing $manufacturingUrl --dry-run
+.\.venv\Scripts\python.exe -m app.ingestion.import_ism services $servicesUrl --dry-run
+.\.venv\Scripts\python.exe -m app.ingestion.import_ism manufacturing $manufacturingUrl
+.\.venv\Scripts\python.exe -m app.ingestion.import_ism services $servicesUrl
+```
+
+The explicit importer accepts a supplied release URL. Overview can also discover the latest Manufacturing and Services reports on the public ISM PR Newswire publisher listing, validate their type/month/date and reuse this importer. Discovery rejects ambiguous or older documents; it never bypasses access blocks. No independent scheduler is added. The importer validates the ISM publisher, report kind/month, named history table, headline/body/table agreement, 12 consecutive unique months and finite values in [0,100]. Changed or incomplete structures fail before database writes; dry-run never writes the database or RAW.
+
+Immutable HTML bytes are saved under ignored `data/raw/ism/`; documents retain SHA-256, source URL, publication timestamp and retrieval timestamp. Identical responses do not duplicate document/observation rows. Revisions retain each document; current-vintage chooses the latest publication timestamp, with retrieval timestamp and document ID as tie-breakers. Older documents cannot override a later publication. Historical observation months are not assigned a fabricated first-release date: document dates belong to the document. This is not full PIT history. Initial coverage comes from the 12-month tables; longer selected chart ranges are never filled or stretched. Later explicit imports may extend coverage.
+
+Local personal use only. Technical access does not establish permission for public display, public demo, redistribution or external export; verify ISM/PR Newswire terms before any such use. No open license is presumed. Do not publish RAW, imported datasets, respondent comments or report text. The UI/report carries source attribution and document provenance, not commentary excerpts. No Bellwether or DBnomics history is imported.
+
+
+## Optional Overview explanations
+
+The local Explain toggle displays conditional, editorial educational notes for the existing Overview readings. It is off by default and persists only in browser localStorage. It does not fetch additional data, call AI, alter API calculations/classifications, or add content to the Markdown report. Changes are compared with the immediately preceding period at display precision, never with consensus or historical actual-at-release data. Missing comparisons do not generate a direction. Rates can improve while levels still decline; negative growth, PMI 50, curve inversion and NFCI level versus direction are handled explicitly. Fed notes identify the effective date and do not describe an old target range as a new decision.
+
+Economic channels are conditional, not a fitted model, market forecast or trading signal. Prices reflect expectations and other information; better economic activity and lower discount-rate pressure can have opposing implications. No deterministic stock/bond/dollar direction is assigned. These are authored interpretations based on general mechanisms, not claims that a single release caused a market move.
+
+Primary references reviewed for definitions and mechanisms:
+
+- [Federal Reserve: policy transmission and expectations](https://www.federalreserve.gov/monetarypolicy/monetary-policy-what-are-its-goals-how-does-it-work.htm)
+- [BLS: CPI definition and uses](https://www.bls.gov/cpi/questions-and-answers.htm)
+- [BLS: producer prices](https://www.bls.gov/ppi/overview.htm)
+- [BLS: JOLTS openings versus hires](https://www.bls.gov/jlt/jltfaq.htm)
+- [BEA: real activity and GDP](https://www.bea.gov/resources/learning-center/what-to-know-gdp)
+- [BEA: consumer spending](https://bea.gov/data/consumer-spending/main)
+- [Census: nominal retail sales](https://www.census.gov/retail/sales.html)
+- [ISM Manufacturing release: survey methodology](https://www.prnewswire.com/news-releases/manufacturing-pmi-at-54-5-september-2026-ism-manufacturing-pmi-report-302894520.html)
+- [ISM Services release: survey methodology](https://www.prnewswire.com/news-releases/services-pmi-at-54-9-september-2026-ism-services-pmi-report-302898421.html)
+- [Chicago Fed: interpreting financial conditions](https://www.chicagofed.org/research/data/nfci/about)
+
+
+### Structured explanation revision
+
+The same optional notes now return an observation followed by Economy, Fed and Markets fields. Variant selection is separate from channel copy and rendering. Numeric facts reuse prepared table values/periods and current source deltas, with screen rounding only. Matching displayed numbers suppress acceleration/deceleration claims; differences below display precision are described as practically unchanged. Flow/rate signs distinguish slower expansion, smaller contraction and crossings of zero. The mechanism text stays conditional and is not a new Macro State classification or a predictive rule. No additional data request, report content, chart calculation or table change is introduced.
+
+Specific checks: CPI disinflation is not falling prices; core CPI excludes food/energy; core PCE is a monitored underlying-pressure measure while the Fed target is annual headline PCE, not monthly core PCE. PPI pass-through is partial and conditional. Nominal sales are distinguished from real spending/income. Payroll changes, unemployment, benefit claims and vacancies are different labor measures. GDP growth is quarterly annualized. PMI is sector diffusion, with 50 separate from month-to-month direction and no headline-only price inference. NFCI direction is distinct from the zero-centered historical level. The yield slope cannot identify the source yield move, and a positive slope does not remove recession risk. Fed effective dates and last stored decisions are not new announcements today.
+
+References above were rechecked against official Fed, BLS, BEA, Chicago Fed and ISM-issued documents. Also see [BEA PCE definition](https://www.bea.gov/data/personal-consumption-expenditures-price-index). The previous ISM PDF URL returned 404 during this review; the verified ISM-issued PR Newswire releases provide the relevant methodology instead. These references support definitions and broad transmission channels; authored opposing market scenarios are conditional reasoning, not empirical forecasts or evidence of an observed market reaction. No consensus surprise or probability is inferred.
+
+The shared InfoTooltip accepts structured content for these notes. Overview arrow, interpretation and explanatory popups open on activation only, share one-open-popup state, and offer close controls, keyboard Escape, outside-click dismissal and touch operation. Longer notes have viewport-bounded placement and internal scrolling. The toggle and chart shortcuts retain their prior behavior.
+
+### Separate numerical arrows and economic interpretation
+
+Overview arrows now describe the numerical change only: green up, red down, gray dash when the displayed readings match. Comparison uses the same localized screen numbers as the table, including one decimal for unemployment, whole claims/annualized housing counts, and two decimals in millions for JOLTS. This handles both invisible changes and visible crossings of rounding boundaries without any new significance threshold. A question mark means the comparison is unavailable and has an accessible label/tooltip; it is not an unchanged reading. Report fields and source precision remain unchanged.
+
+`brief/economicInterpretation.ts` centrally enumerates the supported components and feature names. Its markers are authored MacroLens descriptions for the relevant economic area, not official BLS/BEA/Fed/ISM assessments. They neither predict asset prices nor estimate policy probabilities. In the following table, + means usually favorable, − usually unfavorable and ± mixed/context-dependent. Every row suppresses the assessment when no finite comparison exists, when screen readings are equal, or when the transformation is unsupported. Equal readings retain a neutral no-change arrow tooltip.
+
+| Overview measure | Supported measure | Marker rule for a visible change |
+| --- | --- | --- |
+| NFP | Monthly payroll change | + for faster positive growth or resumed growth; − for a new/deepening loss; ± for slower job creation, easing losses or zero current pace. |
+| Unemployment | Rate level | + for lower, − for higher; participation is a caveat. |
+| Initial claims | Raw weekly claims | + for fewer, − for more; one week is not a trend. |
+| JOLTS | Openings level | ±; vacancies are labor demand, not hires, and tightness matters. |
+| Hourly earnings | Nominal MoM | ±; household income versus costs, productivity and composition. |
+| Headline CPI | MoM | ±; monthly direction alone cannot distinguish sustained disinflation from weak demand. |
+| Core CPI | MoM | ±; excludes food/energy; falling inflation is not automatically favorable during price/demand declines. |
+| Core PCE | MoM | ±; the Fed goal concerns annual headline PCE, not monthly core PCE. |
+| PPI final demand | MoM | ±; producer cost/demand context and conditional consumer-price pass-through. |
+| Real GDP | QoQ annualized | + for faster positive/resumed real growth; − for new/deepening contraction; ± for slower growth/easing contraction/zero. |
+| Industrial production | MoM | Same real growth rule, for industry only. |
+| ISM Manufacturing PMI | Raw index | + if above 50 and rising; − if below 50 and falling; ± if level/direction conflict or at 50. |
+| ISM Services PMI | Raw index | Same sector diffusion rule; no headline-only inflation inference. |
+| Real consumption | MoM | Same real growth rule; measures the real consumption area. |
+| Real disposable income | MoM | Same real growth rule; measures real after-tax income. |
+| Nominal retail sales | MoM | ±; includes price changes and is not real consumption. |
+| Housing starts | Annualized level | + for more starts, − for fewer; local to residential activity. |
+| Building permits | Annualized level | + for more permits, − for fewer; permits do not guarantee actual construction. |
+| Mortgage rate | Rate level | ±; affordability versus wider inflation/rate context. |
+| 10Y–2Y spread | Yield spread | ±; cannot identify which yield moved or establish recession risk. |
+| NFCI | Index level | ±; higher is tighter, lower is looser financing, separately from economic health or level relative to zero. |
+| Fed target range | Last recorded decision | ± only beside the dated last rate change, when prior bounds and the actual bound changes are available; the arrow refers to that stored decision, never a new decision today. No inferred daily comparison is attached to the current range. |
+
+Sources reviewed before implementation support measure definitions and economic mechanisms, not the editorial marker choices:
+
+- [BLS labor-force concepts](https://www.bls.gov/cps/definitions.htm), [JOLTS](https://www.bls.gov/jlt/jltfaq.htm), [CPI](https://www.bls.gov/cpi/questions-and-answers.htm), [PPI](https://www.bls.gov/ppi/overview.htm).
+- [Department of Labor weekly claims](https://www.dol.gov/ui/data.pdf).
+- [BEA GDP](https://www.bea.gov/resources/learning-center/what-to-know-gdp), [personal income and spending](https://www.bea.gov/data/income-saving/personal-income).
+- [Federal Reserve policy goals and transmission](https://www.federalreserve.gov/monetarypolicy/monetary-policy-what-are-its-goals-how-does-it-work.htm).
+- [Chicago Fed NFCI definition](https://www.chicagofed.org/research/data/nfci/about).
+- [ISM Manufacturing methodology](https://go.weareism.org/ism-manufacturing-pmi); the ISM-issued Services methodology release is linked above. The 50 threshold concerns the sector diffusion index, not a percent change in GDP.
+
+A single legend separates the arrow from the unboxed interpretation symbol. Markers remain available with Explain off; the existing chart and longer educational notes remain separate. Short reasons reuse the bounded keyboard/touch tooltip. Overview reserves enough room for the complete numeric value/unit, arrow and badge with compact screen units and full unit meaning retained in tooltip/report text, without shrinking number fonts. These rules do not change observations, transformations, ingestion, classifications, MCI/PIT, the database or Markdown report content.
+
+### Overview readability and source-check status
+
+The indicator column reserves more width and the adjacent chart/info actions have zero extra gap while keeping each 24px click target. Numerical arrows and economic symbols are slightly larger; number fonts, units, observation periods and screen-only comparison semantics remain unchanged.
+
+The source-check line is hidden without a trustworthy check date and otherwise distinguishes a running check, full coverage, partial coverage and failure. Collapsed details retain source scope, missing decision times, attempts and last successful checks; no information icon is restored beside the date. The visible time is the oldest latest successful check among covered inputs, never the newest timestamp of a single series. Observation periods, publication dates, retrieval times and feature computation metadata are separate.
+
+### Overview background availability and coherent publication
+
+Overview first reads a saved publication and separately asks the backend for a background check on entry or return after the backend interval. A PostgreSQL advisory lock serializes workers; concurrent requests share the existing job. Default FRED cadence is 15 minutes; calendars and ISM discovery use six hours. HTTP limits, a job request budget, retry backoff and finite client polling apply. These are availability checks, not guarantees about immediate publisher delivery or correctness audits.
+
+FRED series metadata gates a reload of the already stored current-vintage observation range, preserving revisions without an ALFRED backfill or backward history extension. Existing feature formulas are recomputed in the same data transaction. Successful source savepoints and the complete brief/chart cache publication commit together; source failures retain their old data. A fatal job failure retains the last publication. Independent source-check logs preserve actual attempts and successes. The direct Fed schedule retains its existing atomic file replacement, outside the database transaction. Recent cache generations are disposable; observation/feature history and PIT caches are not evicted.
+
+Technical FRED release dates named FOMC Press Release describe target-series updates and are excluded from calendar presentation. Raw release rows are preserved. Policy decisions continue to come from the official Fed schedule with timezone-aware New York/Warsaw conversion. Missing future decision times remain unknown. Coverage is partial for Overview when they concern the displayed calendar window or the separately displayed next decision; missing later times are reported separately as incomplete future-schedule coverage.
+
+Report labels explicitly distinguish GDP quarterly annualized versus year-over-year growth, and four-week versus thirteen-week claims averages, from consecutive observations. Both inputs and the stored classification remain in audit details; no formula is changed. Production comments distinguish continuing growth from resumed growth. Housing starts/permits are seasonally adjusted annualized rates, not actual counts within the reported month. Marker rules and colors are unchanged. The local bilingual explanation audit uses the exact Overview functions and saved publication; it is not a separate interpretation model.
+
+### Main calendar: event-result provenance
+
+The Calendar main tab reuses `release_calendar.list_calendar_events`, its stored FRED release/series map and the official FOMC file. `include_readings=true` enriches the existing calendar endpoint using two bulk reads of stored observation rows in a repeatable-read transaction. No latest-pair lookup is used to assign an event result. Exact FRED release IDs map to series/transform/unit definitions in `calendar_readings.py`.
+
+A reference period is confirmed by a finite ALFRED observation whose real-time start matches the scheduled release day, is the newest known observation period on that day and was first introduced then. GDP can instead identify a changed estimate of that latest quarter. Closed real-time intervals, missing observations and exact calendar dependencies are respected through the existing `select_as_of` helper and pure v1 feature formulas. Current snapshots do not provide historical release-date evidence. Explicitly shared monthly report groups can bind another component to the confirmed report month; different claims weeks are never merged. Unknown or ambiguous bindings remain null.
+
+Stored date-level vintages are preferred where available, with vintage/realtime provenance. They are not labelled exact intraday actual-at-release values. Components requiring current stored values are explicitly labelled current-vintage; previous values retain their own version label when different. A GDP earlier estimate of the same quarter is distinguished from the preceding quarter. Revision badges require a confirmed difference between those stored estimates. The calendar neither reconstructs a new MCI history nor writes to ALFRED/PIT data.
+
+The date controls use Europe/Warsaw and Monday-Sunday calendar weeks. Chronological ordering is separate from the unchanged editorial star policy shared with Overview. No consensus integration exists: forecasts remain null, and actuals have no surprise/direction coloring. Expired countdowns are removed without creating values. Non-numeric events have no waiting-for-reading state. Selected-range coverage, errors and unconfirmed times are exposed independently of the full background-job status.
+
+Availability checks reuse the Overview coordinator, lock, budget and cadence. Selected ranges register on the shared state for the next permitted calendar check; a busy job is shared, not duplicated. A broad historical request never implies that all intervening years were checked. Local filters do not request providers. See [FRED release dates](https://fred.stlouisfed.org/docs/api/fred/release_dates.html) for the distinction between publisher dates and FRED availability, [FRED observations](https://fred.stlouisfed.org/docs/api/fred/series_observations.html) for real-time periods, [BLS Employment Situation](https://www.bls.gov/news.release/empsit.toc.htm) and [BEA Income and Outlays](https://www.bea.gov/data/income-saving/personal-income) for report composition.

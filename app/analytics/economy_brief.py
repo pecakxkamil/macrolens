@@ -8,6 +8,7 @@ from app.analytics.features import METHODOLOGY_VERSION
 from app.analytics.relationships import _finite_value
 from app.analytics.overview_readings import load_reading_comparisons
 from app.analytics.fed_target import load_fed_target
+from app.analytics.source_checks import load_source_checks
 
 logger = logging.getLogger(__name__)
 # Explicit editorial selection, not a significance ranking.
@@ -149,6 +150,7 @@ def build_brief(now=None):
     return {"assembled_at": now.isoformat(), "timezone": "Europe/Warsaw", "history_type": "current_vintage",
         "snapshot": snapshot, "state": state, "changes": changes, "calendar": calendar,
         "reading_comparisons": readings,
+        "source_checks": load_source_checks(today),
         "fed_target": _section(lambda: load_fed_target(today), "Fed target range"),
         "policy": _section(lambda: policy_outlook(now), "FOMC schedule"),
         "classification_basis": classification_basis(snapshot["data"]) if snapshot["data"] else {},

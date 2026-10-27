@@ -345,6 +345,10 @@ export interface RelationshipIndicator {
   short_name: string | null;
   frequency: string;
   unit: string;
+  source_kind?: "macro" | "asset";
+  source_url?: string;
+  attribution?: string;
+  excluded_observation_count?: number;
 }
 
 export interface RelationshipReading {
@@ -365,9 +369,20 @@ export interface RelationshipComparison {
   right_key: RelationshipKey;
   overlapping_observation_count: number;
   correlation: number | null;
+  first_pair_period?: string | null;
+  last_pair_period?: string | null;
 }
 
+export interface RelationshipCatalogSource extends SeriesMetadata {
+  source_kind: "macro" | "asset";
+  features: string[];
+  source_url?: string;
+  attribution?: string;
+}
+export interface RelationshipCatalogResponse { sources: RelationshipCatalogSource[]; history_type: "current_vintage"; feature_policy: string }
 export interface RelationshipResponse {
+  indexing?: { available: boolean; reason: string | null };
+  feature_policy?: string;
   history_type: "current_vintage";
   start_date: string | null;
   end_date: string | null;
@@ -388,6 +403,8 @@ export interface SeriesMetadata {
   category: string;
   frequency: string;
   unit: string;
+  description?: string;
+  source?: string; source_url?: string; attribution?: string;
 }
 
 export interface SeriesCatalogResponse {
@@ -400,14 +417,37 @@ export interface SeriesFeaturesResponse {
   features: string[];
 }
 
+export interface CalendarMeasure {
+ series_id:string;label:string;feature_name:string;frequency:string;unit:string;definition?:string;
+ reference_period:string|null;previous_period:string|null;previous_kind:"previous_period"|"previous_estimate"|"previous_decision";
+ actual:number|null;previous:number|null;forecast:number|null;consensus_status:"not_integrated"|"available";
+ previous_data_version?:"stored_date_vintage"|"current_vintage"|"official_release"|null;data_version:"stored_date_vintage"|"current_vintage"|"official_release"|null;revision_confirmed:boolean;binding_method:string|null;
+ vintage_date:string|null;realtime_end:string|null;result_status:"available"|"scheduled"|"awaiting_data";mapping_status:string;source_url:string;
+ actual_range?:[number,number]|null;previous_range?:[number,number]|null;
+ effective_date?:string|null;previous_effective_date?:string|null;
+ period_provenance?:{source_url:string;reference_period:string;binding_method:string;retrieved_at?:string;estimate_stage?:string;source_check?:{status:string;source_url:string;error_code?:string}|null}|null;
+ actual_provenance?:Record<string,unknown>|null;previous_provenance?:Record<string,unknown>|null;
+ result_provenance?:{source_url:string;release_date:string;reference_period:string;estimate_stage?:string;retrieved_at?:string}|null;
+ publication_provenance?:{source_url:string;release_date:string;reference_period:string;estimate_stage?:string;retrieved_at?:string}|null;
+ missing_reason?:{actual:string|null;previous:string|null};
+ period_status_reason?:string|null;
+}
+export interface CalendarCheck {
+ status:"complete"|"partial"|"error"|"not_recorded";checked_at:string|null;start_date:string;end_date:string;
+ required_resources:string[];sources:Array<{resource:string;label:string;range_status:string;checked_at:string|null;error_code:string|null;scope_error?:string;missing_times?:string[];later_missing_times?:string[]}>;
+}
 export interface CalendarEvent {
   release_id: number | null;
   event_id?: string;
+  description?:string;
+  measures?:CalendarMeasure[];
+  expects_numeric_result?:boolean;
   event_type?: "fomc_decision";
   meeting_start_date?: string;
   meeting_end_date?: string;
   retrieved_at?: string;
   time_source_url?: string | null;
+  time_rule?:{source_url:string;source_timezone:string;valid_from:string;valid_through:string;time:string};
   release_name: string;
   release_date: string;
   release_time: string | null;
@@ -420,6 +460,7 @@ export interface CalendarEvent {
 }
 
 export interface CalendarResponse {
+  automatic_refresh_supported?:boolean;data_revision?:string;refresh?:OverviewRefreshState;check?:CalendarCheck;max_range_days?:number;
   policy_calendar?: { status: string; retrieved_at: string | null; source_url: string };
   start_date: string;
   end_date: string;
@@ -506,6 +547,12 @@ export async function fetchCalendar(
 export async function fetchReleaseDetail(releaseId: number, signal?: AbortSignal): Promise<ReleaseDetailResponse> {
   const response = await fetch(`${API_BASE_URL}/api/v1/releases/${releaseId}`, { signal });
   if (!response.ok) throw new Error(`Unable to load release ${releaseId}.`);
+  return response.json();
+}
+
+export async function fetchRelationshipSources(signal?: AbortSignal): Promise<RelationshipCatalogResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/relationships/sources`, { signal });
+  if (!response.ok) throw new Error("Unable to load configured relationship sources.");
   return response.json();
 }
 
@@ -708,13 +755,14 @@ export interface BriefComparison {
   series_id: string; feature_name: string; label: string; frequency: string; unit: string;
   change_unit: string; change_type: string; change: number | null;
   expected_previous_observation_date: string | null; latest_stored_observation_date: string | null;
-  current: { value: number; observation_date: string; feature_as_of_date: string } | null;
-  previous: { value: number; observation_date: string; feature_as_of_date: string } | null;
+  current: { value: number; observation_date: string; feature_as_of_date: string | null; document_published_at?: string; source_url?: string; retrieved_at?: string; raw_hash?: string } | null;
+  previous: { value: number; observation_date: string; feature_as_of_date: string | null; document_published_at?: string; source_url?: string; retrieved_at?: string; raw_hash?: string } | null;
 }
 export interface OverviewReadingComparison extends BriefComparison {
-  domain: MciDomainKey; component: string;
+  domain: MciDomainKey; component: string; source_url?: string; attribution?: string;
   three_periods_ago: BriefComparison["current"];
   expected_three_periods_ago_date: string | null;
+  context_moving_average_4w?: BriefComparison["current"];
   context_yoy?: { current: BriefComparison["current"]; previous: BriefComparison["current"]; three_periods_ago: BriefComparison["current"] } | null;
 }
 export interface BriefClassificationBasis {
@@ -729,7 +777,40 @@ export interface FedTargetRange {
   last_rate_change: { effective_date: string; lower_change_bps: number; upper_change_bps: number; change_bps: number | null; previous_lower: number; previous_upper: number } | null;
   sources: Array<{ series_id: string; url: string; observation_date: string | null; retrieved_at: string | null }>;
 }
+export interface OverviewRefreshState {
+  status: "idle" | "running" | "complete" | "partial" | "error";
+  job_id?: string | null;
+  publication_id?: string | null;
+  attempted_at?: string | null;
+  completed_at?: string | null;
+  next_check_at?: string | null;
+  results: Array<{resource:string;status:string;error_code?:string;outcome?:string;manual_import_available?:boolean;missing_times?:string[]}>;
+}
+export interface FomcTimeCheck { release_date:string;fetch_status:"success"|"error";http_status:number|null;time_status:"confirmed"|"unconfirmed" }
 export interface EconomyBriefResponse {
+  data_revision?: string;
+  automatic_refresh_supported?: boolean;
+  refresh?: OverviewRefreshState;
+  source_checks?: {
+    status_scope?: "overview";
+    full_scope_status?: "complete" | "partial" | "not_recorded";
+    fomc_schedule?: {source_check_status:string;completeness_status:string;overview_status:string;overview_dates:string[];displayed_missing_times:string[];future_missing_times:string[];fetch_error_dates:string[];time_checks:FomcTimeCheck[]};
+    status: "complete" | "partial" | "not_recorded";
+    checked_at: string | null;
+    checked_count: number;
+    metadata_status?: "available" | "unavailable";
+    required_count: number;
+    sources: Array<{
+      resource: string; provider: string; label: string;
+      status: "success" | "partial" | "error" | "running" | "not_recorded";
+      last_attempt_at: string | null; last_success_at: string | null; last_finished_at?:string|null;
+      overview_status?:string; overview_checked_at?:string|null; overview_error_code?:string|null;
+      coverage_checked_at: string | null;
+      successful_scope?: {start_date?: string;end_date?: string} | null;
+      error_code: string | null;
+      scope: {start_date?: string;end_date?: string;legacy_dates_only?: boolean;dates?:string[];missing_times?:string[];time_checks?:FomcTimeCheck[]};
+    }>;
+  };
   fed_target?: BriefSection<FedTargetRange>;
   reading_comparisons?: BriefSection<OverviewReadingComparison[]>;
   policy?: BriefSection<{ schedule_status: string; retrieved_at: string | null; source_url: string;
@@ -744,4 +825,32 @@ export async function fetchEconomyBrief(signal?: AbortSignal): Promise<EconomyBr
   const response = await fetch(`${API_BASE_URL}/api/v1/economy/us/brief`, { signal });
   if (!response.ok) throw new Error("Economy Brief is unavailable.");
   return response.json();
+}
+
+
+export async function requestOverviewRefresh(signal?:AbortSignal,range?:{startDate:string;endDate:string}):Promise<OverviewRefreshState> {
+  const query=range?`?${new URLSearchParams({calendar_start_date:range.startDate,calendar_end_date:range.endDate})}`:"";
+  const response=await fetch(`${API_BASE_URL}/api/v1/economy/us/brief/refresh${query}`,{method:"POST",signal});
+  if(!response.ok)throw new Error("Availability check unavailable.");
+  return response.json();
+}
+export async function fetchOverviewRefresh(signal?:AbortSignal):Promise<OverviewRefreshState> {
+  const response=await fetch(`${API_BASE_URL}/api/v1/economy/us/brief/refresh`,{signal});
+  if(!response.ok)throw new Error("Availability check status unavailable.");
+  return response.json();
+}
+export async function fetchBriefHistory(revision:string,key:string,options:HistoryOptions):Promise<HistoryResponse> {
+  const params=new URLSearchParams({revision,key});
+  if(options.startDate)params.set("start_date",options.startDate);
+  if(options.endDate)params.set("end_date",options.endDate);
+  const response=await fetch(`${API_BASE_URL}/api/v1/economy/us/brief/history?${params}`,{signal:options.signal});
+  if(!response.ok)throw new Error("Published chart unavailable; reload Overview if its snapshot has expired.");
+  return response.json();
+}
+
+export async function fetchCalendarAgenda(startDate:string,endDate:string,signal?:AbortSignal):Promise<CalendarResponse> {
+ const params=new URLSearchParams({start_date:startDate,end_date:endDate,include_readings:"true"});
+ const response=await fetch(`${API_BASE_URL}/api/v1/calendar?${params}`,{signal});
+ if(!response.ok)throw new Error("Unable to load calendar.");
+ return response.json();
 }

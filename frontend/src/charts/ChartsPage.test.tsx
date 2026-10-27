@@ -1,6 +1,10 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import App from "../App";
+// Load the real nested route dependencies during collection so DOM assertions
+// measure rendering/navigation rather than cold Vite/Recharts compilation.
+import "../navigation/ExploreDataPage";
+import "./ChartsPage";
 import { combineChartData, rangeStartDate } from "./chartData";
 import { chartDefinitions } from "./chartDefinitions";
 

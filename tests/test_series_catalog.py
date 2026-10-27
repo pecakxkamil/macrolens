@@ -51,11 +51,12 @@ def test_catalog_lists_only_active_configured_series(monkeypatch):
 
     result = series_catalog.list_active_series()
 
-    assert result == {"series": [{
+    assert result["series"][:1] == [{
         "series_id": "UNRATE", "name": "Unemployment Rate",
         "short_name": "Unemployment Rate", "category": "labor",
         "frequency": "monthly", "unit": "percent",
-    }]}
+    }]
+    assert {r["series_id"] for r in result["series"][1:]} == {"ISM_MANUFACTURING_PMI", "ISM_SERVICES_PMI"}
     assert "active = TRUE" in connection.cursor_instance.query
     assert "series_id = ANY(%s)" in connection.cursor_instance.query
     assert "UNRATE" in connection.cursor_instance.params[0]

@@ -51,8 +51,8 @@ test.each([
   ["#/market-comparison", "Analiza makro i rynku"],
   ["#/charts", "Wykresy historyczne"],
   ["#/indicators", "Wskaźniki"],
-  ["#/calendar", "Kalendarz makro"],
-  ["#/relationships", "Zale\u017cno\u015bci wska\u017anik\u00f3w"],
+  ["#/calendar", "Kalendarz"],
+  ["#/relationships", "Por\u00f3wnaj dane"],
 ])("route %s opens in Polish, including its error state and controls", async (hash, heading) => {
   language("pl"); offline(); window.location.hash = hash; render(<App />);
   expect(await screen.findByRole("heading", { name: heading }, { timeout: 5000 })).toBeInTheDocument();

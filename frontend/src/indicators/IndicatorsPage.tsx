@@ -163,6 +163,7 @@ export function IndicatorsPage({ seriesId, embedded = false }: { seriesId?: stri
                   {ranges.map((years) => <button key={years} type="button" aria-pressed={range === years} onClick={() => setRange(years)}>{tText(`${years}Y`)}</button>)}
                 </div>
               </div>
+              {selected.source === "ism" && historyState.status === "ready" && readings.length ? <p>{tText("Available history")}: {String(readings[0].observation_date)} {tText(" through ")}{String(readings[readings.length - 1].observation_date)} · {readings.length} {tText("observations")}. {tText("Local ISM document history; no imputation or full PIT reconstruction.")}</p> : null}
               <div className="indicator-chart-panel">
                 <div className="indicator-chart-panel__heading"><h3>{tText(feature ? featureLabel(feature) : "Observed level")}</h3><span>{tText(selectedUnit(selected, feature))}</span></div>
                 {historyState.status === "loading" ? <p className="chart-state" role="status">{tText("Loading indicator history...")}</p> : null}
@@ -172,13 +173,15 @@ export function IndicatorsPage({ seriesId, embedded = false }: { seriesId?: stri
               </div>
               <section className="indicator-about" aria-labelledby="indicator-about-heading">
                 <h3 id="indicator-about-heading">{tText("About this indicator")}</h3>
+                {selected.description ? <p>{tText(selected.description)}</p> : null}
+                {selected.attribution ? <p>{tText(selected.attribution)}</p> : null}
                 <dl>
                   <div><dt>{tText("Series ID")}</dt><dd>{tText(selected.series_id)}</dd></div>
                   <div><dt>{tText("Series name")}</dt><dd>{tText(selected.name)}</dd></div>
                   <div><dt>{tText("Category")}</dt><dd>{tText(categoryLabel(selected.category))}</dd></div>
                   <div><dt>{tText("Frequency")}</dt><dd>{tText(selected.frequency)}</dd></div>
                   <div><dt>{tText("Source unit")}</dt><dd>{tText(selected.unit)}</dd></div>
-                  <div><dt>{tText("Source")}</dt><dd><a href={`https://fred.stlouisfed.org/series/${encodeURIComponent(selected.series_id)}`} target="_blank" rel="noreferrer">{tText("Source and series definition (FRED)")}</a></dd></div>
+                  <div><dt>{tText("Source")}</dt><dd><a href={selected.source_url ?? `https://fred.stlouisfed.org/series/${encodeURIComponent(selected.series_id)}`} target="_blank" rel="noreferrer">{tText(selected.source === "ism" ? "Institute for Supply Management (ISM)" : "Source and series definition (FRED)")}</a></dd></div>
                   <div><dt>{tText("Available measures")}</dt><dd>{tText("Level")}{tText(availableFeatures.length ? `, ${availableFeatures.map(featureLabel).join(", ")}` : "")}</dd></div>
                 </dl>
               </section>

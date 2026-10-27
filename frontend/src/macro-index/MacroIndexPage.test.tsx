@@ -54,6 +54,7 @@ describe("Macro Conditions Index v1", () => {
     window.location.hash = "#/";
     render(<App />);
     fireEvent.click(screen.getByRole("link", { name: "Research" }));
+    fireEvent.click(await screen.findByRole("link", { name: "MCI Index" }));
     expect(await screen.findByRole("heading", { name: "Macro Conditions Index" })).toBeInTheDocument();
     expect(await screen.findByRole("region", { name: "Current Macro Conditions Index" })).toHaveTextContent("50.0 / 100");
     expect(screen.getByRole("link", { name: "Research" })).toHaveAttribute("aria-current", "page");

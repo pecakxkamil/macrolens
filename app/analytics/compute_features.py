@@ -123,7 +123,7 @@ def load_point_in_time_snapshot(
     )
 
 
-def compute_features(series_id: str, as_of_date: Optional[date] = None) -> dict:
+def compute_features(series_id: str, as_of_date: Optional[date] = None, *, preserve_history=False) -> dict:
     """Compute and store configured v1 features for one series."""
     connection = None
 
@@ -152,7 +152,7 @@ def compute_features(series_id: str, as_of_date: Optional[date] = None) -> dict:
         features = calculate_features(series_id, snapshot, feature_names)
 
         with connection.cursor() as cursor:
-            if series_id == "PAYEMS":
+            if series_id == "PAYEMS" and not preserve_history:
                 cursor.execute(
                     DELETE_OBSOLETE_PAYEMS_FEATURES_SQL,
                     (METHODOLOGY_VERSION,),

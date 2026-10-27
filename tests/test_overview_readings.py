@@ -19,7 +19,7 @@ def get(rows, component):
 @pytest.mark.parametrize("series,feature,component,current,previous,earlier", [
     ("UNRATE", "level", "unemployment", "2026-01-01", "2025-12-01", "2025-10-01"),
     ("GDPC1", "qoq_annualized", "real_gdp", "2026-01-01", "2025-10-01", "2025-04-01"),
-    ("ICSA", "moving_average_4w", "initial_claims", "2026-01-03", "2025-12-27", "2025-12-13"),
+    ("ICSA", "raw", "initial_claims", "2026-01-03", "2025-12-27", "2025-12-13"),
 ])
 def test_calendar_comparisons_anchor_to_latest_available_period(series, feature, component, current, previous, earlier):
     result = get([row(series, feature, current, 4), row(series, feature, previous, 3), row(series, feature, earlier, 2)], component)
@@ -32,7 +32,7 @@ def test_calendar_comparisons_anchor_to_latest_available_period(series, feature,
 @pytest.mark.parametrize("series,feature,component,current,second,older,expected", [
     ("UNRATE", "level", "unemployment", "2026-01-01", "2025-11-01", "2025-09-01", "2025-10-01"),
     ("GDPC1", "qoq_annualized", "real_gdp", "2026-01-01", "2025-07-01", "2025-01-01", "2025-04-01"),
-    ("ICSA", "moving_average_4w", "initial_claims", "2026-01-03", "2025-12-20", "2025-12-06", "2025-12-13"),
+    ("ICSA", "raw", "initial_claims", "2026-01-03", "2025-12-20", "2025-12-06", "2025-12-13"),
 ])
 def test_missing_calendar_periods_are_not_compressed(series, feature, component, current, second, older, expected):
     result = get([row(series, feature, current, 4), row(series, feature, second, 3), row(series, feature, older, 2)], component)
@@ -60,8 +60,8 @@ def test_missing_values_never_become_zero_or_bridge_required_periods(bad):
     ("CPIAUCSL", "mom", "headline_cpi", "percentage points"),
     ("GDPC1", "qoq_annualized", "real_gdp", "percentage points"),
     ("PAYEMS", "monthly_change", "payrolls", "thousands"),
-    ("ICSA", "moving_average_4w", "initial_claims", "persons"),
-    ("CFNAI", "moving_average_3m", "cfnai", "index points"),
+    ("ICSA", "raw", "initial_claims", "claims"),
+    ("ISM_MANUFACTURING_PMI", "raw", "manufacturing_pmi", "index points"),
     ("HOUST", "level", "housing_starts", "thousands SAAR"),
 ])
 def test_same_transform_and_difference_units(series, feature, component, unit):
@@ -94,8 +94,11 @@ def test_one_bounded_query_reuses_current_vintage_order_and_synchronized_yields(
         def cursor(self): return Cursor()
         def close(self): calls.append("closed")
     monkeypatch.setattr(readings, "get_connection", Connection)
+    raw_calls = []
+    monkeypatch.setattr(readings, "load_series_history", lambda series, **kwargs: raw_calls.append((series, kwargs)) or {"observations": []})
     result = readings.load_reading_comparisons(date(2026, 10, 19))
-    assert len(calls) == 2 and len(result) == 17
+    assert raw_calls == [(sid, {"end_date": date(2026, 10, 19)}) for sid in ("ICSA", "ISM_MANUFACTURING_PMI", "ISM_SERVICES_PMI")]
+    assert len(calls) == 2 and len(result) == 21
     sql, params = calls[0]
     assert "as_of_date DESC, computed_at DESC, id DESC" in sql
     assert "a.observation_date = b.observation_date" in sql and "b.feature_value - a.feature_value" in sql
@@ -115,7 +118,7 @@ def test_api_aggregates_readings_once_and_keeps_existing_snapshots_and_changes(m
     response = TestClient(app).get("/api/v1/economy/us/brief")
     assert response.status_code == 200 and len(calls) == 1
     body = response.json()
-    assert len(body["reading_comparisons"]["data"]) == 17 and len(body["changes"]["data"]) == 6
+    assert len(body["reading_comparisons"]["data"]) == 21 and len(body["changes"]["data"]) == 6
     item = body["reading_comparisons"]["data"][1]
     assert item["three_periods_ago"]["observation_date"] == "2026-06-01"
     assert item["change"] == pytest.approx(.1)
@@ -157,3 +160,47 @@ def test_latest_observation_is_selected_by_period_not_retrieval_or_feature_as_of
     assert result["previous"]["observation_date"] == "2026-08-01"
     assert result["change"] == pytest.approx(-.15)
     assert result["context_yoy"]["current"]["observation_date"] == "2026-09-01"
+
+
+@pytest.mark.parametrize("component,series,feature,unit", [
+    ("job_openings", "JTSJOL", "level", "thousands of openings"),
+    ("average_hourly_earnings", "CES0500000003", "mom", "percent"),
+])
+def test_added_labor_rows_use_existing_features_and_exact_months(component, series, feature, unit):
+    result = get([row(series, feature, "2026-09-01", 5), row(series, feature, "2026-08-01", 4), row(series, feature, "2026-06-01", 3), row(series, "yoy", "2026-09-01", 2)], component)
+    assert result["feature_name"] == feature and result["unit"] == unit
+    assert result["previous"]["observation_date"] == "2026-08-01" and result["change"] == 1
+    if feature == "mom": assert result["context_yoy"]["current"]["value"] == 2
+    gap = get([row(series, feature, "2026-09-01", 5), row(series, feature, "2026-07-01", 4)], component)
+    assert gap["previous"] is None and gap["change"] is None
+
+
+def test_claims_raw_change_is_independent_of_same_week_average():
+    result = get([("ICSA", "raw", "2026-10-10", None, 199000), ("ICSA", "raw", "2026-10-03", None, 198000), row("ICSA", "moving_average_4w", "2026-10-10", 198500), row("ICSA", "moving_average_4w", "2026-10-03", 198250)], "initial_claims")
+    assert result["current"]["value"] == 199000 and result["previous"]["value"] == 198000
+    assert result["change"] == 1000 and result["feature_name"] == "raw"
+    assert result["current"]["feature_as_of_date"] is None
+    assert result["context_moving_average_4w"]["value"] == 198500
+    assert result["context_moving_average_4w"]["observation_date"] == "2026-10-10"
+
+
+def test_claims_context_never_borrows_another_week_or_fills_a_raw_gap():
+    result = get([row("ICSA", "raw", "2026-10-10", 199000), row("ICSA", "raw", "2026-09-26", 197000), row("ICSA", "moving_average_4w", "2026-10-03", 198250)], "initial_claims")
+    assert result["context_moving_average_4w"] is None
+    assert result["previous"] is None and result["change"] is None
+
+
+def test_raw_loader_is_reused_and_feature_comparisons_are_not_recomputed(monkeypatch):
+    class Cursor:
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def execute(self, sql, params):
+            assert "('ICSA','raw'" not in sql
+        def fetchall(self): return [row("ICSA", "moving_average_4w", "2026-10-10", 198500)]
+    class Connection:
+        def cursor(self): return Cursor()
+        def close(self): pass
+    monkeypatch.setattr(readings, "get_connection", Connection)
+    monkeypatch.setattr(readings, "load_series_history", lambda series, **kwargs: {"observations": [{"observation_date": date(2026,10,10), "value": 199000}, {"observation_date": date(2026,10,3), "value": 198000}] if series == "ICSA" else []})
+    result = next(row for row in readings.load_reading_comparisons(date(2026,10,22)) if row["component"] == "initial_claims")
+    assert result["change"] == 1000 and result["context_moving_average_4w"]["value"] == 198500

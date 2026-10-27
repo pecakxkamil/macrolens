@@ -9,6 +9,7 @@ from typing import Optional
 import yaml
 
 from app.database.connection import get_connection
+from app.source_checks import availability_check
 from app.ingestion.fred import fetch_series_observations
 from app.ingestion.raw_storage import save_raw_response
 from app.validation.fred_observations import validate_fred_observations
@@ -65,6 +66,12 @@ def _parse_observation(series_id: str, observation: dict) -> Optional[dict]:
 
 
 def ingest_series(series_id: str) -> dict:
+    # Only this explicit remote refresh establishes availability-check provenance.
+    with availability_check(f"fred:{series_id}", {"provider": "FRED", "series_ids": [series_id]}):
+        return _ingest_series(series_id)
+
+
+def _ingest_series(series_id: str, response_data=None) -> dict:
     """Ingest one configured FRED series into observation_vintages."""
     connection = None
 
@@ -76,7 +83,7 @@ def ingest_series(series_id: str) -> dict:
                 f"Unknown series_id: {series_id}. Configured series: {known_series}"
             )
 
-        response_data = fetch_series_observations(series_id)
+        response_data = response_data if response_data is not None else fetch_series_observations(series_id)
         raw_file_path = save_raw_response(series_id, response_data)
         validation_summary = validate_fred_observations(response_data)
 

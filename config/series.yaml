@@ -383,3 +383,15 @@ DFEDTARU:
   transformations:
     - level
   revision_tracking: true
+
+
+PPIFIS:
+  name: "Producer Price Index by Commodity: Final Demand"
+  short_name: PPI Final Demand
+  category: inflation
+  frequency: monthly
+  unit: index
+  description: "Seasonally adjusted index of prices received by domestic producers for final demand. Index Nov 2009=100; source: U.S. Bureau of Labor Statistics. MoM is calculated from index levels."
+  transformations:
+    - mom
+  revision_tracking: true

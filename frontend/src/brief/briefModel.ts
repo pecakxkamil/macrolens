@@ -1,3 +1,5 @@
+import { availabilityPresentation, availabilityTime, availabilityReportDetails } from "./sourceCheckPresentation";
+import { overviewUpcomingEvents, upcomingEventReport, eventImportanceNote } from "./upcomingEvents";
 import { prepareFedTarget, fedTargetReportLine } from "./fedTarget";
 import { prepareReading, readingReportLine } from "./readingComparisons";
 import { warsawDate, previousMonthEnd } from "../datePeriods";
@@ -9,9 +11,9 @@ import { formatCalendarDate, formatPolandTime, groupCalendarEvents } from "../ca
 
 export type PitState = { status: "loading" | "unavailable"; data?: undefined } | { status: "ready"; data: MciHistoryResponse };
 export const domainSelection = [
-  { key: "labor", name: "Labor", readings: [["payrolls", "PAYEMS"], ["unemployment", "UNRATE"], ["initial_claims", "ICSA"]] },
-  { key: "inflation", name: "Inflation", readings: [["headline_cpi", "CPIAUCSL"], ["core_cpi", "CPILFESL"], ["core_pce", "PCEPILFE"]] },
-  { key: "growth", name: "Growth", readings: [["real_gdp", "GDPC1"], ["cfnai", "CFNAI"], ["industrial_production", "INDPRO"]] },
+  { key: "labor", name: "Labor", readings: [["payrolls", "PAYEMS"], ["unemployment", "UNRATE"], ["initial_claims", "ICSA"], ["job_openings", "JTSJOL"], ["average_hourly_earnings", "CES0500000003"]] },
+  { key: "inflation", name: "Inflation", readings: [["headline_cpi", "CPIAUCSL"], ["core_cpi", "CPILFESL"], ["core_pce", "PCEPILFE"], ["producer_ppi", "PPIFIS"]] },
+  { key: "growth", name: "Growth", readings: [["real_gdp", "GDPC1"], ["industrial_production", "INDPRO"], ["manufacturing_pmi", "ISM_MANUFACTURING_PMI"], ["services_pmi", "ISM_SERVICES_PMI"]] },
   { key: "consumer", name: "Consumer", readings: [["real_consumption", "PCEC96"], ["real_disposable_income", "DSPIC96"], ["retail_sales", "RSAFS"]] },
   { key: "housing", name: "Housing", readings: [["housing_starts", "HOUST"], ["building_permits", "PERMIT"], ["mortgage_rate", "MORTGAGE30US"]] },
   { key: "financial_conditions", name: "Financial Conditions", readings: [["yield_curve_2s10s", "DGS2 / DGS10"], ["nfci", "NFCI"]] },
@@ -20,13 +22,13 @@ export const domainSelection = [
 const additionalReadings: Record<string, Array<[string, string]>> = {
   labor: [["continuing_claims", "CCSA"], ["job_openings", "JTSJOL"], ["labor_force_participation", "CIVPART"], ["average_hourly_earnings", "CES0500000003"]],
   inflation: [["headline_pce", "PCEPI"], ["employment_cost_index", "ECIALLCIV"], ["average_hourly_earnings", "CES0500000003"]],
-  growth: [["capacity_utilization", "TCU"], ["durable_goods_orders", "DGORDER"]],
+  growth: [["cfnai", "CFNAI"], ["capacity_utilization", "TCU"], ["durable_goods_orders", "DGORDER"]],
   consumer: [["saving_rate", "PSAVERT"]],
   housing: [["new_home_sales", "HSN1F"]],
   financial_conditions: [["fed_funds_rate", "DFF"], ["treasury_2y", "DGS2"], ["treasury_10y", "DGS10"], ["real_yield_10y", "DFII10"]],
 };
 function detailReadings(spec: typeof domainSelection[number]): ReadonlyArray<readonly [string, string]> {
-  return [...spec.readings, ...additionalReadings[spec.key]];
+  return [...spec.readings, ...additionalReadings[spec.key].filter(([key]) => !spec.readings.some(([selected]) => selected === key))];
 }
 export function shortTimestamp(instant: string): string {
   return new Intl.DateTimeFormat(getLanguage() === "pl" ? "pl-PL" : "en-GB", { timeZone: "Europe/Warsaw", year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" }).format(new Date(instant));
@@ -42,8 +44,11 @@ export function displayValue(value: number, unit: string): string {
 }
 export function basisText(basis: BriefClassificationBasis): string {
   const inputs = basis.inputs.map((input) => `${input.label}: ${formatNumber(input.value, 6)} ${input.unit} [${input.feature_name}]`).join("; ");
+  const windowLabel = basis.component === "real_gdp" && basis.field === "momentum" ? "Quarterly pace relative to annual growth"
+    : ["initial_claims","continuing_claims"].includes(basis.component) && basis.field === "momentum" ? `${basis.component === "initial_claims" ? "Initial claims" : "Continuing claims"}: 4-week average relative to 13-week average`
+    : basis.inputs.some(input=>input.feature_name==="annualized_3m") ? `${basis.label}: 3-month annualized pace relative to annual pace` : null;
   const votes = basis.component_classifications ? ` Component assessments: ${Object.entries(basis.component_classifications).map(([key, value]) => `${key}: ${formatClassification(value)}`).join("; ")}.` : "";
-  return `${basis.label}: ${formatClassification(basis.classification)}. ${basis.short}. ${inputs ? `Inputs: ${inputs}. ` : ""}${basis.observation_date ? `All inputs end at observation period ${basis.observation_date}; feature as-of ${basis.feature_as_of_date}. ` : ""}Rule: ${basis.rule}${votes}`;
+  return `${windowLabel ?? basis.label}: ${windowLabel ? "Stored rule result: " : ""}${formatClassification(basis.classification)}. ${basis.short}. ${inputs ? `Inputs: ${inputs}. ` : ""}${basis.observation_date ? `All inputs end at observation period ${basis.observation_date}; feature as-of ${basis.feature_as_of_date}. ` : ""}Rule: ${basis.rule}${votes}`;
 }
 export function timestamp(instant: string): string {
   return `${new Intl.DateTimeFormat(getLanguage() === "pl" ? "pl-PL" : "en-GB", { timeZone: "Europe/Warsaw", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", timeZoneName: "short" }).format(new Date(instant))} (Europe/Warsaw; ${instant})`;
@@ -105,7 +110,7 @@ function synthesize(domains: Array<{ name: string; evidence: string[]; missing: 
   return sentences.join(" ");
 }
 
-export function briefModel(data: EconomyBriefResponse, pit: PitState = { status: "unavailable" }) {
+export function briefModel(data: EconomyBriefResponse, pit: PitState = { status: "unavailable" }, now = new Date()) {
   const domains = domainSelection.map((spec) => {
     const domain = data.state.data?.domains[spec.key];
     const evidence = domain?.evidence ?? [];
@@ -117,8 +122,8 @@ export function briefModel(data: EconomyBriefResponse, pit: PitState = { status:
       assessmentNote: ["inflation", "growth", "consumer"].includes(spec.key) ? "Momentum compares recent growth with annual growth, not consecutive readings." : spec.key === "labor" ? "Momentum uses multi-month and multi-week comparisons." : spec.key === "housing" ? "Directions describe monthly activity changes and the 4-week mortgage-rate change." : "NFCI level and 4-week direction describe different measures.",
       summary: evidence.slice(0, 2).join(" ") || "Interpretation unavailable; no replacement classification was generated.", evidence,
       indicatorHref: `#/explore/indicators/${spec.key === "consumer" ? "RSAFS" : spec.readings[0][1]}`,
-      readings: detailReadings(spec).filter(([key]) => spec.readings.some(([selected]) => selected === key) || domain?.readings.some((reading) => reading.key === key)).map(([key, series]) => readingText(domain?.readings.find((reading) => reading.key === key), series, spec.key)),
-      missing: !domain || spec.readings.some(([key]) => !Number.isFinite(domain.readings.find((reading) => reading.key === key)?.value)) };
+      readings: detailReadings(spec).filter(([key]) => !["job_openings", "average_hourly_earnings", "producer_ppi", "manufacturing_pmi", "services_pmi"].includes(key)).filter(([key]) => spec.readings.some(([selected]) => selected === key) || domain?.readings.some((reading) => reading.key === key)).map(([key, series]) => readingText(domain?.readings.find((reading) => reading.key === key), series, spec.key)),
+      missing: !domain || spec.readings.filter(([key]) => !["producer_ppi", "manufacturing_pmi", "services_pmi"].includes(key)).some(([key]) => !Number.isFinite(domain.readings.find((reading) => reading.key === key)?.value)) };
   });
   const changes = data.changes.status === "ready" && data.changes.data ? data.changes.data.map(changeText) : ["Reading comparisons unavailable."];
   const events = data.calendar.status === "ready" && data.calendar.data ? groupCalendarEvents(data.calendar.data.events).flatMap((group) => group.events) : [];
@@ -149,7 +154,7 @@ export function briefModel(data: EconomyBriefResponse, pit: PitState = { status:
     timeSourceUrl: nextDecision?.time_source_url,
     note: "Market probabilities are not integrated. View the provider's probabilities and methodology on CME FedWatch.",
   };
-  return { domains, changes, calendar, mci, crossCurrents, completeness, policy, fedTarget: prepareFedTarget(data.fed_target),
+  return { upcoming: overviewUpcomingEvents(data, now), domains, changes, calendar, mci, crossCurrents, completeness, policy, fedTarget: prepareFedTarget(data.fed_target),
     synthesis: synthesize(domains, data.state.data?.cross_currents.map((item) => item.summary) ?? []),
     mciHeadline: row ? `Point-in-time MCI: ${row.mci === null ? "Unavailable" : `${formatNumber(row.mci)} / 100`} - ${formatObservationDate(row.observation_date, "monthly")}` : mci,
     changeSummaries: data.changes.data?.map(comparisonSummary) ?? ["Reading comparisons unavailable."],
@@ -159,7 +164,7 @@ export function briefModel(data: EconomyBriefResponse, pit: PitState = { status:
     sources: ["MacroLens USA Economy Now and Macro State: existing deterministic classifications and evidence; no additional composite or causal model.",
       "FOMC decisions: official Federal Reserve meeting and monthly calendars; stored retrieval timestamp.",
       "FRED-sourced series and MacroLens v1 stored features (current-vintage).", "Macro Calendar: stored FRED release dates and official-source time metadata.", "PIT MCI: ALFRED vintages; date-level availability, not intraday."],
-    links: [...new Set(["UNEMPLOY", ...domainSelection.flatMap((domain) => detailReadings(domain).flatMap(([, ids]) => ids.split(" / ")))])].map((id) => ({ label: id, url: `https://fred.stlouisfed.org/series/${id}` })),
+    links: [...new Set(["UNEMPLOY", ...domainSelection.flatMap((domain) => detailReadings(domain).flatMap(([, ids]) => ids.split(" / ")))])].map((id) => ({ label: id, url: data.reading_comparisons?.data?.find(r => r.series_id === id)?.source_url ?? (id.startsWith("ISM_") ? "https://www.ismworld.org/" : `https://fred.stlouisfed.org/series/${id}`) })),
     eventLinks: [...new Map(events.filter((event) => event.source_link).map((event) => [event.source_link!, { label: event.release_name, url: event.source_link! }])).values()] };
 }
 export type BriefModel = ReturnType<typeof briefModel>;
@@ -167,31 +172,35 @@ function pitReady(model: BriefModel): boolean { return model.mci.includes("Mode:
 function prose(text: string): string { return text.replace(/\r?\n/g, " ").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 export function briefMarkdown(model: BriefModel, data: EconomyBriefResponse, generatedAt: string): string {
   const list = (items: string[]) => items.map((text) => `- ${prose(text)}`).join("\n");
-  const blocks = ["# MacroLens - Economy Brief", `Prepared: ${shortTimestamp(generatedAt)} (Europe/Warsaw)`,
+  const availability=availabilityPresentation(data.source_checks,data.refresh,data.automatic_refresh_supported===false);
+  const checkLine=availability?`${availability.label}${availability.at?` ${availabilityTime(availability.at)}`:""}`:"";
+  const blocks = ["# MacroLens - Economy Brief", `Prepared: ${shortTimestamp(generatedAt)} (Europe/Warsaw)`, checkLine,
     "Current-vintage readings; earlier values may include revisions. Observation periods are shown with each value.",
     ...model.domains.flatMap((domain) => [`## ${domain.name}`, list([...(domain.key === "financial_conditions" ? [fedTargetReportLine(model.fedTarget)] : []), ...domain.compact.map(readingReportLine), ...domain.freshnessIssues.map(reading => `${reading.label}: Newer stored period ${reading.raw!.latest_stored_observation_date} has no available reading.`)])]),
-    "## Upcoming releases", `Stored-calendar window: ${data.calendar_start_date} through ${data.calendar_end_date} (7 calendar days, including today).`,
-    list([...model.calendarItems, ...model.calendarGroups.map((group) => `${group.name} - low importance. Dates: ${group.dates}.`)]),
-    !model.calendarItems.length && !model.calendarGroups.length ? list(model.calendar) : "",
-    "## Next FOMC decision and rate expectations", model.policy.headline, model.policy.note,
-    `[View market probabilities on CME FedWatch](${model.policy.fedwatchUrl})`,
+    "## Key upcoming events", `Stored-calendar window: ${data.calendar_start_date} through ${data.calendar_end_date} (7 calendar days, including today).`,
+    "Editorial priorities for MacroLens, not a forecast of market impact. Times shown in Europe/Warsaw.",
+    model.upcoming.selected.length ? list(model.upcoming.selected.map(upcomingEventReport)) : model.upcoming.available ? "No key upcoming events in the stored 7-day window." : "Release calendar unavailable; upcoming coverage is unknown.",
+    ...(model.upcoming.remaining.length ? ["### Other events this week", list(model.upcoming.remaining.map(upcomingEventReport))] : []),
+    ...(model.upcoming.nextFomc ? ["## Next FOMC decision", upcomingEventReport(model.upcoming.nextFomc)] : []),
+    model.policy.note, `[View market probabilities on CME FedWatch](${model.policy.fedwatchUrl})`,
     "## Sources and limitations", list(model.sources),
-    "CME probabilities and PMI data are not integrated or exported; no authorized data access is configured.",
+    "CME probabilities are not integrated. ISM PMI uses locally imported release tables; public display/export rights require verification. This is not a full PMI PIT history.",
     "No live news, causal attribution, forecasts or trading recommendations. Missing sections and periods are not imputed. Stored data may lag publication and revisions may alter the current-vintage comparisons.",
-    "## Audit details", "### Dates, scope and freshness", `Report generated: ${timestamp(generatedAt)}`, `Data assembled: ${timestamp(data.assembled_at)}`,
+    "## Audit details", "### Data availability check", list(availabilityReportDetails(data)), "### Dates, scope and freshness", `Report generated: ${timestamp(generatedAt)}`, `Data assembled: ${timestamp(data.assembled_at)}`,
     `Current snapshot as-of: ${data.snapshot.data?.as_of_date ?? "Unavailable"}.`, scopeNote, dateNote,
     "Observation periods and classification input windows are shown below. Snapshot and calculation metadata are not publication dates. No uniform stale-data threshold is applied.",
     ...model.domains.flatMap((domain) => [`### ${domain.name} - readings and assessment basis`, `Snapshot as-of: ${domain.asOf}.`, list(domain.readings),
       domain.basis.length ? list(domain.basis) : "Classification inputs unavailable; no substitute assessment was generated.",
       domain.evidence.length ? list(domain.evidence) : "Evidence unavailable."]),
+    "Seasonally adjusted annualized housing rates are not actual starts or permits within one month.",
     "### Comparison details", list(model.domains.flatMap((domain) => domain.compact.map((reading) => {
       const raw = reading.raw;
       if (!raw) return `${reading.label}: comparison history unavailable.`;
-      const point = (value: typeof raw.current) => value ? `${formatNumber(value.value, 6)} ${raw.unit}, observation date ${value.observation_date}, feature as-of ${value.feature_as_of_date}` : "Unavailable";
-      return `${raw.label} (${raw.series_id}, ${raw.feature_name}): latest ${point(raw.current)}; previous ${point(raw.previous)}; three periods earlier ${point(raw.three_periods_ago)}. Expected previous period: ${raw.expected_previous_observation_date ?? "Unavailable"}; expected earlier period: ${raw.expected_three_periods_ago_date ?? "Unavailable"}. ${raw.change_type}: ${raw.change === null ? "Unavailable" : `${formatNumber(raw.change, 6)} ${raw.change_unit}`}. Latest stored observation period: ${raw.latest_stored_observation_date ?? "Unavailable"}.${raw.context_yoy ? ` YoY context: ${JSON.stringify(raw.context_yoy)}.` : ""}`;
+      const point = (value: typeof raw.current) => value ? `${formatNumber(value.value, 6)} ${raw.unit}, observation date ${value.observation_date}, feature as-of ${value.feature_as_of_date ?? "not applicable (raw observation)"}${value.document_published_at ? `; document published ${value.document_published_at}; retrieved ${value.retrieved_at}; RAW SHA-256 ${value.raw_hash}; document source ${value.source_url}. Publication date belongs to the document, not necessarily the first release of this observation` : ""}` : "Unavailable";
+      return `${raw.label} (${raw.series_id}, ${raw.feature_name}): latest ${point(raw.current)}; previous ${point(raw.previous)}; three periods earlier ${point(raw.three_periods_ago)}. Expected previous period: ${raw.expected_previous_observation_date ?? "Unavailable"}; expected earlier period: ${raw.expected_three_periods_ago_date ?? "Unavailable"}. ${raw.change_type}: ${raw.change === null ? "Unavailable" : `${formatNumber(raw.change, 6)} ${raw.change_unit}`}. Latest stored observation period: ${raw.latest_stored_observation_date ?? "Unavailable"}.${raw.context_yoy ? ` YoY context: ${JSON.stringify(raw.context_yoy)}.` : ""}${raw.context_moving_average_4w ? ` Same-week 4W average: ${JSON.stringify(raw.context_moving_average_4w)} claims.` : ""}`;
     }))),
     "### Existing assessment evidence", model.synthesis, model.crossCurrents.length ? list(model.crossCurrents) : model.crossCurrentStatus,
-    "### Full release details", calendarNote, list(model.calendar),
+    "### Full release details", calendarNote, eventImportanceNote, list(model.calendar),
     "### FOMC schedule provenance", model.policy.metadata, "Stored schedules may change. Refresh is separate from page loading.",
     ...(pitReady(model) ? ["### Supporting MCI", model.mci, mciNote] : []),
     "### Fed target range provenance", model.fedTarget.raw ? JSON.stringify(model.fedTarget.raw) : "Fed target range unavailable.",
@@ -202,5 +211,17 @@ export function briefMarkdown(model: BriefModel, data: EconomyBriefResponse, gen
       .filter((link, index, links) => links.findIndex((other) => other.url === link.url) === index)
       .map((link) => `- [${link.label.replace(/\]/g, "\\]")}](${link.url})`).join("\n"),
     "## Optional external AI instruction", aiInstruction];
-  return t(blocks.filter(Boolean).join("\n\n") + "\n");
+  let report = blocks.filter(Boolean).join("\n\n") + "\n";
+  for (const [from,to] of Object.entries({
+    "Real GDP momentum is accelerating.":"Real GDP: quarterly annualized growth is above year-over-year growth.",
+    "Real GDP momentum is decelerating.":"Real GDP: quarterly annualized growth is below year-over-year growth.",
+    "Real GDP momentum is stable.":"Real GDP: quarterly annualized growth equals year-over-year growth.",
+    "Initial claims momentum is improving.":"Initial claims: the 4-week average is below the 13-week average.",
+    "Initial claims momentum is weakening.":"Initial claims: the 4-week average is above the 13-week average.",
+    "Initial claims momentum is stable.":"Initial claims: the 4-week average equals the 13-week average.",
+    "Continuing claims momentum is improving.":"Continuing claims: the 4-week average is below the 13-week average.",
+    "Continuing claims momentum is weakening.":"Continuing claims: the 4-week average is above the 13-week average.",
+    "Continuing claims momentum is stable.":"Continuing claims: the 4-week average equals the 13-week average.",
+  })) report = report.split(from).join(to);
+  return t(report);
 }

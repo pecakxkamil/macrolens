@@ -4,7 +4,7 @@ import math
 from datetime import date
 from typing import Optional
 
-from app.analytics import history
+from app.analytics import history, relationship_sources as sources
 
 
 FREQUENCY_ORDER = {"daily": 0, "weekly": 1, "monthly": 2, "quarterly": 3}
@@ -15,7 +15,7 @@ ALIGNMENT_METHODOLOGY = (
     "latest dated non-null observation per series in each period. Keep periods with "
     "at least one value. Pearson correlation uses only periods with values for both "
     "series; fewer than three pairs or zero variance returns null. Indexed values "
-    "use 100 at the first period where all selected values are nonzero."
+    "use 100 at the first shared period only for eligible positive levels. No observations are carried from earlier periods or interpolated."
 )
 
 
@@ -72,8 +72,15 @@ def _pearson(pairs: list[tuple[float, float]]) -> Optional[float]:
 
 
 def _load(series_id: str, feature_name: Optional[str], start_date: Optional[date], end_date: Optional[date]) -> dict:
-    return (history.load_feature_history(series_id, feature_name, start_date, end_date)
-            if feature_name is not None else history.load_series_history(series_id, start_date, end_date))
+    if series_id in sources.asset_config():
+        return sources.load_asset(series_id, start_date, end_date)
+    loaded = (history.load_feature_history(series_id, feature_name, start_date, end_date)
+              if feature_name is not None else history.load_series_history(series_id, start_date, end_date))
+    loaded = {**loaded, "source_kind": "macro", "excluded_observation_count": 0}
+    if feature_name is not None:
+        safe, excluded = sources.calendar_safe_points(series_id, feature_name, loaded["frequency"], loaded["observations"])
+        loaded.update(observations=safe, excluded_observation_count=excluded)
+    return loaded
 
 
 def compare_histories(
@@ -95,9 +102,12 @@ def compare_histories(
     requests = [("left", left_series, left_feature), ("right", right_series, right_feature)]
     if third_series is not None:
         requests.append(("third", third_series, third_feature))
-    sources = [(series_id, feature_name) for _, series_id, feature_name in requests]
-    if len(set(sources)) != len(sources):
+    histories = [(series_id, None if feature_name == "level" else feature_name) for _, series_id, feature_name in requests]
+    if len(set(histories)) != len(histories):
         raise InvalidRelationshipSelectionError("Select distinct histories.")
+
+    for _, series, feature in requests:
+        sources.validate_source(series, feature)
 
     loaded = {key: _load(series_id, feature_name, start_date, end_date)
               for key, series_id, feature_name in requests}
@@ -106,9 +116,10 @@ def compare_histories(
     periods = sorted(set().union(*(set(items) for items in aligned.values())))
     rows = [{"period": period, **{key: aligned[key].get(period) for key in loaded}} for period in periods]
 
-    baseline = next((row for row in rows if all(
-        row[key] is not None and row[key]["value"] != 0 for key in loaded
-    )), None)
+    eligible = all((feature in (None, "level") and loaded[key]["unit"] != "percent" and series not in ("CFNAI", "NFCI", "ISM_MANUFACTURING_PMI", "ISM_SERVICES_PMI")) for key, series, feature in requests)
+    positive = all(point["value"] > 0 for values in aligned.values() for point in values.values())
+    baseline = next((row for row in rows if all(row[key] is not None for key in loaded)), None) if eligible and positive else None
+    indexing = {"available": baseline is not None, "reason": None if baseline else "Indexed comparison requires positive levels and a shared period. Growth rates, rates, changes and diffusion/financial conditions indices are excluded."}
     for row in rows:
         for key in loaded:
             item = row[key]
@@ -123,17 +134,21 @@ def compare_histories(
         pair_keys.extend(((keys[0], keys[2]), (keys[1], keys[2])))
     comparisons = []
     for left_key, right_key in pair_keys:
-        pairs = [(row[left_key]["value"], row[right_key]["value"]) for row in rows
-                 if row[left_key] is not None and row[right_key] is not None]
+        paired = [row for row in rows if row[left_key] is not None and row[right_key] is not None]
+        pairs = [(row[left_key]["value"], row[right_key]["value"]) for row in paired]
         comparisons.append({
             "left_key": left_key,
             "right_key": right_key,
             "overlapping_observation_count": len(pairs),
             "correlation": _pearson(pairs),
+            "first_pair_period": paired[0]["period"] if paired else None,
+            "last_pair_period": paired[-1]["period"] if paired else None,
         })
 
     return {
         "history_type": history.HISTORY_TYPE,
+        "indexing": indexing,
+        "feature_policy": sources.GAP_POLICY,
         "start_date": start_date,
         "end_date": end_date,
         "comparison_frequency": frequency,
@@ -146,11 +161,15 @@ def compare_histories(
             "name": item["name"],
             "short_name": item.get("short_name"),
             "frequency": item["frequency"],
-            "unit": item["unit"] if feature_name is None or feature_name == "level" else (
+            "source_kind": item.get("source_kind", "macro"),
+            "source_url": item.get("source_url", f"https://fred.stlouisfed.org/series/{series_id}"),
+            "attribution": item.get("attribution"),
+            "excluded_observation_count": item.get("excluded_observation_count", 0),
+            "unit": {"percent": "percentage points", "index": "index points"}.get(item["unit"], item["unit"]) if feature_name and feature_name.startswith("change_") else item["unit"] if feature_name is None or feature_name == "level" else (
                 "percent" if feature_name in ("yoy", "mom", "qoq", "qoq_annualized", "annualized_3m")
                 else item["unit"]
             ),
-        } for key, _, feature_name in requests for item in [loaded[key]]],
+        } for key, series_id, feature_name in requests for item in [loaded[key]]],
         "observations": rows,
         "overlapping_observation_count": comparisons[0]["overlapping_observation_count"],
         "correlation": comparisons[0]["correlation"],

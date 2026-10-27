@@ -81,3 +81,57 @@ CREATE TABLE IF NOT EXISTS alfred_backfills (
 CREATE INDEX IF NOT EXISTS observation_vintages_alfred_idx
     ON observation_vintages (series_id, vintage_date, observation_date)
     WHERE source = 'alfred';
+
+-- Local ISM document versions; never part of the trusted FRED/ALFRED store.
+CREATE TABLE IF NOT EXISTS ism_documents (
+    id BIGSERIAL PRIMARY KEY,
+    series_id VARCHAR NOT NULL,
+    report_month DATE NOT NULL,
+    published_at TIMESTAMPTZ NOT NULL,
+    source_url TEXT NOT NULL,
+    retrieved_at TIMESTAMPTZ NOT NULL,
+    raw_hash VARCHAR(64) NOT NULL,
+    raw_path TEXT NOT NULL,
+    UNIQUE (series_id, raw_hash)
+);
+CREATE TABLE IF NOT EXISTS ism_observations (
+    document_id BIGINT NOT NULL REFERENCES ism_documents(id),
+    observation_date DATE NOT NULL,
+    value NUMERIC NOT NULL CHECK (value >= 0 AND value <= 100),
+    PRIMARY KEY (document_id, observation_date)
+);
+
+-- Additive availability-check provenance. No historical timestamps are inferred.
+CREATE TABLE IF NOT EXISTS source_check_runs (
+    id UUID PRIMARY KEY,
+    resource TEXT NOT NULL,
+    attempted_at TIMESTAMPTZ NOT NULL,
+    finished_at TIMESTAMPTZ,
+    status TEXT NOT NULL CHECK (status IN ('running', 'success', 'partial', 'error')),
+    scope JSONB NOT NULL DEFAULT '{}',
+    error_code TEXT
+);
+CREATE INDEX IF NOT EXISTS source_check_runs_resource_attempt_idx
+    ON source_check_runs (resource, attempted_at DESC);
+CREATE INDEX IF NOT EXISTS source_check_runs_success_idx
+    ON source_check_runs (resource, finished_at DESC) WHERE status = 'success';
+
+-- Disposable published Overview snapshots; source observations and PIT caches are separate.
+CREATE TABLE IF NOT EXISTS overview_publications (
+    id UUID PRIMARY KEY,
+    created_at TIMESTAMPTZ NOT NULL,
+    brief JSONB NOT NULL,
+    histories JSONB NOT NULL
+);
+CREATE TABLE IF NOT EXISTS overview_refresh_state (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    job_id UUID,
+    status TEXT NOT NULL DEFAULT 'idle',
+    attempted_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ,
+    next_check_at TIMESTAMPTZ,
+    publication_id UUID REFERENCES overview_publications(id),
+    source_versions JSONB NOT NULL DEFAULT '{}',
+    results JSONB NOT NULL DEFAULT '[]'
+);
+INSERT INTO overview_refresh_state(id) VALUES (1) ON CONFLICT DO NOTHING;

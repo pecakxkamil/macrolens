@@ -1,6 +1,8 @@
 """PostgreSQL connection helpers for MacroLens."""
 
 import os
+from contextlib import contextmanager
+from contextvars import ContextVar
 
 import psycopg
 from dotenv import load_dotenv
@@ -22,7 +24,7 @@ def _get_required_env(name: str) -> str:
     return value
 
 
-def get_connection() -> psycopg.Connection:
+def get_independent_connection() -> psycopg.Connection:
     """Create a PostgreSQL connection from environment configuration."""
     load_dotenv()
 
@@ -37,4 +39,32 @@ def get_connection() -> psycopg.Connection:
         dbname=_get_required_env("DB_NAME"),
         user=_get_required_env("DB_USER"),
         password=_get_required_env("DB_PASSWORD"),
+        connect_timeout=10,
     )
+
+
+_shared = ContextVar("macrolens_transaction", default=None)
+
+
+class BorrowedConnection:
+    """Existing loaders may close/commit locally without ending the owning unit of work."""
+    def __init__(self, connection):
+        self.connection = connection
+    def __getattr__(self, name):
+        return getattr(self.connection, name)
+    def close(self): pass
+    def commit(self): pass
+    def rollback(self): pass
+
+
+@contextmanager
+def shared_connection(connection):
+    token = _shared.set(BorrowedConnection(connection))
+    try:
+        yield connection
+    finally:
+        _shared.reset(token)
+
+
+def get_connection() -> psycopg.Connection:
+    return _shared.get() or get_independent_connection()

@@ -1,6 +1,7 @@
 """Public metadata for active configured series and stored v1 features."""
 
 from app.analytics.features import FEATURES_BY_SERIES, METHODOLOGY_VERSION
+from app.local_ism import SERIES
 from app.database.connection import get_connection
 from app.database.sync_series import load_series_config
 
@@ -32,8 +33,12 @@ class UnknownCatalogSeriesError(ValueError):
     """Raised for an unknown or inactive configured series."""
 
 
-def _metadata(row: tuple) -> dict:
-    return dict(zip(SERIES_FIELDS, row))
+def _metadata(row: tuple, configured=None) -> dict:
+    metadata = dict(zip(SERIES_FIELDS, row))
+    description = (configured if configured is not None else load_series_config()).get(metadata["series_id"], {}).get("description")
+    if description:
+        metadata["description"] = description
+    return metadata
 
 
 def list_active_series() -> dict:
@@ -46,11 +51,14 @@ def list_active_series() -> dict:
     finally:
         connection.close()
 
-    return {"series": [_metadata(row) for row in rows]}
+    return {"series": [_metadata(row, configured) for row in rows] + [{"series_id": sid, **meta} for sid, meta in SERIES.items()]}
 
 
 def get_active_series(series_id: str) -> dict:
-    if series_id not in load_series_config():
+    if series_id in SERIES:
+        return {"series_id": series_id, **SERIES[series_id]}
+    configured = load_series_config()
+    if series_id not in configured:
         raise UnknownCatalogSeriesError(f"Unknown series: {series_id}")
 
     connection = get_connection()
@@ -63,12 +71,14 @@ def get_active_series(series_id: str) -> dict:
 
     if row is None:
         raise UnknownCatalogSeriesError(f"Unknown series: {series_id}")
-    return _metadata(row)
+    return _metadata(row, configured)
 
 
 def list_available_features(series_id: str) -> dict:
     # Validate active status before reporting transformations.
     get_active_series(series_id)
+    if series_id in SERIES:
+        return {"series_id": series_id, "methodology_version": METHODOLOGY_VERSION, "features": []}
     configured = load_series_config()[series_id].get("transformations", ())
     supported = FEATURES_BY_SERIES.get(series_id, ())
     connection = get_connection()

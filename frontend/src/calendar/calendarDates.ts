@@ -1,11 +1,9 @@
+import { warsawDate } from "../datePeriods";
 import { getLocale, getLanguage, t } from "../i18n/language";
 import type { CalendarEvent } from "../api/macrolens";
 
 export function todayIso(today = new Date()): string {
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return warsawDate(today);
 }
 
 function parseIso(date: string): Date {
@@ -36,7 +34,7 @@ export function dateStatus(releaseDate: string, today: string): "Past" | "Today"
 
 export function formatAgendaDate(date: string): string {
   return new Intl.DateTimeFormat(getLocale(), {
-    weekday: "long", month: "short", day: "numeric", timeZone: "UTC",
+    weekday: "long", month: "long", day: "numeric", year:"numeric", timeZone: "UTC",
   }).format(parseIso(date));
 }
 

@@ -201,3 +201,10 @@ def test_calendar_schema_has_unique_keys_and_no_unverified_event_fields():
     assert "release_time" not in schema
     assert "consensus" not in schema
     assert "surprise" not in schema
+
+
+@pytest.fixture(autouse=True)
+def isolate_availability_provenance(monkeypatch):
+    # These ingestion tests must never write to a configured local database.
+    from app import source_checks
+    monkeypatch.setattr(source_checks, "write_run", lambda run: None)

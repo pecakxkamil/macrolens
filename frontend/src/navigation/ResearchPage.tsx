@@ -6,12 +6,11 @@ const MacroIndexPage = lazy(() => import("../macro-index/MacroIndexPage").then((
 const MarketComparisonPage = lazy(() => import("../market-comparison/MarketComparisonPage").then((module) => ({ default: module.MarketComparisonPage })));
 const RelationshipsPage = lazy(() => import("../relationships/RelationshipsPage").then((module) => ({ default: module.RelationshipsPage })));
 const views = [
-  ["mci", "Macro Conditions Index"], ["macro-market", "Macro-Market Analysis"], ["relationships", "Indicator Relationships"],
+  ["relationships", "Compare Data"], ["mci", "MCI Index"], ["macro-market", "MCI vs Markets"],
 ] as const;
 
 export function ResearchPage({ route }: { route: Extract<AppRoute, { section: "research" }> }) {
   return <>
-    <header className="section-header"><h1>{tText("Research")}</h1><p>{tText("Explore documented historical comparisons. Results depend on the selected data, period and method.")}</p></header>
     <nav className="section-switch" aria-label={tLabel("Research views")}>
       {views.map(([view, label]) => <a key={view} href={`#/research/${view}`} aria-current={route.view === view ? "page" : undefined}>{tText(label)}</a>)}
     </nav>

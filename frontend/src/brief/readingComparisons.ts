@@ -2,26 +2,18 @@ import type { OverviewReadingComparison } from "../api/macrolens";
 import { formatObservationDate } from "../format";
 import { getLanguage, getLocale } from "../i18n/language";
 
-// Presentation only: no thresholds, classifications or scoring are calculated.
-const directionStyle: Record<string, "increase" | "decrease" | "neutral"> = {
-  payrolls: "increase", unemployment: "decrease", initial_claims: "decrease",
-  headline_cpi: "neutral", core_cpi: "neutral", core_pce: "neutral",
-  real_gdp: "increase", cfnai: "increase", industrial_production: "increase",
-  real_consumption: "increase", real_disposable_income: "increase",
-  housing_starts: "increase", building_permits: "increase",
-  retail_sales: "neutral", mortgage_rate: "neutral", fed_funds_rate: "neutral",
-  yield_curve_2s10s: "neutral", nfci: "neutral",
-};
+// Arrow colors describe numerical direction only, never economic desirability.
+export type ReadingDirection = "higher" | "lower" | "unchanged" | "unavailable";
 export const readingLabels: Record<string, string> = {
-  payrolls: "Payroll monthly change", unemployment: "Unemployment rate", initial_claims: "Initial claims, 4W average",
-  headline_cpi: "CPI MoM", core_cpi: "Core CPI MoM", core_pce: "Core PCE MoM", real_gdp: "Real GDP QoQ annualized",
+  payrolls: "Nonfarm payrolls (NFP)", unemployment: "Unemployment rate", initial_claims: "Initial jobless claims", job_openings: "JOLTS job openings", average_hourly_earnings: "Hourly earnings MoM",
+  manufacturing_pmi: "ISM Manufacturing PMI", services_pmi: "ISM Services PMI", producer_ppi: "Producer inflation PPI MoM", headline_cpi: "CPI MoM", core_cpi: "Core CPI MoM", core_pce: "Core PCE MoM", real_gdp: "Real GDP QoQ, annualized",
   cfnai: "CFNAI, 3M average", industrial_production: "Industrial production MoM", real_consumption: "Real consumption MoM",
   real_disposable_income: "Real disposable income MoM", retail_sales: "Nominal retail sales MoM",
   housing_starts: "Housing starts", building_permits: "Building permits", mortgage_rate: "30Y mortgage rate",
-  fed_funds_rate: "Effective Fed Funds Rate", yield_curve_2s10s: "10Y minus 2Y Treasury spread", nfci: "NFCI",
+  fed_funds_rate: "Effective Fed Funds Rate", yield_curve_2s10s: "10Y–2Y Treasury spread", nfci: "NFCI",
 };
 const missing = "\u2014";
-export function readingNumber(value: number | null | undefined, unit: string, precision = ["percent", "index", "percentage points"].includes(unit) ? 2 : unit === "persons" || unit === "thousands SAAR" ? 0 : undefined): string {
+export function readingNumber(value: number | null | undefined, unit: string, precision = ["percent", "index", "percentage points"].includes(unit) ? 2 : ["persons", "claims", "thousands SAAR"].includes(unit) ? 0 : undefined): string {
   if (typeof value !== "number" || !Number.isFinite(value)) return missing;
   return new Intl.NumberFormat(getLocale(), { useGrouping: true, minimumFractionDigits: precision ?? 0, maximumFractionDigits: precision ?? 2 }).format(Math.abs(value) < .5 * 10 ** -(precision ?? 2) ? 0 : value);
 }
@@ -30,7 +22,7 @@ function displayedDelta(item: OverviewReadingComparison): number {
   return Number(item.change?.toFixed(precision));
 }
 export function readingUnit(unit: string): string {
-  return ({ percent: "%", "percentage points": "pp", thousands: "thousand jobs", persons: "people", index: "index points", "thousands SAAR": "thousand homes/year (annualized)" } as Record<string, string>)[unit] ?? unit;
+  return ({ percent: "%", "percentage points": "pp", thousands: "thousand jobs", persons: "people", claims: "claims", "thousands of openings": "thousand openings", index: "index points", "thousands SAAR": "thousand homes/year (annualized)" } as Record<string, string>)[unit] ?? unit;
 }
 export function comparisonLabels(frequency: string) {
   if (frequency === "daily") return { previous: "Previous observation", earlier: "3 observations earlier", change: "Change vs previous observation" };
@@ -38,17 +30,25 @@ export function comparisonLabels(frequency: string) {
   if (frequency === "weekly") return { previous: "Previous week", earlier: "3 weeks earlier", change: "Change vs previous week" };
   return { previous: "Previous month", earlier: "3 months earlier", change: "Change vs previous month" };
 }
+function screenNumber(key: string, unit: string, value?: number | null): string {
+  return key === "job_openings" && typeof value === "number"
+    ? readingNumber(value / 1000, "millions", 2)
+    : readingNumber(value, unit, key === "unemployment" ? 1 : undefined);
+}
+export function comparisonDirection(item?: OverviewReadingComparison): ReadingDirection {
+  if (!item?.current || !item.previous || !Number.isFinite(item.current.value) || !Number.isFinite(item.previous.value)
+    || item.change === null || !Number.isFinite(item.change)) return "unavailable";
+  if (screenNumber(item.component, item.unit, item.current.value) === screenNumber(item.component, item.unit, item.previous.value)) return "unchanged";
+  return item.current.value > item.previous.value ? "higher" : "lower";
+}
 export function comparisonTone(item?: OverviewReadingComparison): "positive" | "negative" | "neutral" {
-  if (!item?.current || !item.previous || item.change === null || !Number.isFinite(item.change) || displayedDelta(item) === 0) return "neutral";
-  const style = directionStyle[item.component] ?? "neutral";
-  if (style === "neutral") return "neutral";
-  const improves = style === "increase" ? item.change > 0 : item.change < 0;
-  return improves ? "positive" : "negative";
+  const direction = comparisonDirection(item);
+  return direction === "higher" ? "positive" : direction === "lower" ? "negative" : "neutral";
 }
 // Compact units are local to Overview; reports keep the full unit definition.
 export function compactReadingValue(value: string, unit: string): string {
   if (value === missing) return missing;
-  const suffix = ({ percent: "%", "percentage points": " pp", thousands: getLanguage() === "pl" ? " tys." : " k", persons: getLanguage() === "pl" ? " os." : " people", "thousands SAAR": getLanguage() === "pl" ? " tys." : " k" } as Record<string, string>)[unit] ?? "";
+  const suffix = ({ percent: "%", "percentage points": " pp", thousands: getLanguage() === "pl" ? " tys." : " k", persons: getLanguage() === "pl" ? " os." : " people", claims: getLanguage() === "pl" ? " wniosk\u00f3w" : " claims", "thousands SAAR": getLanguage() === "pl" ? " tys." : " k" } as Record<string, string>)[unit] ?? "";
   return value + suffix;
 }
 function fullUnit(unit: string): string { return unit === "percentage points" ? "percentage points" : readingUnit(unit); }
@@ -57,11 +57,14 @@ export function prepareReading(key: string, series: string, item?: OverviewReadi
   const unit = item?.unit ?? "";
   const point = (value: OverviewReadingComparison["current"] | undefined, expected?: string | null, context?: OverviewReadingComparison["current"]) => {
     const formatted = readingNumber(value?.value, unit, key === "unemployment" ? 1 : undefined);
+    const screenValue = screenNumber(key, unit, value?.value);
+    const screenSuffix = key === "job_openings" && formatted !== missing ? getLanguage() === "pl" ? " mln" : " m" : compactReadingValue("", unit);
     return {
-      value: formatted, suffix: formatted === missing ? "" : compactReadingValue("", unit), display: compactReadingValue(formatted, unit),
+      screenValue, screenSuffix: formatted === missing ? "" : screenSuffix,
+      value: formatted, suffix: formatted === missing ? "" : compactReadingValue("", unit), display: screenValue === missing ? missing : screenValue + screenSuffix,
       period: value?.observation_date || expected ? formatObservationDate(value?.observation_date ?? expected!, item?.frequency) : missing,
       date: value?.observation_date ?? expected ?? undefined,
-      yoy: item?.feature_name === "mom" ? readingNumber(context?.observation_date === (value?.observation_date ?? expected) ? context?.value : null, "percent") : undefined,
+      yoy: item?.feature_name === "mom" && series !== "PPIFIS" ? readingNumber(context?.observation_date === (value?.observation_date ?? expected) ? context?.value : null, "percent") : undefined,
     };
   };
   const current = point(item?.current, undefined, item?.context_yoy?.current);
@@ -71,7 +74,8 @@ export function prepareReading(key: string, series: string, item?: OverviewReadi
   const delta = item?.current && item.previous && typeof change === "number" && Number.isFinite(change) ? change : null;
   const roundedDelta = delta === null ? null : displayedDelta(item!);
   const rate = ["mom", "yoy", "annualized_3m", "qoq_annualized"].includes(item?.feature_name ?? "");
-  const arrow = roundedDelta === null || roundedDelta === 0 ? missing : roundedDelta > 0 ? "\u2191" : "\u2193";
+  const comparison = comparisonDirection(item);
+  const arrow = comparison === "unavailable" ? "?" : comparison === "unchanged" ? missing : comparison === "higher" ? "\u2191" : "\u2193";
   const difference = delta === null ? missing : `${delta > 0 ? "+" : ""}${readingNumber(delta, item!.change_unit)} ${readingUnit(item!.change_unit)}`;
   const exactDifference = delta === null ? missing : `${delta > 0 ? "+" : ""}${exactNumber(delta)} ${readingUnit(item!.change_unit)}`;
   const fullDifference = delta === null ? missing : `${delta > 0 ? "+" : ""}${exactNumber(delta)} ${fullUnit(item!.change_unit)}`;
@@ -83,14 +87,16 @@ export function prepareReading(key: string, series: string, item?: OverviewReadi
   const magnitude = delta === null ? missing : compactReadingValue(readingNumber(Math.abs(roundedDelta!), item!.change_unit, key === "unemployment" ? 1 : undefined), item!.change_unit);
   return { key, rate, exactDifference, tooltip, hasChange: delta !== null, label: readingLabels[key] ?? item?.label ?? key,
     indicatorHref: `#/explore/indicators/${series.split(" / ")[0]}`,
-    sources: series.split(" / ").map((id) => ({ label: id, url: `https://fred.stlouisfed.org/series/${id}` })),
+    sources: series.split(" / ").map((id) => ({ label: id, url: item?.source_url ?? (id.startsWith("ISM_") ? "https://www.ismworld.org/" : `https://fred.stlouisfed.org/series/${id}`) })),
     unit: readingUnit(unit), reportUnit: fullUnit(unit), current, previous, earlier, labels: comparisonLabels(item?.frequency ?? "monthly"),
-    arrow, difference, change: fullDifference,
+    claimsAverage: key === "initial_claims" && item?.current && item.context_moving_average_4w?.observation_date === item.current.observation_date && Number.isFinite(item.context_moving_average_4w.value)
+      ? { value: readingNumber(item.context_moving_average_4w.value, "claims"), date: item.current.observation_date } : null,
+    comparison, arrow, difference, change: fullDifference,
     compactChange: delta === null ? missing : rate ? arrow : `${arrow === missing ? "" : `${arrow} `}${magnitude}`,
     tone: comparisonTone(item), raw: item };
 }
 export type PreparedReading = ReturnType<typeof prepareReading>;
 export function readingReportLine(reading: PreparedReading): string {
   const value = (point: PreparedReading["current"]) => `${point.value} (${point.period})${point.yoy !== undefined ? `; YoY: ${point.yoy}${point.yoy === missing ? "" : "%"}` : ""}`;
-  return `${reading.label}${reading.reportUnit ? ` [${reading.reportUnit}]` : ""}: Latest: ${value(reading.current)}; ${reading.labels.previous}: ${value(reading.previous)}; ${reading.labels.earlier}: ${value(reading.earlier)}; ${reading.labels.change}: ${reading.change}.`;
+  return `${reading.label}${reading.reportUnit ? ` [${reading.reportUnit}]` : ""}: Latest: ${value(reading.current)}; ${reading.labels.previous}: ${value(reading.previous)}; ${reading.labels.earlier}: ${value(reading.earlier)}; ${reading.labels.change}: ${reading.change}.${reading.claimsAverage ? ` Same-week 4W average: ${reading.claimsAverage.value} claims (${reading.current.period}).` : ""}`;
 }

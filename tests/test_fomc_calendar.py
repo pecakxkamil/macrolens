@@ -130,3 +130,10 @@ def test_optional_policy_failure_does_not_block_existing_brief(monkeypatch):
     result = economy_brief.build_brief(datetime(2026, 10, 19, tzinfo=timezone.utc))
     assert result["policy"]["status"] == "unavailable"
     assert all(result[key]["status"] == "ready" for key in ("snapshot", "state", "calendar", "changes"))
+
+
+@pytest.fixture(autouse=True)
+def isolate_availability_provenance(monkeypatch):
+    # These ingestion tests must never write to a configured local database.
+    from app import source_checks
+    monkeypatch.setattr(source_checks, "write_run", lambda run: None)

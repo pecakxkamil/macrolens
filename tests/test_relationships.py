@@ -13,7 +13,7 @@ def make_history(series_id, frequency, observations, feature_name=None):
         "name": series_id,
         "short_name": series_id,
         "frequency": frequency,
-        "unit": "percent",
+        "unit": "number",
         "history_type": "current_vintage",
         "feature_name": feature_name,
         "observations": [
@@ -25,6 +25,13 @@ def make_history(series_id, frequency, observations, feature_name=None):
 
 def stub_histories(monkeypatch, payloads):
     calls = []
+    def validate(sid, feature):
+        if not any(key[0] == sid for key in payloads):
+            raise history.UnknownSeriesError("Unknown test source")
+        if (sid, feature) not in payloads:
+            raise history.UnsupportedFeatureError("Unsupported test feature")
+    monkeypatch.setattr(relationships.sources, "validate_source", validate)
+    monkeypatch.setattr(relationships.sources, "calendar_safe_points", lambda sid, feature, frequency, observations: (observations, 0))
 
     def load(series_id, start_date, end_date):
         calls.append((series_id, None, start_date, end_date))
@@ -51,8 +58,9 @@ def test_same_frequency_alignment_uses_latest_observation_per_period(monkeypatch
     result = relationships.compare_histories("LEFT", "RIGHT", right_feature="yoy")
     assert [row["period"] for row in result["observations"]] == ["2026-01", "2026-02", "2026-03"]
     assert result["observations"][0]["left"]["observation_date"] == date(2026, 1, 31)
-    assert result["observations"][0]["left"]["normalized_value"] == 100
-    assert result["observations"][1]["right"]["normalized_value"] == 200
+    assert result["observations"][0]["left"]["normalized_value"] is None
+    assert result["observations"][1]["right"]["normalized_value"] is None
+    assert result["indexing"]["available"] is False
     assert result["overlapping_observation_count"] == 3
     assert result["correlation"] == pytest.approx(1.0)
     assert result["history_type"] == "current_vintage"

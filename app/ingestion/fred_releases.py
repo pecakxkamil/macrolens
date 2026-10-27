@@ -7,6 +7,7 @@ import httpx
 from dotenv import load_dotenv
 
 from app.ingestion.fred import REQUEST_TIMEOUT_SECONDS
+from app.ingestion.request_budget import before_request
 
 
 FRED_BASE_URL = "https://api.stlouisfed.org/fred"
@@ -18,6 +19,7 @@ def _fetch_json(path: str, params: dict) -> dict:
     api_key = os.getenv("FRED_API_KEY")
     if not api_key:
         raise RuntimeError("Missing required environment variable: FRED_API_KEY")
+    before_request("FRED")
     try:
         response = httpx.get(
             f"{FRED_BASE_URL}/{path}",

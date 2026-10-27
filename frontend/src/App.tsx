@@ -655,6 +655,14 @@ export function DetailedOverview({ initialSnapshot }: { initialSnapshot?: UsaEco
 }
 
 export default function App() {
+  const [explanations,setExplanations] = useState(() => {
+    try { return localStorage.getItem("macrolens.overview.explanations") === "true"; } catch { return false; }
+  });
+  const toggleExplanations = () => setExplanations(current => {
+    const next = !current;
+    try { localStorage.setItem("macrolens.overview.explanations",String(next)); } catch { /* Preference remains available for this session. */ }
+    return next;
+  });
   useSyncExternalStore(subscribeLanguage, getLanguage);
   const [hash, setHash] = useState(() => window.location.hash);
   const route = resolveRoute(hash);
@@ -671,18 +679,22 @@ export default function App() {
   }, [hash, route.hash]);
 
   return <>
-    <LanguageSwitcher />
+    <div className="app-corner-controls">
+      <LanguageSwitcher />
+      <button type="button" className="overview-explanations-toggle" aria-label={tLabel("Overview explanations")} aria-pressed={explanations} onClick={toggleExplanations}><span aria-hidden="true">i</span>{tText("Explain")}</button>
+    </div>
     <nav className="app-navigation" aria-label={tLabel("Main navigation")}>
       <a href="#/" aria-current={route.section === "overview" ? "page" : undefined}>{tText("Overview")}</a>
+      <a href="#/calendar" aria-current={route.section === "calendar" ? "page" : undefined}>{tText("Calendar")}</a>
       <a href="#/explore/indicators" aria-current={route.section === "explore" ? "page" : undefined}>{tText("Explore Data")}</a>
-      <a href="#/research/mci" aria-current={route.section === "research" ? "page" : undefined}>{tText("Research")}</a>
+      <a href="#/research" aria-current={route.section === "research" ? "page" : undefined}>{tText("Research")}</a>
     </nav>
     <div className="app-shell">
       <Suspense fallback={<p className="loading-panel">{tText("Loading section...")}</p>}>
         {route.section === "explore" ? <ExploreDataPage route={route} />
           : route.section === "research" ? <ResearchPage route={route} />
-          : route.view === "calendar" ? <><a className="back-link" href="#/">{tText("Back to Overview")}</a><CalendarPage /></>
-          : <EconomyBrief />}
+          : route.section === "calendar" ? <CalendarPage />
+          : <EconomyBrief explanations={explanations} />}
       </Suspense>
     </div>
   </>;

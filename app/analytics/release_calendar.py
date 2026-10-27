@@ -1,6 +1,7 @@
 """Read-only calendar queries for tracked MacroLens releases."""
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 from typing import Optional
 
 from app.database.connection import get_connection
@@ -12,11 +13,12 @@ from app.analytics.fomc_calendar import read_schedule
 CALENDAR_SQL = """
 SELECT d.release_date, r.release_id, r.name, r.source_link,
        s.series_id, s.name, s.short_name, s.category, s.frequency, s.unit
-FROM release_dates AS d
-JOIN economic_releases AS r ON r.release_id = d.release_id
+FROM economic_releases AS r
 JOIN series_release_map AS m ON m.release_id = r.release_id
 JOIN series AS s ON s.series_id = m.series_id
-WHERE d.release_date BETWEEN %s AND %s
+LEFT JOIN release_dates AS d ON d.release_id = r.release_id
+  AND d.release_date BETWEEN %s AND %s
+WHERE (d.release_date IS NOT NULL OR r.release_id IN (50,10,46,11,192,9,13))
   AND s.active = TRUE AND s.series_id = ANY(%s)
 ORDER BY d.release_date, r.name, r.release_id, s.series_id;
 """
@@ -88,11 +90,13 @@ def list_calendar_events(
     end_date: Optional[date] = None,
     category: Optional[str] = None,
 ) -> dict:
-    today = date.today()
+    today = datetime.now(ZoneInfo("Europe/Warsaw")).date()
     start = start_date or today - timedelta(days=today.weekday())
     end = end_date or start + timedelta(days=6)
     if start > end:
         raise InvalidCalendarRangeError("start_date must be on or before end_date.")
+    if (end-start).days >= 366:
+        raise InvalidCalendarRangeError("Calendar ranges are limited to 366 days.")
     configured = load_series_config()
     categories = {item["category"] for item in configured.values()}
     if category is not None and category not in categories:
@@ -107,13 +111,25 @@ def list_calendar_events(
         connection.close()
 
     events = {}
+    from app.analytics.calendar_evidence import read_evidence
+    evidence=read_evidence()
+    templates={}
     for release_date, release_id, name, source_link, *series_columns in rows:
+        # Target-bound series have technical FRED update dates on this release.
+        # Official policy decisions are merged separately from the Fed schedule.
+        if name.casefold() == "fomc press release":
+            continue
+        template=templates.setdefault(release_id,dict(release_id=release_id,release_name=name,source_link=source_link,
+            importance=release_importance(name),date_precision='date',series=[]))
+        series = _series(tuple(series_columns))
+        if not any(s['series_id']==series['series_id'] for s in template['series']):template['series'].append(series)
+        if release_date is None:continue
         key = (release_id, release_date)
         event = events.setdefault(key, {
             "release_id": release_id,
             "release_name": name,
             "release_date": release_date,
-            **release_time_metadata(name, release_date),
+            **release_time_metadata(name, release_date, evidence),
             "importance": release_importance(name),
             "source_link": source_link,
             "date_precision": "date",
@@ -123,6 +139,7 @@ def list_calendar_events(
         if not any(item["series_id"] == series["series_id"] for item in event["series"]):
             event["series"].append(series)
 
+    apply_bls_schedule(events,templates,evidence,start,end)
     selected = [event for event in events.values() if category is None or any(
         item["category"] == category for item in event["series"]
     )]
@@ -141,6 +158,30 @@ def list_calendar_events(
         "events": selected,
         "policy_calendar": {key: policy[key] for key in ("status", "retrieved_at", "source_url")},
     }
+
+
+def apply_bls_schedule(events, templates, evidence, start, end):
+    """Overlay confirmed identities on the existing FRED calendar, without writes.
+
+    Missing rows in a shorter source do not cancel events. Only an explicit move
+    of the same reference period supersedes a previously known date.
+    """
+    from app.ingestion.bls_schedule import select_records, identity
+    selected,_=select_records(evidence.get('periods',[]))
+    additional,_=select_records(evidence.get('periods',[]),{9,13},{'official_release':4,'official_schedule':3,'official_g17_monthly_rule':2})
+    selected+=additional
+    active={identity(r):r for r in selected}
+    for old in evidence.get('periods',[])+evidence.get('bls_history',[])+evidence.get('publisher_history',[]):
+        current=active.get(identity(old))
+        if current and current['release_date']!=old['release_date']:
+            events.pop((old['release_id'],date.fromisoformat(old['release_date'])),None)
+    for row in selected:
+        rid=row['release_id'];day=date.fromisoformat(row['release_date'])
+        if rid not in templates or not start<=day<=end:continue
+        template=templates[rid]
+        events[(rid,day)]={**template,'release_date':day,
+            **release_time_metadata(template['release_name'],day,evidence),
+            'source_link':row['source_url']}
 
 
 def get_release_detail(release_id: int) -> dict:

@@ -9,6 +9,7 @@ export function relationshipChartRows(response: RelationshipResponse): Relations
       const key: RelationshipKey = indicator.key;
       const reading = observation[key];
       row[key] = reading?.value ?? null;
+      row[`${key}_date`] = reading?.observation_date ?? null;
       row[`${key}_index`] = reading?.normalized_value ?? null;
     }
     return row;
