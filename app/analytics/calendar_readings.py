@@ -75,12 +75,17 @@ def linked_period(rows,event_day,sid):
     return latest if first==event_day or sid=='GDPC1' else None
 
 
-def bind_events(events,panel,current,now,evidence=None,provider_updates=None):
+def bind_events(events,panel,current,now,evidence=None,provider_updates=None,ism_documents=None):
     evidence=evidence or {}
     from app.ingestion.bls_schedule import select_records
     _,bls_conflicts=select_records(evidence.get('periods',[]))
     events=copy.deepcopy(events)
     for event in events:
+        if event.get('event_type')=='ism_report':
+            from app.analytics.ism_calendar import bind_measure
+            event.update(description='Monthly ISM survey of US business activity.',expects_numeric_result=True,
+                measures=[bind_measure(event,ism_documents or [],now)])
+            continue
         day=str(event['release_date']);rid=event['release_id'];metadata={s['series_id']:s for s in event['series']}
         specs=[s for s in SPECS.get(rid,[]) if s[0] in metadata]
         if not specs:specs=[(s['series_id'],'raw',s['short_name'] or s['name'],s['unit']) for s in event['series']]
@@ -212,7 +217,9 @@ def policy_measure(event,decisions,now):
 
 
 def load_results(events,start,end,now,connection):
-    series=sorted({s['series_id'] for event in events for s in event['series']})
+    from app.analytics.ism_calendar import load_documents
+    ism_documents=load_documents(connection) if any(e.get('event_type')=='ism_report' for e in events) else []
+    series=sorted({s['series_id'] for event in events if event.get('event_type')!='ism_report' for s in event['series']})
     panel=defaultdict(list);current=defaultdict(list);updates={}
     if series:
         with connection.cursor() as cursor:
@@ -229,4 +236,4 @@ def load_results(events,start,end,now,connection):
                 WHERE resource=ANY(%s) AND status='success' AND scope ? 'last_updated'
                 ORDER BY resource,finished_at DESC''',(['fred:'+sid for sid in series],))
             updates={resource.split(':',1)[1]:updated for resource,updated in cursor.fetchall()}
-    return bind_events(events,panel,current,now,read_evidence(),updates)
+    return bind_events(events,panel,current,now,read_evidence(),updates,ism_documents)

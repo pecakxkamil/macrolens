@@ -19,6 +19,7 @@ FRED_SERIES = SNAPSHOT_SERIES | {sid.strip() for spec in READINGS
 REQUIRED = {**{f'fred:{sid}': ('FRED', sid) for sid in sorted(FRED_SERIES)},
     'fred:calendar': ('FRED', 'Release calendar'),
     'fed:calendar': ('Federal Reserve', 'FOMC schedule'),
+    'ism:calendar': ('ISM', 'ISM publication schedule'),
     'ism:ISM_MANUFACTURING_PMI': ('ISM via PR Newswire', 'ISM Manufacturing PMI'),
     'ism:ISM_SERVICES_PMI': ('ISM via PR Newswire', 'ISM Services PMI')}
 
@@ -36,6 +37,8 @@ def instant(value):
 
 def eligible(row, today, end_date=None):
     scope = row['scope']
+    if row['resource']=='ism:calendar':
+        return bool(scope.get('confirmed_from') and scope.get('confirmed_through') and scope['confirmed_from']<=str(today) and scope['confirmed_through']>=str(end_date or today))
     if row['resource'].startswith('ism:'):
         # Importing a named document cannot discover a more recent publication.
         return scope.get('latest_publication_discovered') is True
@@ -58,7 +61,7 @@ def summarize_checks(rows, today, required=None, end_date=None):
         latest = max(recorded_attempts or attempts, key=lambda row: instant(row['attempted_at']), default=None)
         successes = [row for row in attempts if row['status'] == 'success'
             and instant(row['finished_at'])
-            and (not resource.startswith('ism:') or row['scope'].get('latest_publication_discovered') is True)]
+            and (not resource.startswith('ism:') or resource=='ism:calendar' or row['scope'].get('latest_publication_discovered') is True)]
         success = max(successes, key=lambda row: instant(row['finished_at']), default=None)
         covered = max((row for row in successes if eligible(row, today, end_date)),
             key=lambda row: instant(row['finished_at']), default=None)

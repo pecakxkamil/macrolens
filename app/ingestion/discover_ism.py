@@ -61,4 +61,5 @@ def import_discovered(kind, candidate):
         connection.close()
     inserted = import_ism.store_report(report, url, content)
     return {'latest_publication_discovered': True, 'report_month': str(expected_month),
-        'published_at': report['published_at'].isoformat(), 'source_url': url, 'new_document': inserted}
+        'published_at': report['published_at'].isoformat(), 'source_url': url, 'new_document': inserted,
+        'discovery_status':'confirmed', 'result_downloaded':True}

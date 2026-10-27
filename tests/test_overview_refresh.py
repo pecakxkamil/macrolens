@@ -19,6 +19,13 @@ from app.api.main import app
 NOW = datetime(2026,10,26,12,tzinfo=timezone.utc)
 
 
+@pytest.fixture(autouse=True)
+def isolated_ism_schedule(monkeypatch):
+    from app.ingestion import sync_ism_calendar
+    monkeypatch.setattr(sync_ism_calendar,'sync_schedule',lambda *a,**k:{'events':[],'check':{'status':'success'}})
+    monkeypatch.setattr(sync_ism_calendar,'read_schedule',lambda:{'adapter_version':sync_ism_calendar.SCHEDULE_ADAPTER_VERSION})
+
+
 class MemoryStore:
     def __init__(self):
         self.lock = threading.Lock()

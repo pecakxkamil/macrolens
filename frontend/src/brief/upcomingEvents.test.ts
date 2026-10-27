@@ -19,6 +19,16 @@ test("unknown, PMI, FOMC minutes and partial source names are not promoted", () 
   for (const name of ["ISM PMI", "CPI", "Consumer Price Index details", "FOMC minutes", "H.15 Selected Interest Rates"]) expect(eventPriority(event(name))).toBeUndefined();
   expect(eventPriority(event("Official policy meeting", "2026-10-20", {event_type: "fomc_decision"}))?.key).toBe("fomc");
 });
+
+test('both exact ISM reports share editorial stars across Overview and Calendar without changing the four-event limit',()=>{
+ const manufacturing=event('ISM Manufacturing PMI','2026-10-20',{release_id:null,event_id:'ism:manufacturing:2026-09-01',event_type:'ism_report'});
+ const services=event('ISM Services PMI','2026-10-21',{release_id:null,event_id:'ism:services:2026-09-01',event_type:'ism_report'});
+ const selected=overviewUpcomingEvents(data([manufacturing,services]),now).selected;
+ expect(selected).toHaveLength(2);expect(selected.every(e=>eventImportanceStars(e)===3)).toBe(true);
+ expect(manufacturing.importance).toBe('medium');
+ const many=overviewUpcomingEvents(data([manufacturing,services,event('Employment Situation'),event('Gross Domestic Product'),event('Consumer Price Index'),event('Personal Income and Outlays')]),now);
+ expect(many.selected).toHaveLength(4);expect(many.remaining).toHaveLength(2);
+});
 test("select at most four by editorial priority, then display in date order", () => {
   const events = [event("Unemployment Insurance Weekly Claims Report", "2026-10-18"), event("Advance Monthly Sales for Retail and Food Services", "2026-10-19"), event("Employment Situation", "2026-10-23"), event("Consumer Price Index", "2026-10-20"), event("Personal Income and Outlays", "2026-10-22"), event("Gross Domestic Product", "2026-10-21")];
   const result = overviewUpcomingEvents(data(events), now);

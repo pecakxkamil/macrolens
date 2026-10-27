@@ -143,6 +143,9 @@ def list_calendar_events(
     selected = [event for event in events.values() if category is None or any(
         item["category"] == category for item in event["series"]
     )]
+    if category in (None, 'growth'):
+        from app.analytics.ism_calendar import calendar_events
+        selected.extend(calendar_events(start,end))
     policy = read_schedule()
     if category in (None, "financial_conditions"):
         selected.extend({**event, "release_date": date.fromisoformat(event["release_date"])}

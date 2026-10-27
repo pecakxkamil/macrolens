@@ -431,10 +431,13 @@ export interface CalendarMeasure {
  publication_provenance?:{source_url:string;release_date:string;reference_period:string;estimate_stage?:string;retrieved_at?:string}|null;
  missing_reason?:{actual:string|null;previous:string|null};
  period_status_reason?:string|null;
+ attribution?:string;
+ previous_before_report?:{value:number;provenance:Record<string,unknown>}|null;
+ previous_revision_confirmed?:boolean;
 }
 export interface CalendarCheck {
  status:"complete"|"partial"|"error"|"not_recorded";checked_at:string|null;start_date:string;end_date:string;
- required_resources:string[];sources:Array<{resource:string;label:string;range_status:string;checked_at:string|null;error_code:string|null;scope_error?:string;missing_times?:string[];later_missing_times?:string[]}>;
+ required_resources:string[];sources:Array<{resource:string;label:string;range_status:string;checked_at:string|null;error_code:string|null;scope_error?:string;missing_times?:string[];later_missing_times?:string[];scope?:{latest_publication_discovered?:boolean;discovered_report_month?:string;report_month?:string;result_downloaded?:boolean;annual_schedule_status?:string;annual_error_code?:string}}>;
 }
 export interface CalendarEvent {
   release_id: number | null;
@@ -442,7 +445,7 @@ export interface CalendarEvent {
   description?:string;
   measures?:CalendarMeasure[];
   expects_numeric_result?:boolean;
-  event_type?: "fomc_decision";
+  event_type?: "fomc_decision" | "ism_report";
   meeting_start_date?: string;
   meeting_end_date?: string;
   retrieved_at?: string;

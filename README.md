@@ -4,6 +4,19 @@ MacroLens collects and validates US macroeconomic data, turns observations into 
 
 This portfolio project demonstrates a reproducible data pipeline, SQL storage, time-series transformations, data-quality checks and communication of analytical limitations. It uses deterministic rules; it does not provide economic forecasts or trading recommendations.
 
+## Recent updates — 27 October 2026
+
+Since the previous GitHub update:
+
+- **Overview:** readable current/previous comparisons, PPI and local ISM readings, deterministic EN/PL explanations, indicator-history dialogs and a Markdown report with source and version details.
+- **Calendar:** larger, aligned readings; responsive EN/PL layout; reference periods, actual/previous values and neutral comparisons; official FOMC decisions; and a readable countdown without permanent row highlighting. Revised building permits retain their separate publication clock and explicit provider-delay status.
+- **ISM Manufacturing and Services:** confirmed 2026 release dates, reference months, IANA timezone conversion and shared editorial three-star importance. Calendar results reuse the existing validated document pipeline and retain document versions, provenance and previous-month revisions. The Overview preview still selects at most four events.
+- **Refresh and navigation:** shared source checks, provider budgets, cache invalidation and last-good-data retention; Explore Data/Research navigation and expanded Indicator Relationships comparisons with the existing market histories.
+
+Latest validation: **704 backend tests and 523 frontend tests passed**, production build passed, and real EN/PL browser checks passed at 1366 and 390 px. The build retains a main-bundle size warning. See the [calendar finalization audit](docs/audits/calendar-finalization-2026-10-27.md) and [ISM calendar audit](docs/audits/calendar-ism-2026-10-27.md) for evidence and scope.
+
+Limits remain explicit: no consensus forecasts, BLS HTTP 403 with only a bounded manually confirmed period horizon, current-vintage revisions and incomplete release-version history. Automatic access to the annual ISM calendar can fail on CAPTCHA/HTTP errors; saved confirmed dates and explicit report announcements remain usable. Existing ISM personal-use/public-display restrictions still apply. Local databases, raw source captures, credentials and runtime artifacts are not included in Git.
+
 ## Product walkthrough
 
 The application has four main sections, designed for a short demonstration:
@@ -359,5 +372,7 @@ The calendar reuses the same backend refresh coordinator, PostgreSQL advisory lo
 Manual verification: open Calendar, switch the day/week presets, use a custom range such as 2026-09-28 through 2026-10-04 if retained in your local database, expand GDP and verify whether Previous is the earlier estimate of the same quarter, and inspect the vintage labels on Income/Outlays and Employment measures. Test EN/PL, Only three stars, Clear filters, keyboard Enter/Escape and the old calendar address. Coverage depends on your actual saved vintages and source-check metadata; a new checkout may show no mapped results.
 
 The nearest visible publication group has one EN/PL countdown: full 24-hour days from 24 hours onward, then full hours/minutes, minutes, or less than a minute. Its timer wakes at the next displayed-unit boundary and pauses while hidden. Event rows have the same resting appearance; hover and keyboard focus remain visible.
+
+Both ISM PMI reports now appear in Calendar with the existing local document source, growth category and shared MacroLens editorial three-star importance. The published 2026 ISM table supplies exact dates, including holiday exceptions; validated reports document the following-month reference period, ET clock and explicit next-release announcements. The annual calendar can be blocked by a CAPTCHA: this remains a failed automatic check, while reviewed confirmed dates and explicit report announcements remain usable. Actual requires the document's own report month; Previous after publication uses that document's prior-month value, with any earlier version shown separately. There is no consensus or complete first-release history. See the [ISM calendar audit](docs/audits/calendar-ism-2026-10-27.md) for sources, bounded coverage and verification. Existing ISM personal-use/public-display restrictions remain; this is not public-demo clearance.
 
 Revised building permits use the separate clock explicitly documented in the Census schedule (08:00 New York, versus 08:30 for initial NRC). Previous continues to mean the preceding month, not the earlier estimate of the revised month. A confirmed publisher receipt is distinct from availability in FRED; if the provider still supplies the old estimate, Actual stays blank with its specific reason in details. See the [calendar finalization audit](docs/audits/calendar-finalization-2026-10-27.md) for the October 27 evidence and validation. This stage adds no automatic Census workbook observation integration.

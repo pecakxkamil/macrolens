@@ -10,6 +10,8 @@ export const overviewEventPriorities = [
   { key: "cpi", aliases: ["Consumer Price Index"], priority: "Key event" },
   { key: "pce", aliases: ["Personal Income and Outlays"], priority: "Key event" },
   { key: "gdp", aliases: ["Gross Domestic Product"], priority: "Key event" },
+  { key: "ism_manufacturing", aliases: ["ISM Manufacturing PMI"], priority: "Key event" },
+  { key: "ism_services", aliases: ["ISM Services PMI"], priority: "Key event" },
   { key: "retail", aliases: ["Advance Monthly Sales for Retail and Food Services"], priority: "Tracked event" },
   { key: "claims", aliases: ["Unemployment Insurance Weekly Claims Report"], priority: "Tracked event" },
 ] as const;
@@ -70,7 +72,7 @@ export function eventImportanceStars(event: CalendarEvent): number | null {
   const priority = eventPriority(event);
   return priority ? overviewStars[priority.priority] : sourceStars[event.importance] ?? null;
 }
-export const eventImportanceNote = "MacroLens Overview stars: key editorial events = 3; tracked editorial events (Retail Sales and weekly Claims) = 2. Otherwise source importance maps high = 3, medium = 2, low = 1; unknown importance is unavailable. Editorial tiers take precedence without changing source classes. This is not an Investing.com rating or a forecast of market impact.";
+export const eventImportanceNote = "MacroLens Overview stars: key editorial events, including both ISM PMI reports, = 3; tracked editorial events (Retail Sales and weekly Claims) = 2. Otherwise source importance maps high = 3, medium = 2, low = 1; unknown importance is unavailable. Editorial tiers take precedence without changing source classes. This is not an Investing.com rating or a forecast of market impact.";
 export function eventShortDateLabel(event: CalendarEvent): string {
   return new Intl.DateTimeFormat(getLocale(), { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${eventDay(event)}T00:00:00Z`));
 }

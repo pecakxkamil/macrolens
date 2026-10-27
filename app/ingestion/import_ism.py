@@ -118,7 +118,21 @@ def parse_report(html, kind):
     readings.sort()
     if readings[-1][1] != float(headline[1]) or float(headline[1]) != float(title_value[1]):
         raise ValueError("Principal reading disagrees with newest table row.")
-    return {"series_id": KINDS[kind], "report_month": report_month, "published_at": published_at, "readings": readings}
+    # Schedule evidence comes from the publisher's prose, never datePublished.
+    following = re.search(r'compiles the report for release on the (?:first|third) business day of the following month', body, re.I)
+    next_release = re.search(r'The next ISM\s+' + label + r'\s+PMI\s+Report\s+featuring\s+([A-Za-z]+ \d{4})\s+data will be released at\s+(\d{1,2}):(\d{2})\s*a\.m\.\s+ET\s+on\s+(?:Monday|Tuesday|Wednesday|Thursday|Friday),\s+([A-Za-z]+ \d{1,2}, \d{4})', body, re.I)
+    announcement = None
+    if next_release:
+        next_period = month(next_release[1])
+        next_day = datetime.strptime(next_release[4], '%B %d, %Y').date()
+        next_clock = datetime.strptime(next_release[2]+':'+next_release[3]+' AM','%I:%M %p').time()
+        if next_period <= report_month or next_day <= published_at.date():
+            raise ValueError('Invalid next ISM publication identity.')
+        announcement = dict(reference_period=str(next_period), release_date=str(next_day),
+            release_time=next_clock.isoformat(), source_timezone='America/New_York')
+    return {"series_id": KINDS[kind], "report_month": report_month, "published_at": published_at, "readings": readings,
+            "following_month_rule_confirmed": bool(following), "next_release": announcement,
+            "release_clock_confirmed":bool(re.search(r'after 10:00\s*a\.m\.\s*ET',body,re.I) or (announcement and announcement['release_time']=='10:00:00'))}
 
 def fetch_report(url, kind):
     parsed = urlparse(url)

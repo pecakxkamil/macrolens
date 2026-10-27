@@ -199,6 +199,8 @@ def refresh_sources(connection, previous, now):
             with connection.transaction():
                 with availability_check(resource, {'provider':'ISM via PR Newswire'}) as check:
                     if listing_failed: raise RuntimeError('Latest ISM listing unavailable.')
+                    check['scope'].update(latest_publication_discovered=True,discovery_status='confirmed',
+                        discovered_report_month=str(listing[kind][0]),result_downloaded=False)
                     details = discover_ism.import_discovered(kind, listing[kind])
                     check['scope'].update(details)
             versions[resource] = {'attempted_at':now.isoformat(), **details}
@@ -206,6 +208,31 @@ def refresh_sources(connection, previous, now):
         except Exception:
             versions[resource] = {**versions.get(resource, {}), 'attempted_at':now.isoformat()}
             results.append({'resource':resource,'status':'error','error_code':'latest_publication_not_verified', 'manual_import_available':True})
+    # This is schedule metadata in the same job, not a second observation importer.
+    resource='ism:calendar'
+    from app.ingestion.sync_ism_calendar import SCHEDULE_ADAPTER_VERSION,read_schedule as read_ism_schedule,rebuild_cached_announcements
+    if _due(versions.get(resource,{}),now,ism_interval):
+        from app.ingestion.sync_ism_calendar import sync_schedule as sync_ism_schedule
+        try:
+            with connection.transaction(),httpx.Client(timeout=20,follow_redirects=True) as client:
+                payload=sync_ism_schedule(client,connection,now)
+            versions[resource]={'attempted_at':now.isoformat()}
+            results.append({'resource':resource,'status':payload['check']['status']})
+        except Exception:
+            versions[resource]={'attempted_at':now.isoformat()}
+            results.append({'resource':resource,'status':'error','error_code':'ism_schedule_unavailable'})
+    else:
+        # New document versions and adapter upgrades invalidate derived metadata
+        # immediately, without issuing an early annual-calendar HTTP request.
+        changed=any(r['resource'].startswith('ism:ISM_') and r.get('new_document') for r in results)
+        if changed or read_ism_schedule().get('adapter_version')!=SCHEDULE_ADAPTER_VERSION:
+            try:
+                with connection.transaction():rebuild_cached_announcements(connection,now)
+                results.append({'resource':resource,'status':'cached','outcome':'rebuilt_from_stored_documents'})
+            except Exception:
+                results.append({'resource':resource,'status':'error','error_code':'ism_schedule_cache_unavailable'})
+        else:
+            results.append({'resource':resource,'status':'cached','outcome':'within_provider_interval'})
     return versions, results
 
 

@@ -9,6 +9,12 @@ from app.database.connection import get_independent_connection,shared_connection
 MAX_CALENDAR_DAYS=366
 
 
+def event_resources(events):
+    resources={('ism:' if e.get('event_type')=='ism_report' else 'fred:')+s['series_id'] for e in events for s in e['series']}
+    if any(e.get('event_type')=='ism_report' for e in events):resources.add('ism:calendar')
+    return resources
+
+
 def validate_range(start,end):
     if start>end:raise release_calendar.InvalidCalendarRangeError('start_date must be on or before end_date.')
     if (end-start).days>=MAX_CALENDAR_DAYS:raise release_calendar.InvalidCalendarRangeError('Calendar ranges are limited to 366 days.')
@@ -16,7 +22,7 @@ def validate_range(start,end):
 
 def scoped_check(checks,start,end,events,policy):
     sources=[]
-    required={'fred:calendar','fed:calendar'}|{'fred:'+s['series_id'] for e in events for s in e['series']}
+    required={'fred:calendar','fed:calendar'}|event_resources(events)
     if any(e.get('release_id') in (50,10,46,11,192,9,13) for e in events):required.add('calendar:periods')
     for original in checks['sources']:
         if original['resource'] not in required:continue
@@ -57,7 +63,7 @@ def calendar_agenda(start=None,end=None,now=None,category=None):
             with connection.cursor() as cursor:cursor.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ')
             data=release_calendar.list_calendar_events(start,end,category)
             data['events']=load_results(data['events'],start,end,now,connection)
-            resources={"fred:"+s["series_id"] for e in data["events"] for s in e["series"]}
+            resources=event_resources(data['events'])
             if any(e.get('release_id') in (50,10,46,11,192,9,13) for e in data['events']):resources.add('calendar:periods')
             checks=load_source_checks(start,resources,end)
             with connection.cursor() as cursor:

@@ -94,6 +94,38 @@ test.each(['en','pl'] as const)('revised permits explain a published result pend
  expect(detail.textContent).not.toContain('..');expect(within(detail).getByRole('link',{name:tText('Confirmed publisher release')})).toHaveAttribute('href',source);
 });
 
+test.each(['en','pl'] as const)('ISM future rows keep stars, exact months, no consensus and raw index units in %s',async language=>{
+ setLanguage(language);vi.setSystemTime(new Date('2026-11-02T08:00:00Z'));
+ const ismEvents:CalendarEvent[]=['manufacturing','services'].map((kind,i)=>{
+  const sid=i?'ISM_SERVICES_PMI':'ISM_MANUFACTURING_PMI',day=i?'2026-11-04':'2026-11-02';
+  return {...events()[0],release_id:null,event_id:`ism:${kind}:2026-10-01`,event_type:'ism_report',release_name:i?'ISM Services PMI':'ISM Manufacturing PMI',release_date:day,release_time:'10:00:00',release_datetime_utc:day+'T15:00:00Z',measures:[{...measure(i?'ISM Services PMI':'ISM Manufacturing PMI'),series_id:sid,feature_name:'raw',unit:'index points',reference_period:'2026-10-01',previous_period:'2026-09-01',actual:null,previous:i?54.9:54.5,data_version:null,source_url:'https://www.ismworld.org/'}]};
+ });
+ const fetch=vi.fn(async()=>({ok:true,json:async()=>({events:ismEvents,start_date:'2026-11-02',end_date:'2026-11-08'})}));vi.stubGlobal('fetch',fetch);
+ render(<CalendarPage/>);const name=language==='en'?'ISM Manufacturing PMI (Oct)':'ISM PMI przemysłu (paź)';
+ const button=await screen.findByRole('button',{name}),row=button.closest('tr')!;
+ expect(row).toHaveTextContent('16:00');expect(within(row).getByRole('img',{name:tText('Importance 3 of 3')})).toBeInTheDocument();
+ expect(row.querySelector('.agenda-actual')).toHaveTextContent('—');expect(row.querySelector('.agenda-secondary')).toHaveTextContent('—');
+ expect(row.querySelector('.agenda-secondary:last-child')).toHaveTextContent(language==='en'?'54.5':'54,5');expect(row.textContent).not.toContain('%');
+ expect(screen.getByRole('link',{name:'ISM'})).toHaveAttribute('href','https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/');
+ fireEvent.click(screen.getByLabelText(/Only|Tylko/));expect(screen.getByRole('button',{name})).toBeInTheDocument();expect(document.querySelectorAll('.agenda-entry')).toHaveLength(2);expect(fetch).toHaveBeenCalledTimes(1);
+});
+
+test.each(['en','pl'] as const)('ISM historical differences stay neutral and details preserve report and prior versions in %s',async language=>{
+ setLanguage(language);
+ const provenance={source_url:'https://www.prnewswire.com/news-releases/ism.html',document_published_at:'2026-10-01T14:00:00Z',retrieved_at:'2026-10-26T12:00:00Z',raw_hash:'a'.repeat(64),version:'official_release'};
+ const m:CalendarMeasure={...measure('ISM Manufacturing PMI'),series_id:'ISM_MANUFACTURING_PMI',feature_name:'raw',unit:'index points',actual:54.5,previous:54.6,data_version:'official_release',previous_data_version:'official_release',actual_provenance:provenance,previous_provenance:provenance,previous_before_report:{value:54.7,provenance},previous_revision_confirmed:true};
+ const item:CalendarEvent={...events()[0],release_id:null,event_id:'ism:manufacturing:2026-09-01',event_type:'ism_report',release_name:'ISM Manufacturing PMI',measures:[m]};
+ vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>({events:[item],start_date:'2026-10-26',end_date:'2026-11-01'})})));
+ render(<CalendarPage/>);const button=await screen.findByRole('button',{name:language==='en'?'ISM Manufacturing PMI (Sep)':'ISM PMI przemysłu (wrz)'}),row=button.closest('tr')!;
+ expect(row.querySelector('.agenda-comparison')).toHaveClass('agenda-comparison--neutral');expect(row.textContent).not.toContain('%');
+ fireEvent.click(button);const detail=document.getElementById(button.getAttribute('aria-controls')!)!;
+ expect(detail).toHaveTextContent(tText('Previous is the preceding month as reported in this document.'));
+ expect(detail).toHaveTextContent(tText('Previous was revised in this report.'));expect(detail).toHaveTextContent('a'.repeat(64));
+ expect(detail).toHaveTextContent(tText('Document publication time'));expect(detail).toHaveTextContent(tText('Retrieved'));
+ expect(detail.textContent).not.toContain(' ? ');
+ expect(detail).toHaveTextContent(tText('ISM document versions are not a complete first-release history. A report timestamp does not date all months in its history table.'));
+});
+
 test('custom date validation and presets retain saved-data requests',async()=>{
  const fetch=mockApi();render(<CalendarPage/>);await screen.findByRole('button',{name:'CPI MoM (Sep)'});fireEvent.click(screen.getByRole('button',{name:'Date range'}));
  fireEvent.change(screen.getByLabelText('Start date'),{target:{value:'2026-11-01'}});fireEvent.change(screen.getByLabelText('End date'),{target:{value:'2026-10-01'}});fireEvent.click(screen.getByRole('button',{name:'Apply range'}));expect(screen.getByRole('alert')).toHaveTextContent('The start date must not follow');expect(fetch).toHaveBeenCalledTimes(1);
