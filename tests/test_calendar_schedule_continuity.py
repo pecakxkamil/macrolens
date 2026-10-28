@@ -38,6 +38,8 @@ def offline_sources(monkeypatch):
     monkeypatch.setattr(calendar,'read_schedule',lambda:{'status':'available','events':[],'retrieved_at':STAMP,'source_url':'https://www.federalreserve.gov/'})
     from app.analytics import ism_calendar
     monkeypatch.setattr(ism_calendar,'calendar_events',lambda *args:[])
+    from app.analytics import michigan_calendar
+    monkeypatch.setattr(michigan_calendar,'calendar_events',lambda *args:[])
 
 
 @pytest.mark.parametrize('rid,day,period,stage,clock',[

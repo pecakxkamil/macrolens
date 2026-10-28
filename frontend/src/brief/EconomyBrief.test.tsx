@@ -804,6 +804,18 @@ test("report during a background check uses its saved dataset and records the ru
  expect(report).toContain("Latest: 199,000 (Oct 3, 2026)");
 });
 
+test.each(['en','pl'] as const)('Overview includes Michigan month and restricted publisher link without a seventh card in %s',async language=>{
+ setLanguage(language);const data=fixture();
+ data.calendar.data!.events=[{release_id:null,event_id:'michigan:2026-10:final',event_type:'michigan_final',release_name:'Michigan Consumer Sentiment — Final',release_date:'2026-10-23',release_time:null,release_datetime_utc:null,source_timezone:'America/New_York',source_link:'https://data.sca.isr.umich.edu/survey-info.php',importance:'medium',date_precision:'date',series:[],measures:[],reference_period:'2026-10-01',publication_stage:'final',expects_numeric_result:true,result_integration_status:'publisher_permission_required',publisher_reports_url:'https://data.sca.isr.umich.edu/reports.php?year=2026'}];
+ mockApi(data);render(<EconomyBrief/>);
+ const link=await screen.findByRole('link',{name:language==='en'?'Publisher reports':'Raporty wydawcy'});
+ expect(link).toHaveAttribute('href',data.calendar.data!.events[0].publisher_reports_url);
+ expect(link.closest('li')).toHaveTextContent(language==='en'?'Oct 2026':'paź 2026');
+ expect(document.querySelectorAll('.overview-domain')).toHaveLength(6);
+ const report=briefMarkdown(briefModel(data),data,data.assembled_at);
+ expect(report).toContain('https://data.sca.isr.umich.edu/reports.php?year=2026');
+});
+
 test("report identifies GDP and claims window comparisons without reinterpreting consecutive readings",()=>{
  const data=fixture();
  data.classification_basis={growth:[{component:"real_gdp",field:"momentum",label:"Real GDP momentum",classification:"accelerating",short:"Quarterly annualized versus annual growth.",observation_date:"2026-04-01",feature_as_of_date:"2026-09-30",inputs:[{label:"Quarterly annualized growth",feature_name:"qoq_annualized",value:2.22,unit:"percent"},{label:"Year-over-year growth",feature_name:"yoy",value:2.19,unit:"percent"}],rule:"This compares different windows, not consecutive quarters."}],labor:[{component:"initial_claims",field:"momentum",label:"Initial claims momentum",classification:"improving",short:"Four versus thirteen weeks.",observation_date:"2026-10-17",feature_as_of_date:"2026-10-22",inputs:[{label:"Four-week average",feature_name:"moving_average_4w",value:197250,unit:"persons"},{label:"Thirteen-week average",feature_name:"moving_average_13w",value:200000,unit:"persons"}],rule:"A lower four-week average indicates improvement."}]};

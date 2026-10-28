@@ -21,7 +21,7 @@ export function compactMeasureName(measure:CalendarMeasure){
  const suffix=({mom:'MoM',yoy:'YoY',qoq:'QoQ',qoq_annualized:'QoQ'} as Record<string,string>)[measure.feature_name];
  return `${tText(base)}${suffix?` ${tText(suffix)}`:''}`;
 }
-export function compactPeriod(measure:CalendarMeasure,publicationDate:string){
+export function compactPeriod(measure:Pick<CalendarMeasure,'feature_name'|'reference_period'|'frequency'>,publicationDate:string){
  if(measure.feature_name==='target_range')return '';
  const period=measure.reference_period;if(!period)return '';
  const day=new Date(period+'T00:00:00Z');if(!Number.isFinite(day.getTime()))return '';

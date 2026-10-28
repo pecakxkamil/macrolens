@@ -266,6 +266,21 @@ def refresh_sources(connection, previous, now):
                 results.append({'resource':resource,'status':'error','error_code':'ism_schedule_cache_unavailable'})
         else:
             results.append({'resource':resource,'status':'cached','outcome':'within_provider_interval'})
+    # Schedule-only Michigan metadata uses this same lock, budget and cadence.
+    from app.ingestion.sync_michigan_calendar import sync_schedule as sync_michigan_schedule
+    resource='michigan:calendar'
+    if _due(versions.get(resource,{}),now,slow_interval):
+        try:
+            with httpx.Client(timeout=20,follow_redirects=True) as client:
+                payload=sync_michigan_schedule(client,now)
+            versions[resource]={'attempted_at':now.isoformat()}
+            results.append({'resource':resource,'status':payload['check']['status'],
+                            'results_integration':'publisher_permission_required'})
+        except Exception:
+            versions[resource]={'attempted_at':now.isoformat()}
+            results.append({'resource':resource,'status':'error','error_code':'michigan_schedule_unavailable'})
+    else:
+        results.append({'resource':resource,'status':'cached','outcome':'within_provider_interval'})
     return versions, results
 
 

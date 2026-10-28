@@ -13,6 +13,12 @@ from tests.test_ism import document
 
 NOW=datetime(2026,10,27,15,tzinfo=timezone.utc)
 
+@pytest.fixture(autouse=True)
+def isolated_michigan_schedule(monkeypatch):
+    from app.ingestion import sync_michigan_calendar
+    monkeypatch.setattr(sync_michigan_calendar,'sync_schedule',lambda *a,**k:{'events':[],'check':{'status':'success'}})
+
+
 
 def rules():
     return {k:dict(following_month_rule_confirmed=True,release_clock_confirmed=True,source_url='https://www.prnewswire.com/news-releases/test.html',raw_hash='a'*64) for k in import_ism.KINDS}

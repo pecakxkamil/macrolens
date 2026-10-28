@@ -52,6 +52,8 @@ def no_local_policy_snapshot(monkeypatch):
     monkeypatch.setattr(release_calendar, "read_schedule", lambda: {"status": "not_synced", "events": [], "retrieved_at": None, "source_url": "https://www.federalreserve.gov/"})
     from app.analytics import ism_calendar
     monkeypatch.setattr(ism_calendar,'read_schedule',lambda:{'events':[]})
+    from app.analytics import michigan_calendar
+    monkeypatch.setattr(michigan_calendar,'read_schedule',lambda:{'events':[]})
 
 
 def event_rows():

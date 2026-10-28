@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from "vitest";
 import type { CalendarEvent, EconomyBriefResponse } from "../api/macrolens";
-import { eventImportanceStars, eventDay, eventPriority, eventRelativeDay, overviewEventPriorities, overviewUpcomingEvents, upcomingEventReport } from "./upcomingEvents";
+import { eventImportanceStars, eventIdentity, eventDay, eventPriority, eventRelativeDay, overviewEventPriorities, overviewUpcomingEvents, upcomingEventReport } from "./upcomingEvents";
 import { setLanguage } from "../i18n/language";
 
 const now = new Date("2026-10-18T12:00:00Z");
@@ -40,6 +40,15 @@ test('both exact ISM reports share editorial stars across Overview and Calendar 
  const many=overviewUpcomingEvents(data([manufacturing,services,event('Employment Situation'),event('Gross Domestic Product'),event('Consumer Price Index'),event('Personal Income and Outlays')]),now);
  expect(many.selected).toHaveLength(4);expect(many.remaining).toHaveLength(2);
 });
+test('Michigan stages retain stable identities, shared editorial stars and the four-event limit',()=>{
+ const preliminary=event('Michigan Consumer Sentiment — Preliminary','2026-10-20',{event_id:'michigan:2026-10:preliminary',event_type:'michigan_preliminary',reference_period:'2026-10-01'});
+ const final=event('Michigan Consumer Sentiment — Final','2026-10-23',{event_id:'michigan:2026-10:final',event_type:'michigan_final',reference_period:'2026-10-01'});
+ expect([preliminary,final].map(eventImportanceStars)).toEqual([3,2]);
+ expect(eventIdentity({...preliminary,release_date:'2026-10-21'})).toBe(eventIdentity(preliminary));
+ expect(overviewUpcomingEvents(data([preliminary,final,preliminary]),now).selected).toHaveLength(2);
+ expect(overviewUpcomingEvents(data([preliminary,final,event('Employment Situation'),event('Gross Domestic Product'),event('Consumer Price Index')]),now).selected).toHaveLength(4);
+});
+
 test("select at most four by editorial priority, then display in date order", () => {
   const events = [event("Unemployment Insurance Weekly Claims Report", "2026-10-18"), event("Advance Monthly Sales for Retail and Food Services", "2026-10-19"), event("Employment Situation", "2026-10-23"), event("Consumer Price Index", "2026-10-20"), event("Personal Income and Outlays", "2026-10-22"), event("Gross Domestic Product", "2026-10-21")];
   const result = overviewUpcomingEvents(data(events), now);

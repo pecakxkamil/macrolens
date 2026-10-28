@@ -220,6 +220,30 @@ test.each(['en','pl'] as const)('ISM historical differences stay neutral and det
  expect(detail).toHaveTextContent(tText('ISM document versions are not a complete first-release history. A report timestamp does not date all months in its history table.'));
 });
 
+test.each(['en','pl'] as const)('Michigan has two numeric report stages with restricted results and independent timing in %s',async language=>{
+ setLanguage(language);vi.setSystemTime(new Date('2026-11-06T12:00:00Z'));
+ const items:CalendarEvent[]=(['preliminary','final'] as const).map((stage,i)=>({...events()[0],release_id:null,event_id:`michigan:2026-11:${stage}`,event_type:i?'michigan_final':'michigan_preliminary',release_name:`Michigan Consumer Sentiment — ${i?'Final':'Preliminary'}`,release_date:i?'2026-11-20':'2026-11-06',release_datetime_utc:i?null:'2026-11-06T15:00:00Z',reference_period:'2026-11-01',publication_stage:stage,expects_numeric_result:true,series:[],measures:[],result_integration_status:'publisher_permission_required',publisher_reports_url:'https://data.sca.isr.umich.edu/reports.php?year=2026',license_source_url:'https://data.sca.isr.umich.edu/agreement.php',document_status:'unconfirmed'}));
+ vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>({events:items,start_date:'2026-11-02',end_date:'2026-11-08'})})));
+ render(<CalendarPage/>);
+ const preliminary=await screen.findByRole('button',{name:tText(items[0].release_name)+(language==='en'?' (Nov)':' (lis)')});
+ expect(document.querySelectorAll('.agenda-entry')).toHaveLength(2);
+ expect(preliminary.closest('tr')).toHaveTextContent('16:00');
+ expect(within(preliminary.closest('tr')!).getByRole('img',{name:tText('Importance 3 of 3')})).toBeInTheDocument();
+ expect(screen.getAllByRole('link',{name:tText('Publisher reports')})).toHaveLength(2);
+ expect(screen.queryByRole('link',{name:tText('Data at publisher')})).not.toBeInTheDocument();
+ expect(countdown(nextInstant([items[1]],new Date('2026-11-06T12:00:00Z')),new Date('2026-11-06T12:00:00Z'))).toBeNull();
+ expect(countdown(nextInstant(items,new Date('2026-11-06T12:00:00Z')),new Date('2026-11-06T12:00:00Z'))).toBeTruthy();
+ fireEvent.click(preliminary);
+ const detail=document.getElementById(preliminary.getAttribute('aria-controls')!)!;
+ expect(detail).toHaveTextContent(tText('Previous would compare the preceding month, not Preliminary versus Final of the same month. No Previous value is integrated.'));
+ expect(within(detail).getByRole('link',{name:tText('Publisher usage agreement')})).toHaveAttribute('href',items[0].license_source_url);
+ expect(detail).toHaveTextContent(tText('No matching report link has been verified; this does not establish that the report is unpublished.'));
+ expect(detail).not.toHaveTextContent(tText('No numerical result is expected for this event.'));
+ fireEvent.keyDown(detail,{key:'Escape'});expect(preliminary).toHaveFocus();
+ fireEvent.click(screen.getByLabelText(/Only|Tylko/));expect(document.querySelectorAll('.agenda-entry')).toHaveLength(1);
+ expect(preliminary).toBeInTheDocument();
+});
+
 test('custom date validation and presets retain saved-data requests',async()=>{
  const fetch=mockApi();render(<CalendarPage/>);await screen.findByRole('button',{name:'CPI MoM (Sep)'});fireEvent.click(screen.getByRole('button',{name:'Date range'}));
  fireEvent.change(screen.getByLabelText('Start date'),{target:{value:'2026-11-01'}});fireEvent.change(screen.getByLabelText('End date'),{target:{value:'2026-10-01'}});fireEvent.click(screen.getByRole('button',{name:'Apply range'}));expect(screen.getByRole('alert')).toHaveTextContent('The start date must not follow');expect(fetch).toHaveBeenCalledTimes(1);

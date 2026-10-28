@@ -150,6 +150,8 @@ def test_fred_date_without_period_cannot_prove_bls_time():
 
 def test_calendar_uses_publisher_dates_even_without_fred_window_dates(monkeypatch):
     from app.analytics import release_calendar, calendar_evidence
+    from app.analytics import michigan_calendar
+    monkeypatch.setattr(michigan_calendar,'calendar_events',lambda *args:[])
     from tests.test_release_calendar import FakeConnection, SERIES_PAYROLL
     metadata=(None,50,'Employment Situation','https://www.bls.gov/ces/',*SERIES_PAYROLL)
     monkeypatch.setattr(release_calendar,'get_connection',lambda:FakeConnection([[metadata]]))

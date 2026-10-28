@@ -41,13 +41,26 @@ function ProducerYearly({measure}:{measure:CalendarMeasure}){
 function EventDetails({event,measure,now,check,id,onClose}:{event:CalendarEvent;measure?:CalendarMeasure;now:Date;check:CalendarResponse['check'];id:string;onClose:()=>void}){
  const ism=event.event_type==='ism_report';
  const fed=event.event_type?.startsWith('fomc_');
- const relevant=check?.sources.filter(s=>s.resource===(ism?'ism:calendar':fed?'fed:calendar':'fred:calendar')||s.resource===`${ism?'ism':'fred'}:${measure?.series_id}`);
+ const michigan=event.event_type?.startsWith('michigan_');
+ const relevant=check?.sources.filter(s=>s.resource===(michigan?'michigan:calendar':ism?'ism:calendar':fed?'fed:calendar':'fred:calendar')||s.resource===`${ism?'ism':'fred'}:${measure?.series_id}`);
  const ismSource=relevant?.find(s=>s.resource===`ism:${measure?.series_id}`);
  const ismSchedule=relevant?.find(s=>s.resource==='ism:calendar');
  return <tr className="agenda-detail" onKeyDown={e=>{if(e.key==='Escape'){e.stopPropagation();onClose();}}}><td colSpan={8}><div id={id}>
  <strong>{tText(event.release_name)}</strong><p>{tText(event.event_type==='fomc_decision'?'Official Federal Reserve policy decision; final day of the scheduled meeting.':event.description??'One publication may contain several separately measured indicators.')}</p>
  <p>{tText('Publication day')}: {formatCalendarDate(event.release_date)} · {eventInstant(event)!==null?formatPolandTime(event.release_datetime_utc).replace(/ PL$/,''):tText('Time unconfirmed')}{eventInstant(event)===null?` · ${tText('No confirmed publication time is stored; no midnight time is inferred.')}`:''}</p>
  {safeLink(event.source_link)?<a href={event.source_link!} target="_blank" rel="noreferrer">{tText('Publication source')}</a>:null}
+ {michigan?<>
+ <p>{tText('Observation period')}: {event.reference_period?formatObservationDate(event.reference_period,'monthly'):tText('Reference period unconfirmed')} · {tText(event.publication_stage==='preliminary'?'Preliminary':'Final')}</p>
+ <p>{tText('Numerical results are not integrated. Dashboard redistribution requires clarification or permission from the publisher. The scheduled release and document availability are separate from access to its numbers.')}</p>
+ <p><a href={event.publisher_reports_url} target="_blank" rel="noreferrer">{tText('Publisher reports')}</a>{' · '}<a href={event.license_source_url} target="_blank" rel="noreferrer">{tText('Publisher usage agreement')}</a></p>
+ <p>{event.document_status==='available'&&safeLink(event.document_url)?<a href={event.document_url!} target="_blank" rel="noreferrer">{tText('Official event document')}</a>:tText('No matching report link has been verified; this does not establish that the report is unpublished.')}</p>
+ {event.document_kind==='current_summary_link'?<p>{tText('This link opens the publisher’s changing current summary, verified for this month and stage at the recorded check time; it is not an archived report.')}</p>:null}
+ <p>{tText('Forecast')}: — · {tText('No integrated consensus source')}.</p>
+ <p>{tText('Previous would compare the preceding month, not Preliminary versus Final of the same month. No Previous value is integrated.')}</p>
+ {safeLink(event.date_source_url)?<p><a href={event.date_source_url!} target="_blank" rel="noreferrer">{tText('Publication date source')}</a></p>:null}
+ {event.schedule_status==='changed'?<p>{tText('The publisher changed this event’s date or confirmed time; its identity is preserved.')}</p>:null}
+ {event.schedule_provenance?<p>{tText('Retrieved')}: {availabilityTime(event.schedule_provenance.retrieved_at)} · {tText('Document hash')}: {event.schedule_provenance.raw_hash}</p>:null}
+ </>:null}
  {event.schedule_provenance?.confirmation_type==='one_time_official_review'?<p>{tText('This schedule was confirmed by a one-time review of the official publisher page; automatic access remains unavailable.')}</p>:null}
  {event.schedule_status==='conflict'?<p>{tText('Official schedule evidence conflicts; the date shown comes from FRED and no official time or period is assigned.')}</p>:null}
  {safeLink(event.time_source_url)?<p><a href={event.time_source_url!} target="_blank" rel="noreferrer">{tText('Publication time source')}</a>{event.time_rule?` · ${event.time_rule.time} ${event.time_rule.source_timezone} · ${event.time_rule.valid_from} – ${event.time_rule.valid_through}`:''}</p>:null}
@@ -86,12 +99,12 @@ function EventDetails({event,measure,now,check,id,onClose}:{event:CalendarEvent;
  {measure.effective_date?<p>{tText('Decision effective date')}: {formatCalendarDate(measure.effective_date)}</p>:null}
  {measure.previous_effective_date?<p>{tText('Previous decision effective date')}: {formatCalendarDate(measure.previous_effective_date)}</p>:null}
  {(['actual','previous'] as const).map(kind=>{const proof=kind==='actual'?measure.actual_provenance:measure.previous_provenance;return proof?<p key={kind}>{tText(kind==='actual'?'Actual source':'Previous source')}: <a href={safeLink(String(proof.source_url??''))??undefined} target="_blank" rel="noreferrer">{tText(String(proof.version??'Official announcement'))}</a>{proof.vintage_date?` \u00b7 ${tText('Vintage date')}: ${proof.vintage_date}`:''}{proof.as_of?` \u00b7 ${tText('As of')}: ${proof.as_of}`:''}{proof.document_published_at?` \u00b7 ${tText('Document publication time')}: ${availabilityTime(String(proof.document_published_at))}`:''}{proof.retrieved_at?` \u00b7 ${tText('Retrieved')}: ${availabilityTime(String(proof.retrieved_at))}`:''}{proof.raw_hash?` \u00b7 ${tText('Document hash')}: ${proof.raw_hash}`:''}</p>:null;})}
- <p>{tText(comparableForecast(measure)?'Forecast is the consensus for this publication, period and measure.':'No integrated consensus source')}.</p></div>:<p>{tText(event.expects_numeric_result===false?'Actual, Previous, Forecast and numerical comparisons do not apply to this event.':'No numerical result')}</p>}
+ <p>{tText(comparableForecast(measure)?'Forecast is the consensus for this publication, period and measure.':'No integrated consensus source')}.</p></div>:event.result_integration_status==='publisher_permission_required'?null:<p>{tText(event.expects_numeric_result===false?'Actual, Previous, Forecast and numerical comparisons do not apply to this event.':'No numerical result')}</p>}
  </div></td></tr>;
 }
 function AgendaRow({event,measure,now,next,showCountdown,expanded,toggle,check,rowId}:{event:CalendarEvent;measure?:CalendarMeasure;now:Date;next:number;showCountdown:boolean;expanded:boolean;toggle:()=>void;check:CalendarResponse['check'];rowId:string}){
  const stars=eventImportanceStars(event),instant=eventInstant(event),remaining=showCountdown?countdownText(next,now):null;
- const name=measure?compactMeasureName(measure):tText(event.release_name),period=measure?compactPeriod(measure,event.release_date):'';
+ const name=measure?compactMeasureName(measure):tText(event.release_name),period=measure?compactPeriod(measure,event.release_date):event.event_type?.startsWith('michigan_')&&event.reference_period?compactPeriod({reference_period:event.reference_period,frequency:'monthly',feature_name:'raw'},event.release_date):'';
  const forecast=measure&&comparableForecast(measure)?measure.forecast:null;
  const vsForecast=measure?calendarComparison(measure,'forecast'):null,vsPrevious=measure?calendarComparison(measure,'previous'):null;
  const buttonId=`agenda-button-${rowId}`,detailId=`agenda-detail-${rowId}`;
@@ -102,7 +115,7 @@ function AgendaRow({event,measure,now,next,showCountdown,expanded,toggle,check,r
  <td className="agenda-stars"><span role="img" aria-label={tLabel(stars===null?'Importance unavailable':`Importance ${stars} of 3`)}>{stars===null?'\u2014':'\u2605'.repeat(stars)}</span></td>
  <td className="agenda-number agenda-secondary" data-label={tLabel('Forecast')}>{measure?compactMeasureValue(forecast,measure.unit):'\u2014'}</td>
  <td className="agenda-difference" data-label={tLabel('vs forecast')}>{vsForecast?<ComparisonTooltip comparison={vsForecast}/>:event.expects_numeric_result===false?'—':null}</td>
- <td className="agenda-number agenda-actual" data-label={tLabel('Actual')}>{measure?calendarReadingValue(measure,'actual'):'\u2014'}{measure?.year_over_year?<><br/><small>{tText('YoY (NSA)')}: {calendarReadingValue(measure.year_over_year,'actual')}</small></>:null}</td>
+ <td className="agenda-number agenda-actual" data-label={tLabel('Actual')}>{event.result_integration_status==='publisher_permission_required'?<a href={safeLink(event.document_url)??event.publisher_reports_url} target="_blank" rel="noreferrer">{tText(event.document_status==='available'&&event.document_url?'Data at publisher':'Publisher reports')}</a>:measure?calendarReadingValue(measure,'actual'):'\u2014'}{measure?.year_over_year?<><br/><small>{tText('YoY (NSA)')}: {calendarReadingValue(measure.year_over_year,'actual')}</small></>:null}</td>
  <td className="agenda-difference" data-label={tLabel('vs previous')}>{vsPrevious?<ComparisonTooltip comparison={vsPrevious}/>:event.expects_numeric_result===false?'—':null}</td>
  <td className="agenda-number agenda-secondary" data-label={tLabel('Previous')}>{measure?calendarReadingValue(measure,'previous'):'\u2014'}{measure?.year_over_year?<><br/><small>{tText('YoY (NSA)')}: {calendarReadingValue(measure.year_over_year,'previous')}</small></>:null}</td></tr>
  {expanded?<EventDetails event={event} measure={measure} now={now} check={check} id={detailId} onClose={close}/>:null}</Fragment>;
@@ -154,5 +167,5 @@ export function CalendarPage(){
   });
  })}</tbody>)}</table>:null}
  <p className="agenda-comparison-legend">{tText("Difference color: typical interpretation for the economic area, not market direction.")}</p>
- <p className="agenda-attribution">{tText('Sources')}: <a href="https://fred.stlouisfed.org/">FRED / ALFRED</a>, <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm">{tText('Federal Reserve')}</a>{data?.events.some(event=>event.event_type==='ism_report')?<>, <a href="https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/">ISM</a></>:null}. {tText('Stars express MacroLens editorial importance, not market direction or an Investing.com rating.')}</p></main>;
+ <p className="agenda-attribution">{tText('Sources')}: <a href="https://fred.stlouisfed.org/">FRED / ALFRED</a>, <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm">{tText('Federal Reserve')}</a>{data?.events.some(event=>event.event_type==='ism_report')?<>, <a href="https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/">ISM</a></>:null}{data?.events.some(event=>event.event_type?.startsWith('michigan_'))?<>, <a href="https://data.sca.isr.umich.edu/survey-info.php">University of Michigan Surveys of Consumers</a></>:null}. {tText('Stars express MacroLens editorial importance, not market direction or an Investing.com rating.')}</p></main>;
 }
