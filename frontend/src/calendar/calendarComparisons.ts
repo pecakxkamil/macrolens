@@ -55,7 +55,7 @@ export function calendarComparison(m:CalendarMeasure,kind:ComparisonKind):Compar
   :m.unit==='claims'?(pl?'wniosków':'claims')
   :m.unit==='thousand jobs'?(pl?'tys. miejsc pracy':'k jobs')
   :['thousands','thousands SAAR','thousand homes/year (SAAR)','thousand openings','thousands of openings'].includes(m.unit)?(pl?'tys.':'k')
-  :m.unit;
+  :m.unit==='hours'?(pl?'godz.':'hours'):m.unit;
  const absolute=`${amount}${unit?'\u00a0'+unit:''}`;
  const shortUnit=m.unit==='thousand jobs'?(pl?'tys.':'k'):['index','index points'].includes(m.unit)?(pl?'pkt':'pt'):unit;
  const text=`${rounded>0?'+':rounded<0?'−':''}${amount}${shortUnit?'\u00a0'+shortUnit:''}`;

@@ -171,6 +171,7 @@ def apply_bls_schedule(events, templates, evidence, start, end):
     """
     from app.ingestion.bls_schedule import publisher_identity
     from app.analytics.calendar_evidence import schedule_records, claims_rule, period_evidence
+    from app.analytics.employment_measures import EMPLOYMENT_LEVELS
     selected,conflicts=schedule_records(evidence)
     active={publisher_identity(r):r for r in selected}
     for old in evidence.get('periods',[])+evidence.get('bls_history',[])+evidence.get('publisher_history',[]):
@@ -184,7 +185,8 @@ def apply_bls_schedule(events, templates, evidence, start, end):
         related=[c for c in conflicts if any(publisher_identity(r)==publisher_identity(row) for r in c['candidates'])]
         events[(rid,day)]={**template,'release_date':day,
             'event_id':f"release:{rid}:{row['reference_period']}:{row.get('estimate_stage') or 'main'}",
-            'series':[s for s in template['series'] if s['series_id'] in row['series_ids']],
+            'series':[s for s in template['series'] if s['series_id'] in row['series_ids']
+                      or (rid==50 and 'PAYEMS' in row['series_ids'] and s['series_id'] in EMPLOYMENT_LEVELS)],
             **release_time_metadata(template['release_name'],day,evidence),
             'source_link':row['source_url'],'schedule_provenance':row,
             'schedule_status':'confirmed', 'estimate_stage':row.get('estimate_stage'),

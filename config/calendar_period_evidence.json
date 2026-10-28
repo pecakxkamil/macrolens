@@ -582,6 +582,46 @@
       "retrieved_at": "2026-10-28T11:50:56.610568+00:00",
       "confirmation_type": "one_time_official_review",
       "retrieval_method": "Official BLS release header and report month reviewed with web tool; direct HTTP remains 403. No original response bytes or hash are claimed."
+    },
+    {
+      "release_id": 50,
+      "series_ids": [
+        "PAYEMS",
+        "UNRATE",
+        "CES0500000003",
+        "CIVPART",
+        "U6RATE",
+        "AWHAETP"
+      ],
+      "release_date": "2026-07-02",
+      "reference_period": "2026-06-01",
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "binding_method": "reviewed_official_schedule",
+      "source_url": "https://www.bls.gov/news.release/archives/empsit_07022026.htm",
+      "retrieved_at": "2026-10-28T15:16:26.271638+00:00",
+      "confirmation_type": "one_time_official_review",
+      "retrieval_method": "Official BLS release header and reference month reviewed with web tool. Direct HTTP returned 403; no successful automatic BLS retrieval or RAW/hash is claimed."
+    },
+    {
+      "release_id": 50,
+      "series_ids": [
+        "PAYEMS",
+        "UNRATE",
+        "CES0500000003",
+        "CIVPART",
+        "U6RATE",
+        "AWHAETP"
+      ],
+      "release_date": "2026-08-07",
+      "reference_period": "2026-07-01",
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "binding_method": "reviewed_official_schedule",
+      "source_url": "https://www.bls.gov/news.release/archives/empsit_08072026.htm",
+      "retrieved_at": "2026-10-28T15:16:26.271638+00:00",
+      "confirmation_type": "one_time_official_review",
+      "retrieval_method": "Official BLS release header and reference month reviewed with web tool. Direct HTTP returned 403; no successful automatic BLS retrieval or RAW/hash is claimed."
     }
   ],
   "rules": [

@@ -13,12 +13,13 @@ from urllib.parse import urlparse
 import httpx
 
 from app.analytics.ppi_measures import PPI_SERIES
+from app.analytics.employment_measures import EMPLOYMENT_LEVELS
 from app.ingestion.request_budget import before_request
 from app.ingestion.sync_fomc_calendar import Tree
 
 # Public links verified in https://www.bls.gov/schedule/ (By News Release).
 GROUPS = {
-    'Employment Situation': (50, ['PAYEMS', 'UNRATE', 'CES0500000003'], 'empsit'),
+    'Employment Situation': (50, ['PAYEMS', 'UNRATE', 'CES0500000003', *EMPLOYMENT_LEVELS], 'empsit'),
     'Consumer Price Index': (10, ['CPIAUCSL', 'CPILFESL'], 'cpi'),
     'Producer Price Index': (46, list(PPI_SERIES), 'ppi'),
     'Employment Cost Index': (11, ['ECIALLCIV'], 'eci'),

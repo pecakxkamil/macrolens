@@ -508,3 +508,31 @@ WPUFD49116:
   transformations:
     - yoy
   revision_tracking: true
+
+U6RATE:
+  name: "Total Unemployed, Plus All Persons Marginally Attached to the Labor Force, Plus Total Employed Part Time for Economic Reasons, as a Percent of the Civilian Labor Force Plus All Persons Marginally Attached to the Labor Force (U-6)"
+  short_name: U-6 Labor Underutilization Rate
+  category: labor
+  frequency: monthly
+  unit: percent
+  seasonal_adjustment: Seasonally Adjusted
+  source: US Bureau of Labor Statistics via FRED
+  source_series_id: LNS13327709
+  survey: CPS
+  transformations:
+    - level
+  revision_tracking: true
+
+AWHAETP:
+  name: Average Weekly Hours of All Employees, Total Private
+  short_name: Average Weekly Hours — Total Private
+  category: labor
+  frequency: monthly
+  unit: hours
+  seasonal_adjustment: Seasonally Adjusted
+  source: US Bureau of Labor Statistics via FRED
+  source_series_id: CES0500000002
+  survey: CES
+  transformations:
+    - level
+  revision_tracking: true

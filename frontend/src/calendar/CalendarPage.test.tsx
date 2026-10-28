@@ -42,6 +42,21 @@ test.each(['en','pl'] as const)('PPI keeps three monthly rows and independent NS
  expect(details).toHaveTextContent(language==='en'?'Current-vintage':'Bieżąca');
 });
 beforeEach(()=>{vi.useFakeTimers({toFake:['Date']});vi.setSystemTime(new Date(NOW));});
+test.each(['en','pl'] as const)('Employment levels use CPS/CES and neutral pp/hours in %s',async language=>{
+ setLanguage(language);
+ const ids=['CIVPART','U6RATE','AWHAETP'],labels=['Labor Force Participation Rate','U-6 Labor Underutilization Rate','Average Weekly Hours — Total Private'];
+ const levels=ids.map<CalendarMeasure>((sid,i)=>({...measure(labels[i]),series_id:sid,feature_name:'raw',actual:[61.8,7.6,34.4][i],previous:[61.6,7.7,34.3][i],unit:i===2?'hours':'percent',data_version:'current_vintage',survey:i===2?'CES':'CPS',source_series_id:i===2?'CES0500000002':i===1?'LNS13327709':'LNS11300000',seasonal_adjustment:'Seasonally Adjusted',source_url:`https://fred.stlouisfed.org/series/${sid}`}));
+ const e={...events()[1],measures:[...events()[1].measures!,...levels]};
+ vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>({start_date:'2026-10-26',end_date:'2026-11-01',events:[e],automatic_refresh_supported:false})})));
+ render(<CalendarPage/>);const b=await screen.findByRole('button',{name:new RegExp(language==='en'?'Average Weekly Hours':'Średni tygodniowy czas pracy')});
+ const rows=[...document.querySelectorAll('.agenda-entry')];expect(rows).toHaveLength(4);
+ expect(rows[1].children[6]).toHaveTextContent(language==='en'?'0.2 pp':'0,2 pkt proc.');
+ expect(rows[2].children[6]).toHaveTextContent(language==='en'?'0.1 pp':'0,1 pkt proc.');
+ expect(rows[3].children[6]).toHaveTextContent(language==='en'?'0.1 hours':'0,1 godz.');
+ expect(rows[3].querySelector('.agenda-actual')).toHaveTextContent(language==='en'?'34.4 hours':'34,4 godz.');
+ expect(rows[1].querySelector('.agenda-comparison--favorable')).toBeNull();expect(rows[2].querySelector('.agenda-comparison--unfavorable')).toBeNull();
+ fireEvent.click(b);expect(document.querySelector('.agenda-detail')).toHaveTextContent('CES0500000002');expect(document.querySelector('.agenda-detail')).toHaveTextContent('CES');
+});
 afterEach(()=>{cleanup();vi.useRealTimers();vi.restoreAllMocks();vi.unstubAllGlobals();setLanguage('en');location.hash='';});
 
 test.each(['en','pl'] as const)('Retail stays one report with three neutral percent measures and component details in %s',async language=>{

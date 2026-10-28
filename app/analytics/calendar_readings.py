@@ -11,6 +11,7 @@ from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 import pandas as pd
 from app.analytics.features import calculate_features
+from app.analytics.employment_measures import EMPLOYMENT_LEVELS, level_reason as employment_level_reason, expand_employment_evidence, availability_reason as employment_availability_reason, decorate as decorate_employment
 from app.analytics.ppi_measures import NEW_PPI_SERIES, PPI_LABELS, inputs as ppi_inputs, expand_ppi_evidence, availability_reason as ppi_availability_reason, decorate_and_fold
 from app.analytics.point_in_time import select_as_of
 from app.analytics.calendar_evidence import read_evidence, period_evidence
@@ -19,7 +20,7 @@ from app.analytics.calendar_evidence import read_evidence, period_evidence
 # Shared monthly reports: BLS Employment Situation/CPI, BEA Income and Outlays,
 # Census New Residential Construction. Weekly claims have DIFFERENT periods.
 SPECS = {
- 50:[('PAYEMS','monthly_change','Nonfarm payrolls (NFP)','thousand jobs'),('UNRATE','raw','Unemployment rate','percent'),('CES0500000003','mom','Hourly earnings MoM','percent')],
+ 50:[('PAYEMS','monthly_change','Nonfarm payrolls (NFP)','thousand jobs'),('UNRATE','raw','Unemployment rate','percent'),('CES0500000003','mom','Hourly earnings MoM','percent')]+[(sid,'raw',spec[0],spec[1]) for sid,spec in EMPLOYMENT_LEVELS.items()],
  10:[('CPIAUCSL','mom','CPI MoM','percent'),('CPIAUCSL','yoy','Headline CPI YoY','percent'),('CPILFESL','mom','Core CPI MoM','percent'),('CPILFESL','yoy','Core CPI YoY','percent')],
  54:[('PCEPI','mom','Headline PCE MoM','percent'),('PCEPILFE','mom','Core PCE MoM','percent'),('PCEPILFE','yoy','Core PCE YoY','percent'),('DSPIC96','mom','Real disposable income MoM','percent'),('PCEC96','mom','Real consumption MoM','percent'),('PSAVERT','raw','Saving rate','percent')],
  27:[('HOUST','raw','Housing starts','thousand homes/year (SAAR)'),('PERMIT','raw','Building permits','thousand homes/year (SAAR)')],
@@ -53,6 +54,7 @@ def period_before(day,frequency):
 
 def value_at(sid,feature,points,period,frequency):
     if not period:return None
+    if sid in EMPLOYMENT_LEVELS and employment_level_reason(sid,points,period):return None
     if sid in NEW_PPI_SERIES and ppi_inputs(points,period,feature)[1]:return None
     values={str(p['observation_date']):finite(p['value']) for p in points}
     if feature=='raw':return values.get(period)
@@ -79,7 +81,7 @@ def linked_period(rows,event_day,sid):
 
 def bind_events(events,panel,current,now,evidence=None,provider_updates=None,ism_documents=None):
     from app.analytics.retail_measures import expand_retail_evidence, append_control, EX_AUTOS_DEFINITION
-    evidence=expand_ppi_evidence(expand_retail_evidence(evidence or {}))
+    evidence=expand_employment_evidence(expand_ppi_evidence(expand_retail_evidence(evidence or {})))
     from app.ingestion.bls_schedule import select_records
     _,bls_conflicts=select_records(evidence.get('periods',[]))
     events=copy.deepcopy(events)
@@ -171,6 +173,10 @@ def bind_events(events,panel,current,now,evidence=None,provider_updates=None,ism
             if rid==46 and sid in NEW_PPI_SERIES and not future:
                 ppi_reason=ppi_availability_reason(sid,current_points,period,event,proof,provider_updates)
                 if ppi_reason:actual=None;version=None;vintage=None
+            employment_reason=None
+            if rid==50 and sid in EMPLOYMENT_LEVELS and not future:
+                employment_reason=employment_availability_reason(sid,current_points,period,event,proof,provider_updates)
+                if employment_reason:actual=None;version=None;vintage=None
             previous_period=period_before(period,frequency) if period else None
             previous_kind='previous_period'
             prior_snapshot=select_as_of(panel.get(sid,[]),date.fromisoformat(day)-timedelta(days=1))
@@ -196,8 +202,10 @@ def bind_events(events,panel,current,now,evidence=None,provider_updates=None,ism
                 'publication_provenance':receipt if stage=='revised_permits' else None,
                 'actual_provenance':provenance(sid,period,version,next((p for p in current_points if str(p['observation_date'])==period),None) if version=='current_vintage' else vintage,str(now.date()) if version=='current_vintage' else day) if actual is not None else None,
                 'previous_provenance':provenance(sid,previous_period,previous_version,next((p for p in (prior_snapshot if previous_kind=='previous_estimate' else known if previous_version=='stored_date_vintage' else current_points) if str(p['observation_date'])==previous_period),None),str(now.date()) if previous_version=='current_vintage' else day) if previous is not None else None,
-                'missing_reason':{'actual':ppi_reason or revised_reason or ('publisher_result_not_confirmed' if unconfirmed_result else 'not_yet_published' if future and period else reason(actual,period,current_points)),'previous':reason(previous,previous_period,current_points)},
+                'missing_reason':{'actual':employment_reason or ppi_reason or revised_reason or ('publisher_result_not_confirmed' if unconfirmed_result else 'not_yet_published' if future and period else reason(actual,period,current_points)),'previous':reason(previous,previous_period,current_points)},
                 'source_url':f'https://fred.stlouisfed.org/series/{sid}'})
+        if rid==50:
+            decorate_employment(event,current)
         if rid==46:
             decorate_and_fold(event,current)
         if rid==9:

@@ -11,6 +11,8 @@ FEATURES_BY_SERIES = {
     "PAYEMS": ("monthly_change", "monthly_change_ma_3m", "monthly_change_ma_6m"),
     "UNRATE": ("level", "change_3m", "change_6m", "moving_average_3m"),
     "UNEMPLOY": ("level",),
+    "U6RATE": ("level",),
+    "AWHAETP": ("level",),
     "ICSA": ("moving_average_4w", "moving_average_13w", "yoy"),
     "CCSA": ("moving_average_4w", "moving_average_13w", "yoy"),
     "JTSJOL": ("level", "change_3m", "change_6m", "yoy"),
