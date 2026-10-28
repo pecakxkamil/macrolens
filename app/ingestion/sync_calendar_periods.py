@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 from fractions import Fraction
 from pathlib import Path
 
+from app.analytics.retail_measures import RETAIL_SERIES
 from app.analytics.calendar_evidence import SNAPSHOT, REVIEWED, read_evidence
 from app.ingestion.sync_fomc_calendar import Tree
 from app.ingestion.request_budget import before_request
@@ -26,7 +27,7 @@ SOURCES = {
  'g17': 'https://www.federalreserve.gov/releases/g17/default.htm',
 }
 BLS = {name: (rid, sids) for name, (rid, sids, _) in BLS_GROUPS.items()}
-EVIDENCE_ADAPTER_VERSION=6
+EVIDENCE_ADAPTER_VERSION=7
 G17_METHOD='https://www.federalreserve.gov/releases/g17/OMB/2026/OMB_2026.htm'
 
 
@@ -119,7 +120,7 @@ def parse_retail_schedule(html,url,retrieved):
             if c[0]=='Data Month':continue
             if 'to be announced' in c[1].lower():continue
             period,day=parsed_date(c[0]),parsed_date(c[1])
-            records.append(dict(release_id=9,series_ids=['RSAFS'],release_date=day,reference_period=period,
+            records.append(dict(release_id=9,series_ids=list(RETAIL_SERIES),release_date=day,reference_period=period,
                 release_time='08:30:00',source_timezone='America/New_York',source_url=url,retrieved_at=retrieved,
                 binding_method='official_schedule',estimate_stage='advance'))
     if not records:raise ValueError('No advance retail schedule')
@@ -200,8 +201,25 @@ def parse_retail_report(html,url,retrieved):
     day=re.search(r'FOR IMMEDIATE RELEASE:\s*(?:Monday|Tuesday|Wednesday|Thursday|Friday), (\w+ \d{1,2}, \d{4})',text)
     period=re.search(r'Advance estimates of U\.S\. retail and food services sales for (\w+ \d{4})',text,re.I)
     if not day or not period:raise ValueError('Advance retail report date/period missing')
-    return dict(release_id=9,series_ids=['RSAFS'],release_date=parsed_date(day[1]),reference_period=parsed_date(period[1]),
+    return dict(release_id=9,series_ids=list(RETAIL_SERIES),release_date=parsed_date(day[1]),reference_period=parsed_date(period[1]),
         source_url=url,retrieved_at=retrieved,binding_method='official_release',estimate_stage='advance',release_time=report_clock(text),source_timezone='America/New_York')
+
+
+def parse_retail_pdf_text(text, url, retrieved):
+    """Explicitly supplied historical MARTS report; no crawling or backfill."""
+    text=' '.join(text.split())
+    header=re.search(r'FOR RELEASE AT (\d{1,2}:\d{2}) (AM|PM) (EDT|EST), (?:MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY), (\w+ \d{1,2}, \d{4})',text,re.I)
+    month=re.search(r'ADVANCE MONTHLY SALES FOR RETAIL AND FOOD SERVICES, (\w+ \d{4})',text,re.I)
+    body=re.search(r'Advance estimates of U\.S\. retail and food services sales for (\w+ \d{4})',text,re.I)
+    if not header or not month or not body or parsed_date(month[1])!=parsed_date(body[1]):
+        raise ValueError('MARTS PDF must confirm its release date and matching report month')
+    day=parsed_date(header[4].title())
+    clock=datetime.strptime(header[1]+' '+header[2].upper(),'%I:%M %p').time()
+    if datetime.combine(date.fromisoformat(day),clock,ZoneInfo('America/New_York')).tzname()!=header[3].upper():
+        raise ValueError('MARTS PDF publisher timezone conflicts with release date')
+    return dict(release_id=9,series_ids=list(RETAIL_SERIES),release_date=day,
+        reference_period=parsed_date(month[1].title()),source_url=url,retrieved_at=retrieved,
+        binding_method='official_release',estimate_stage='advance',release_time=clock.isoformat(),source_timezone='America/New_York')
 
 
 def parse_bls_ics(content,url,retrieved):
@@ -396,6 +414,8 @@ def sync_periods(client, start, end, events, now=None, path=None, source_kinds=N
             if not include_results or not any(e.get('release_id')==rid for e in events):continue
             try:
                 receipt=parser(fetch(url).text,url,stamp)
+                if rid==9:
+                    receipt.update(raw_hash=captures[url]['raw_hash'],raw_path=captures[url]['raw_path'])
                 if not receipt.get('release_time'):
                     clocks={p['release_time'] for p in periods if p['release_id']==rid and p['release_date']==receipt['release_date'] and p['reference_period']==receipt['reference_period'] and p.get('release_time')}
                     if len(clocks)==1:

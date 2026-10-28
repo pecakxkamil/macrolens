@@ -2041,5 +2041,17 @@
   "This schedule was confirmed by a one-time review of the official publisher page; automatic access remains unavailable.": "Termin potwierdzono podczas jednorazowego sprawdzenia oficjalnej strony wydawcy; automatyczny dostęp pozostaje niedostępny.",
   "Official schedule evidence conflicts; the date shown comes from FRED and no official time or period is assigned.": "Oficjalne dowody harmonogramu są sprzeczne; pokazana data pochodzi z FRED, bez przypisania oficjalnej godziny ani okresu.",
   "G.17 annual revision": "G.17 — roczna rewizja",
-  "Annual revision of industrial production and capacity utilization history; no single monthly reading is assigned.": "Roczna rewizja historii produkcji przemysłowej i wykorzystania mocy; nie przypisano pojedynczego odczytu miesięcznego."
+  "Annual revision of industrial production and capacity utilization history; no single monthly reading is assigned.": "Roczna rewizja historii produkcji przemysłowej i wykorzystania mocy; nie przypisano pojedynczego odczytu miesięcznego.",
+  "Retail Sales ex Autos": "Sprzedaż detaliczna bez samochodów",
+  "Retail Sales Control Group": "Sprzedaż detaliczna — grupa kontrolna",
+  "Retail Sales ex Autos MoM": "Sprzedaż detaliczna bez samochodów m/m",
+  "Retail Sales Control Group MoM": "Sprzedaż detaliczna — grupa kontrolna m/m",
+  "Monthly percentage change in seasonally adjusted nominal retail and food services sales excluding motor vehicle and parts dealers (NAICS 441). Both vehicles and automotive parts are excluded; food services are retained. Levels are millions of dollars; prices are not deflated.": "Miesięczna zmiana procentowa odsezonowanej nominalnej sprzedaży detalicznej i gastronomii bez dealerów pojazdów i części (NAICS 441). Wyłączono pojazdy i części samochodowe; gastronomia pozostaje w agregacie. Poziomy w mln USD; bez korekty o zmiany cen.",
+  "Control Group = RSFSXMV - RSGASS - RSBMGESD - RSFSDP: seasonally adjusted nominal sales excluding NAICS 441, 447, 444 and 722. MoM = 100 × (current level / previous level - 1). This market aggregate is not BEA PCE or a real spending measure.": "Grupa kontrolna = RSFSXMV − RSGASS − RSBMGESD − RSFSDP: odsezonowana nominalna sprzedaż bez kategorii NAICS 441, 447, 444 i 722. Zmiana m/m = 100 × (poziom bieżący / poprzedni − 1). Ten agregat rynkowy nie jest miarą PCE BEA ani realnych wydatków.",
+  "A required retail component or month is missing.": "Brakuje wymaganego komponentu sprzedaży lub miesiąca.",
+  "A retail component is not a finite nonnegative sales level.": "Komponent sprzedaży nie jest poprawnym nieujemnym poziomem.",
+  "Retail components do not share one stored FRED current-vintage snapshot; versions are not mixed.": "Komponenty sprzedaży nie pochodzą ze wspólnej zapisanej wersji bieżącej FRED; różne wersje nie są łączone.",
+  "The retail aggregate must have a positive finite level and denominator.": "Agregat sprzedaży musi mieć dodatni, skończony poziom i mianownik.",
+  "Control Group calculation uses a common current-vintage snapshot, not historical first prints.": "Obliczenie grupy kontrolnej korzysta ze wspólnej wersji bieżącej danych, a nie z historycznych pierwszych odczytów.",
+  "millions of dollars": "mln USD"
 }

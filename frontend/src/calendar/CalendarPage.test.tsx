@@ -28,6 +28,30 @@ function mockApi(mode='ready',automatic=false){
 beforeEach(()=>{vi.useFakeTimers({toFake:['Date']});vi.setSystemTime(new Date(NOW));});
 afterEach(()=>{cleanup();vi.useRealTimers();vi.restoreAllMocks();vi.unstubAllGlobals();setLanguage('en');location.hash='';});
 
+test.each(['en','pl'] as const)('Retail stays one report with three neutral percent measures and component details in %s',async language=>{
+ setLanguage(language);
+ const labels=['Nominal retail sales MoM','Retail Sales ex Autos MoM','Retail Sales Control Group MoM'];
+ const ids=['RSAFS','RSFSXMV','RETAIL_CONTROL'];
+ const part={observation_period:'2026-09-01',vintage_date:'2026-10-28',level:400184,unit:'millions of dollars',components:{RSFSXMV:605188,RSGASS:68021,RSBMGESD:44077,RSFSDP:92906},source_urls:Object.fromEntries(['RSFSXMV','RSGASS','RSBMGESD','RSFSDP'].map(sid=>[sid,`https://fred.stlouisfed.org/series/${sid}`]))};
+ const readings=ids.map<CalendarMeasure>((sid,i)=>({...measure(labels[i]),series_id:sid,actual:i===2?.135621381:0.9,previous:i===2?1.18979194:1.4,forecast:null,data_version:'current_vintage',calculation_provenance:i===2?{actual:{current:part,previous:{...part,observation_period:'2026-08-01',level:399642},formula:'100 * (current / previous - 1)'}}:undefined}));
+ const retail:CalendarEvent={...events()[0],release_id:9,event_id:'release:9:2026-09-01:advance',release_name:'Advance Monthly Sales for Retail and Food Services',importance:'medium',series:[{...cpi,series_id:'RSAFS',category:'consumer'}],measures:readings};
+ vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>({start_date:'2026-10-26',end_date:'2026-11-01',events:[retail],automatic_refresh_supported:false})})));
+ render(<CalendarPage/>);
+ const name=language==='en'?'Retail Sales Control Group':'Sprzedaż detaliczna — grupa kontrolna';
+ const button=await screen.findByRole('button',{name:new RegExp(name)});
+ expect(document.querySelectorAll('.agenda-entry')).toHaveLength(3);
+ const row=button.closest('tr')!;
+ expect(row.querySelector('.agenda-actual')).toHaveTextContent(language==='en'?'0.14%':'0,14%');
+ expect(row.textContent).toContain(language==='en'?'pp':'pkt proc.');
+ expect(row.querySelector('.agenda-comparison')).toHaveClass('agenda-comparison--neutral');
+ fireEvent.click(button);
+ expect(screen.getByText(tText('Control Group calculation uses a common current-vintage snapshot, not historical first prints.'))).toBeInTheDocument();
+ for(const sid of ['RSFSXMV','RSGASS','RSBMGESD','RSFSDP'])expect(screen.getAllByRole('link',{name:sid})).toHaveLength(2);
+ expect(screen.queryByRole('link',{name:tText('View indicator')})).not.toBeInTheDocument();
+ fireEvent.keyDown(document.querySelector('.agenda-detail')!,{key:'Escape'});
+ expect(button).toHaveFocus();
+});
+
 test.each(['en','pl'] as const)('January publisher-only rows retain cross-year periods, zero previous and one-time provenance in %s',async language=>{
  setLanguage(language);vi.setSystemTime(new Date('2027-01-11T12:00:00Z'));
  const reading={...measure(),reference_period:'2026-12-01',previous_period:'2026-11-01',actual:null,previous:0,forecast:null};

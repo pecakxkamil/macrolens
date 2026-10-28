@@ -24,7 +24,7 @@ SPECS = {
  27:[('HOUST','raw','Housing starts','thousand homes/year (SAAR)'),('PERMIT','raw','Building permits','thousand homes/year (SAAR)')],
  53:[('GDPC1','qoq_annualized','Real GDP QoQ, annualized','percent')],
  180:[('ICSA','raw','Initial jobless claims','claims'),('CCSA','raw','Continuing jobless claims','claims')],
- 9:[('RSAFS','mom','Nominal retail sales MoM','percent')],46:[('PPIFIS','mom','Producer inflation PPI MoM','percent')],
+ 9:[('RSAFS','mom','Nominal retail sales MoM','percent'),('RSFSXMV','mom','Retail Sales ex Autos MoM','percent')],46:[('PPIFIS','mom','Producer inflation PPI MoM','percent')],
  13:[('INDPRO','mom','Industrial production MoM','percent'),('TCU','raw','Capacity utilization','percent')],
  192:[('JTSJOL','raw','JOLTS job openings','thousand openings')],97:[('HSN1F','raw','New home sales','thousand homes/year (SAAR)')],
  190:[('MORTGAGE30US','raw','30Y mortgage rate','percent')],219:[('CFNAI','raw','CFNAI','index points')],221:[('NFCI','raw','NFCI','index points')],
@@ -76,7 +76,8 @@ def linked_period(rows,event_day,sid):
 
 
 def bind_events(events,panel,current,now,evidence=None,provider_updates=None,ism_documents=None):
-    evidence=evidence or {}
+    from app.analytics.retail_measures import expand_retail_evidence, append_control, EX_AUTOS_DEFINITION
+    evidence=expand_retail_evidence(evidence or {})
     from app.ingestion.bls_schedule import select_records
     _,bls_conflicts=select_records(evidence.get('periods',[]))
     events=copy.deepcopy(events)
@@ -96,6 +97,8 @@ def bind_events(events,panel,current,now,evidence=None,provider_updates=None,ism
         specs=[s for s in SPECS.get(rid,[]) if s[0] in metadata]
         if not specs:specs=[(s['series_id'],'raw',s['short_name'] or s['name'],s['unit']) for s in event['series']]
         official=[r for r in evidence.get('periods',[]) if r['release_id']==rid and r['release_date']==day]
+        if rid==9 and (event.get('estimate_stage') not in (None,'advance') or (official and all(r.get('estimate_stage') not in (None,'advance') for r in official))):
+            specs=[s for s in specs if s[0]=='RSAFS']
         if rid==27 and official:
             # Census's later revised-permits release is not another starts report.
             permitted={sid for r in official for sid in r['series_ids']}
@@ -175,7 +178,7 @@ def bind_events(events,panel,current,now,evidence=None,provider_updates=None,ism
             revised=previous_kind=='previous_estimate' and actual is not None and before_value is not None and actual!=before_value
             reason=lambda value,ref,points: None if value is not None else 'reference_period_unconfirmed' if not ref else 'observation_missing' if not any(str(p['observation_date'])==ref and finite(p['value']) is not None for p in points) else 'transformation_dependency_missing'
             event['measures'].append({'series_id':sid,'label':label,'feature_name':feature,'frequency':frequency,'unit':unit,
-                'definition':DEFINITIONS[feature],'reference_period':period,'previous_period':previous_period,'previous_kind':previous_kind,
+                'definition':EX_AUTOS_DEFINITION if sid=='RSFSXMV' else DEFINITIONS[feature],'reference_period':period,'previous_period':previous_period,'previous_kind':previous_kind,
                 'actual':actual,'previous':previous,'forecast':None,'consensus_status':'not_integrated',
                 'data_version':version,'previous_data_version':previous_version,'revision_confirmed':revised,'binding_method':binding,
                 'vintage_date':str(vintage['vintage_date']) if vintage else None,'realtime_end':str(vintage['realtime_end']) if vintage and vintage.get('realtime_end') else None,
@@ -189,6 +192,8 @@ def bind_events(events,panel,current,now,evidence=None,provider_updates=None,ism
                 'previous_provenance':provenance(sid,previous_period,previous_version,next((p for p in (prior_snapshot if previous_kind=='previous_estimate' else known if previous_version=='stored_date_vintage' else current_points) if str(p['observation_date'])==previous_period),None),str(now.date()) if previous_version=='current_vintage' else day) if previous is not None else None,
                 'missing_reason':{'actual':revised_reason or ('publisher_result_not_confirmed' if unconfirmed_result else 'not_yet_published' if future and period else reason(actual,period,current_points)),'previous':reason(previous,previous_period,current_points)},
                 'source_url':f'https://fred.stlouisfed.org/series/{sid}'})
+        if rid==9:
+            append_control(event,current,provider_updates)
         if event.get('event_type')=='fomc_decision':
             event['expects_numeric_result']=True
             event['measures']=[policy_measure(event,evidence.get('decisions',[]),now)]

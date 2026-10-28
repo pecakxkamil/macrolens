@@ -395,3 +395,51 @@ PPIFIS:
   transformations:
     - mom
   revision_tracking: true
+
+RSFSXMV:
+  name: "Advance Retail Sales: Retail Trade and Food Services, Excluding Motor Vehicle and Parts Dealers"
+  short_name: Retail Sales ex Autos
+  category: consumer
+  frequency: monthly
+  unit: millions of dollars
+  seasonal_adjustment: Seasonally Adjusted
+  source: US Census Bureau via FRED
+  transformations:
+    - mom
+  revision_tracking: true
+
+RSGASS:
+  name: "Advance Retail Sales: Gasoline Stations"
+  short_name: Retail gasoline stations
+  category: consumer
+  frequency: monthly
+  unit: millions of dollars
+  seasonal_adjustment: Seasonally Adjusted
+  source: US Census Bureau via FRED
+  transformations:
+    - level
+  revision_tracking: true
+
+RSBMGESD:
+  name: "Advance Retail Sales: Building Materials, Garden Equipment and Supplies Dealers"
+  short_name: Retail building and garden supplies
+  category: consumer
+  frequency: monthly
+  unit: millions of dollars
+  seasonal_adjustment: Seasonally Adjusted
+  source: US Census Bureau via FRED
+  transformations:
+    - level
+  revision_tracking: true
+
+RSFSDP:
+  name: "Advance Retail Sales: Food Services and Drinking Places"
+  short_name: Retail food services
+  category: consumer
+  frequency: monthly
+  unit: millions of dollars
+  seasonal_adjustment: Seasonally Adjusted
+  source: US Census Bureau via FRED
+  transformations:
+    - level
+  revision_tracking: true

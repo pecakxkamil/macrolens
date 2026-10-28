@@ -57,6 +57,8 @@ def refresh_fred(series_id, previous, local, connection, now):
     spec = _load_series_config()[series_id]['transformations']
     with availability_check(f'fred:{series_id}', {'provider':'FRED', 'series_ids':[series_id]}) as check:
         metadata = fetch_series_metadata(series_id)
+        from app.analytics.retail_measures import validate_metadata
+        validate_metadata(series_id, metadata)
         changed = (previous.get('last_updated') != metadata['last_updated']
             or previous.get('local_signature') != local.get('signature') or previous.get('transformations') != spec)
         details = {'last_updated':metadata['last_updated'], 'observation_end':metadata.get('observation_end')}
@@ -77,6 +79,32 @@ def refresh_fred(series_id, previous, local, connection, now):
 def _due(previous, now, interval):
     attempted = previous.get('attempted_at')
     return not attempted or now >= datetime.fromisoformat(attempted) + timedelta(seconds=interval)
+
+
+def align_retail_snapshots(connection, versions, results, local, now):
+    """Finish a changed retail component set in the same existing job/budget.
+
+    Unchanged jobs do not download observations again. After a partial update,
+    unchanged components need a common current-vintage snapshot as well.
+    """
+    from app.analytics.retail_measures import CONTROL_COMPONENTS
+    resources={'fred:'+sid for sid in CONTROL_COMPONENTS}
+    relevant=[r for r in results if r['resource'] in resources]
+    if len(relevant)!=len(resources) or any(r['status']!='success' for r in relevant):return
+    changed={r['resource'] for r in relevant if r.get('outcome')=='updated'}
+    vintages={tuple(versions[r].get('local_signature') or [None])[-1] for r in resources}
+    if not changed and len(vintages)==1:return
+    for sid in CONTROL_COMPONENTS:
+        resource='fred:'+sid
+        if resource in changed:continue
+        try:
+            before_request('budget')
+            with connection.transaction():
+                prior={**versions.get(resource,{}),'last_updated':None}
+                versions[resource],result=refresh_fred(sid,prior,local.get(sid,{}),connection,now)
+            results[:]=[r for r in results if r['resource']!=resource]+[result]
+        except Exception:
+            results[:]=[r for r in results if r['resource']!=resource]+[dict(resource=resource,status='error',error_code='refresh_failed')]
 
 
 def publication_results_due(events, evidence, versions, previous, now):
@@ -126,6 +154,7 @@ def refresh_sources(connection, previous, now):
                 results.extend({'resource':f'fred:{other}','status':'skipped','error_code':'provider_backoff'}
                     for other in sorted(required_series) if f'fred:{other}' not in {r['resource'] for r in results})
                 break
+    align_retail_snapshots(connection, versions, results, local, now)
     today = now.astimezone(ZoneInfo('Europe/Warsaw')).date()
     slow_interval = seconds('OVERVIEW_CALENDAR_INTERVAL_SECONDS', 21600, 900)
     for resource in ('fred:calendar','fed:calendar'):

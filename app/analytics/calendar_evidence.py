@@ -36,7 +36,8 @@ def read_evidence(path=None):
                 result[key].extend(payload.get(key, []))
         except (OSError, ValueError, KeyError, TypeError):
             continue
-    return result
+    from app.analytics.retail_measures import expand_retail_evidence
+    return expand_retail_evidence(result)
 
 
 def period_evidence(evidence, release_id, day, sid):

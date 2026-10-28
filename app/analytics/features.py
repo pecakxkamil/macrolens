@@ -27,6 +27,10 @@ FEATURES_BY_SERIES = {
     "INDPRO": ("mom", "yoy", "annualized_3m"),
     "TCU": ("level", "change_3m", "moving_average_3m"),
     "DGORDER": ("mom", "yoy", "moving_average_3m"),
+    "RSFSXMV": ("mom",),
+    "RSGASS": ("level",),
+    "RSBMGESD": ("level",),
+    "RSFSDP": ("level",),
     "RSAFS": ("mom", "yoy", "annualized_3m"),
     "PCEC96": ("mom", "yoy", "annualized_3m"),
     "DSPIC96": ("mom", "yoy", "annualized_3m"),
@@ -120,10 +124,12 @@ def calculate_features(
         calculated["yoy"] = ((values / values.shift(lag)) - 1) * 100
     if "mom" in feature_names:
         calculated["mom"] = ((values / values.shift(1)) - 1) * 100
-        if series_id == "PPIFIS":
+        if series_id in ("PPIFIS", "RSFSXMV"):
             # Register the new monthly series without changing legacy v1 features.
             consecutive_month = frame["observation_date"].dt.to_period("M").astype("int64").diff().eq(1)
             calculated["mom"] = calculated["mom"].where(consecutive_month)
+            if series_id == "RSFSXMV":
+                calculated["mom"] = calculated["mom"].where(values.shift(1) > 0)
     if "qoq" in feature_names:
         calculated["qoq"] = ((values / values.shift(1)) - 1) * 100
     if "qoq_annualized" in feature_names:
