@@ -21,7 +21,7 @@ def scope_overview_checks(brief):
     next_event = policy_data.get('next_decision')
     calendar = brief.get('calendar') or {}
     events = (calendar.get('data') or {}).get('events', [])
-    displayed = [event for event in events if event.get('event_type') == 'fomc_decision'
+    displayed = [event for event in events if str(event.get('event_type','')).startswith('fomc_')
                  or event.get('release_name') == 'FOMC policy decision']
     if next_event:
         displayed.append(next_event)

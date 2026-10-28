@@ -2,6 +2,9 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import App from "../App";
+// Keep the real nested route imports outside rendering/navigation waits.
+import "../navigation/ResearchPage";
+import "./MacroIndexPage";
 import type { MciCurrentResponse, MciHistoryObservation } from "../api/macrolens";
 import { rangeStartDate } from "../charts/chartData";
 import fixture from "./testData.json";

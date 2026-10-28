@@ -445,7 +445,15 @@ export interface CalendarEvent {
   description?:string;
   measures?:CalendarMeasure[];
   expects_numeric_result?:boolean;
-  event_type?: "fomc_decision" | "ism_report";
+  event_type?: "fomc_decision" | "fomc_press_conference" | "fomc_minutes" | "fomc_sep" | "ism_report";
+  meeting_id?: string;
+  date_status?: "confirmed" | "unconfirmed";
+  time_status?: "confirmed" | "unconfirmed";
+  date_source_url?: string;
+  document_url?: string | null;
+  document_status?: "available" | "not_available";
+  schedule_provenance?: {source_url:string;retrieved_at:string;raw_hash?:string;confirmation_type?:string;retrieval_method?:string};
+  schedule_status?: "confirmed" | "conflict";
   meeting_start_date?: string;
   meeting_end_date?: string;
   retrieved_at?: string;

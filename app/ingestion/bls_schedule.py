@@ -31,6 +31,11 @@ def identity(row):
     return row['release_id'], row['reference_period']
 
 
+def publisher_identity(row):
+    """A GDP estimate, M3 full report or permits revision is its own release."""
+    return row['release_id'], row['reference_period'], row.get('estimate_stage') or ''
+
+
 def signature(row):
     return row['release_date'], row.get('release_time')
 
@@ -86,14 +91,14 @@ def parse_html(html, url, retrieved, publication=None):
     return list(seen.values())
 
 
-def select_records(rows, group_ids=None, priority=None):
+def select_records(rows, group_ids=None, priority=None, identity_key=identity):
     """Deterministic published-source precedence, with unresolved peers withheld."""
     groups = {}
     group_ids=group_ids if group_ids is not None else {g[0] for g in GROUPS.values()}
     priority=priority if priority is not None else PRIORITY
     for row in rows:
         if row['release_id'] in group_ids:
-            groups.setdefault(identity(row), []).append(row)
+            groups.setdefault(identity_key(row), []).append(row)
     selected, conflicts = [], []
     for key, candidates in sorted(groups.items()):
         rank = max(priority.get(r.get('binding_method'), 0) for r in candidates)
@@ -118,14 +123,15 @@ def select_records(rows, group_ids=None, priority=None):
     return [r for r in selected if len(day_groups[(r['release_id'], r['release_date'])]) == 1], conflicts
 
 
-def merge_source(data, url, rows):
+def merge_source(data, url, rows, identity_key=identity):
     """Upsert only explicit identities; absent rows never imply cancellation."""
     old = data['periods']
     history = data.setdefault('bls_history', [])
     for row in rows:
-        matches = [r for r in old if r['source_url'] == url and identity(r) == identity(row)]
+        matches = [r for r in old if r['source_url'] == url and identity_key(r) == identity_key(row)]
         unchanged = next((r for r in matches if signature(r) == signature(row)
-                          and r.get('series_ids') == row['series_ids']), None)
+                          and r.get('series_ids') == row['series_ids']
+                          and (not row.get('raw_hash') or r.get('raw_hash') == row['raw_hash'])), None)
         if unchanged:
             continue  # Original content acquisition date is stable on revalidation.
         for prior in matches:

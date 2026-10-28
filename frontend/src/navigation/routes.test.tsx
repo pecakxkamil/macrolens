@@ -2,6 +2,10 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { afterEach, expect, test, vi } from "vitest";
 import App from "../App";
 import { resolveRoute } from "./routes";
+// Exercise real navigation/rendering, keeping cold nested Vite/Recharts
+// compilation in collection rather than consuming the DOM assertion budget.
+import "./ExploreDataPage";
+import "../charts/ChartsPage";
 
 const mappings = [
   ["#/state", "#/", "overview", "USA Economy Now"],

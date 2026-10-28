@@ -81,6 +81,12 @@ def bind_events(events,panel,current,now,evidence=None,provider_updates=None,ism
     _,bls_conflicts=select_records(evidence.get('periods',[]))
     events=copy.deepcopy(events)
     for event in events:
+        if event.get('expects_numeric_result') is False and event.get('estimate_stage')=='annual_revision':
+            event['measures']=[]
+            continue
+        if event.get('event_type') in ('fomc_press_conference','fomc_minutes','fomc_sep'):
+            event.update(expects_numeric_result=False, measures=[])
+            continue
         if event.get('event_type')=='ism_report':
             from app.analytics.ism_calendar import bind_measure
             event.update(description='Monthly ISM survey of US business activity.',expects_numeric_result=True,

@@ -18,8 +18,7 @@ JOIN series_release_map AS m ON m.release_id = r.release_id
 JOIN series AS s ON s.series_id = m.series_id
 LEFT JOIN release_dates AS d ON d.release_id = r.release_id
   AND d.release_date BETWEEN %s AND %s
-WHERE (d.release_date IS NOT NULL OR r.release_id IN (50,10,46,11,192,9,13))
-  AND s.active = TRUE AND s.series_id = ANY(%s)
+WHERE s.active = TRUE AND s.series_id = ANY(%s)
 ORDER BY d.release_date, r.name, r.release_id, s.series_id;
 """
 
@@ -139,7 +138,7 @@ def list_calendar_events(
         if not any(item["series_id"] == series["series_id"] for item in event["series"]):
             event["series"].append(series)
 
-    apply_bls_schedule(events,templates,evidence,start,end)
+    conflicts=apply_bls_schedule(events,templates,evidence,start,end)
     selected = [event for event in events.values() if category is None or any(
         item["category"] == category for item in event["series"]
     )]
@@ -159,6 +158,7 @@ def list_calendar_events(
         "end_date": end,
         "category": category,
         "events": selected,
+        "official_schedule_conflicts": conflicts,
         "policy_calendar": {key: policy[key] for key in ("status", "retrieved_at", "source_url")},
     }
 
@@ -169,22 +169,69 @@ def apply_bls_schedule(events, templates, evidence, start, end):
     Missing rows in a shorter source do not cancel events. Only an explicit move
     of the same reference period supersedes a previously known date.
     """
-    from app.ingestion.bls_schedule import select_records, identity
-    selected,_=select_records(evidence.get('periods',[]))
-    additional,_=select_records(evidence.get('periods',[]),{9,13},{'official_release':4,'official_schedule':3,'official_g17_monthly_rule':2})
-    selected+=additional
-    active={identity(r):r for r in selected}
+    from app.ingestion.bls_schedule import publisher_identity
+    from app.analytics.calendar_evidence import schedule_records, claims_rule, period_evidence
+    selected,conflicts=schedule_records(evidence)
+    active={publisher_identity(r):r for r in selected}
     for old in evidence.get('periods',[])+evidence.get('bls_history',[])+evidence.get('publisher_history',[]):
-        current=active.get(identity(old))
+        current=active.get(publisher_identity(old))
         if current and current['release_date']!=old['release_date']:
             events.pop((old['release_id'],date.fromisoformat(old['release_date'])),None)
     for row in selected:
         rid=row['release_id'];day=date.fromisoformat(row['release_date'])
         if rid not in templates or not start<=day<=end:continue
         template=templates[rid]
+        related=[c for c in conflicts if any(publisher_identity(r)==publisher_identity(row) for r in c['candidates'])]
         events[(rid,day)]={**template,'release_date':day,
+            'event_id':f"release:{rid}:{row['reference_period']}:{row.get('estimate_stage') or 'main'}",
+            'series':[s for s in template['series'] if s['series_id'] in row['series_ids']],
             **release_time_metadata(template['release_name'],day,evidence),
-            'source_link':row['source_url']}
+            'source_link':row['source_url'],'schedule_provenance':row,
+            'schedule_status':'confirmed', 'estimate_stage':row.get('estimate_stage'),
+            'schedule_conflicts':related}
+    for conflict in conflicts:
+        if conflict['resolution']!='unresolved':continue
+        for row in conflict['candidates']:
+            key=(row['release_id'],date.fromisoformat(row['release_date']))
+            if key in events:
+                events[key].update(schedule_status='conflict',schedule_conflicts=[conflict],
+                                   release_time=None,source_timezone=None,release_datetime_utc=None)
+    # G.17 explicitly distinguishes an annual revision from monthly readings.
+    # It has a confirmed date/clock, but no single monthly Actual/Previous pair.
+    clocks={}
+    for rule in evidence.get('rules',[]):
+        if rule.get('release_id')==13 and rule.get('id','').startswith('g17_clock_'):
+            if rule['id'] not in clocks or rule['retrieved_at']>clocks[rule['id']]['retrieved_at']:
+                clocks[rule['id']]=rule
+    if 13 in templates:
+        for rule in clocks.values():
+            for text in rule.get('annual_revision_dates',[]):
+                day=date.fromisoformat(text)
+                if not start<=day<=end:continue
+                events[(13,day)]={**templates[13], 'event_id':f'release:13:annual_revision:{day.year}',
+                    'release_date':day,'release_name':'G.17 annual revision',
+                    **release_time_metadata(templates[13]['release_name'],day,evidence),
+                    'source_link':rule['source_url'],'schedule_provenance':rule,'schedule_status':'confirmed',
+                    'estimate_stage':'annual_revision','expects_numeric_result':False,'measures':[],
+                    'description':'Annual revision of industrial production and capacity utilization history; no single monthly reading is assigned.'}
+    # DOL publishes an explicit bounded weekly rule and holiday substitutions.
+    # No dates are inferred from a FRED series frequency.
+    if 180 in templates:
+        for offset in range((end-start).days+1):
+            day=start+timedelta(days=offset)
+            rule=claims_rule(evidence,str(day))
+            if not rule:continue
+            template=templates[180]
+            proof=period_evidence(evidence,180,str(day),'ICSA')
+            events[(180,day)]={**template,'release_date':day,
+                'event_id':f"release:180:{proof['reference_period']}:weekly",
+                **release_time_metadata(template['release_name'],day,evidence),
+                'source_link':rule['source_url'],'schedule_provenance':proof,'schedule_status':'confirmed'}
+        for key in list(events):
+            if key[0]==180 and any(str(key[1]) in r.get('cancelled_dates',[]) for r in evidence.get('rules',[])
+                                  if r.get('id')=='dol_weekly_claims') and not claims_rule(evidence,str(key[1])):
+                events.pop(key)
+    return conflicts
 
 
 def get_release_detail(release_id: int) -> dict:

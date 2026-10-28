@@ -4,6 +4,7 @@ import json
 import re
 import uuid
 import calendar
+import hashlib
 from datetime import date, datetime, timezone
 from zoneinfo import ZoneInfo
 from fractions import Fraction
@@ -25,7 +26,7 @@ SOURCES = {
  'g17': 'https://www.federalreserve.gov/releases/g17/default.htm',
 }
 BLS = {name: (rid, sids) for name, (rid, sids, _) in BLS_GROUPS.items()}
-EVIDENCE_ADAPTER_VERSION=5
+EVIDENCE_ADAPTER_VERSION=6
 G17_METHOD='https://www.federalreserve.gov/releases/g17/OMB/2026/OMB_2026.htm'
 
 
@@ -83,13 +84,17 @@ def parse_schedule(kind, html, url, retrieved):
                             from urllib.parse import urljoin
                             records[-1]['report_url']=urljoin(url,links[0].attrs['href'])
             elif kind == 'soc' and len(c)==3:
-                add(27,['HOUST','PERMIT'],c[1],c[0],'initial')
+                initial_clock='08:30:00' if re.search(r'New Residential Construction\s*-\s*8:30\s*a\.m\.',title,re.I) else None
+                add(27,['HOUST','PERMIT'],c[1],c[0],'initial',initial_clock)
                 revised_clock='08:00:00' if re.search(r'Revised Building Permits\s*-\s*8:00\s*a\.m\.',title,re.I) else None
                 add(27,['PERMIT'],c[2],c[0],'revised_permits',revised_clock)
-                add(97,['HSN1F'],c[2],c[0])
+                sales_clock='10:00:00' if re.search(r'New Residential Sales\s*-\s*10:00\s*a\.m\.',title,re.I) else None
+                add(97,['HSN1F'],c[2],c[0],clock=sales_clock)
             elif kind == 'm3' and len(c)==3:
-                add(95,['DGORDER'],c[1],c[0],'advance')
-                add(95,['DGORDER'],c[2],c[0],'full')
+                advance_clock='08:30:00' if re.search(r'8:30\s*a\.m\.',title,re.I) else None
+                full_clock='10:00:00' if re.search(r'10:00\s*a\.m\.',title,re.I) else None
+                add(95,['DGORDER'],c[1],c[0],'advance',advance_clock)
+                add(95,['DGORDER'],c[2],c[0],'full',full_clock)
             elif kind == 'chicago' and len(c)==2:
                 if 'National Activity Index (CFNAI)' in title:add(219,['CFNAI'],c[0],c[1])
                 elif 'National Financial Conditions Index (NFCI)' in title:add(221,['NFCI'],c[0],c[1])
@@ -134,14 +139,15 @@ def parse_g17_schedule(html,url,retrieved,method=None):
         # mid-month releases in 2026/27. Delays/combined releases need a report.
         found=list(re.finditer(r'('+'|'.join(calendar.month_name[1:])+r')[\s\u00a0\ufffd]+(\d{1,2})([^,.;]*)(?:[,.;]|$)',content))
         if not found:raise ValueError('G.17 dates not recognized')
-        dates={};monthly=[]
+        dates={};monthly=[];annual_dates=[]
         for item in found:
             day=date(int(year[1]),list(calendar.month_name).index(item[1]),int(item[2]))
             note=item[3].lower();annual='annual revision' in note
             dates[str(day)]='12:00:00' if annual else '09:15:00'
+            if annual:annual_dates.append(str(day))
             if not annual:monthly.append((day,note))
         rules.append(dict(id='g17_clock_'+year[1],release_id=13,valid_from=year[1]+'-01-01',valid_through=year[1]+'-12-31',
-            dates=dates,source_timezone='America/New_York',source_url=url,retrieved_at=retrieved))
+            dates=dates,annual_revision_dates=annual_dates,source_timezone='America/New_York',source_url=url,retrieved_at=retrieved))
         for day,note in monthly:
             if not method_valid or day.year not in (2026,2027) or not 10<=day.day<=23 or any(w in note for w in ('delay','combined','revision')):
                 continue
@@ -332,28 +338,38 @@ def parse_decision(html, implementation, day, url, implementation_url, retrieved
         source_url=url,implementation_url=implementation_url,retrieved_at=retrieved)
 
 
-def sync_periods(client, start, end, events, now=None, path=None):
+def sync_periods(client, start, end, events, now=None, path=None, source_kinds=None, include_results=True):
     now=now or datetime.now(timezone.utc);stamp=now.isoformat();target=Path(path or SNAPSHOT)
     existing=read_evidence(target);periods=list(existing['periods']);decisions=list(existing['decisions']);results=list(existing['results']);rules=list(existing['rules']);checks=[]
     publisher_history=list(existing['publisher_history'])
     def merge_publisher(new):
         # Reuse identity-based retention: a narrower response cannot delete
         # absent months, and a moved month archives its previous date.
-        from app.ingestion.bls_schedule import merge_source
+        from app.ingestion.bls_schedule import merge_source, publisher_identity
         data={'periods':periods,'bls_history':publisher_history}
-        for url in sorted({r['source_url'] for r in new}):merge_source(data,url,[r for r in new if r['source_url']==url])
+        for url in sorted({r['source_url'] for r in new}):merge_source(data,url,[r for r in new if r['source_url']==url],publisher_identity)
     raw=target.parents[1]/'raw/calendar_periods'/f'{now:%Y%m%dT%H%M%SZ}-{uuid.uuid4().hex}'
     raw.mkdir(parents=True,exist_ok=True)
+    captures={}
     def fetch(url):
-        before_request('publisher');r=client.get(url);r.raise_for_status()
-        (raw/(str(len(list(raw.iterdir())))+('.pdf' if r.content.startswith(b'%PDF') else '.html'))).write_bytes(r.content)
+        before_request('publisher');r=client.get(url)
+        capture=raw/(str(len(list(raw.iterdir())))+('.pdf' if r.content.startswith(b'%PDF') else '.html'))
+        capture.write_bytes(r.content)
+        receipt=dict(source_url=url,retrieved_at=stamp,http_status=r.status_code,raw_hash=hashlib.sha256(r.content).hexdigest(),raw_path=str(capture))
+        capture.with_suffix(capture.suffix+'.json').write_text(json.dumps(receipt),encoding='utf-8')
+        captures[url]=receipt
+        r.raise_for_status()
         return r
-    with availability_check('calendar:periods',{'start_date':str(start),'end_date':str(end)}) as check:
+    with availability_check('calendar:periods',{'start_date':str(start),'end_date':str(end),
+            'source_kinds':sorted(source_kinds) if source_kinds is not None else None,
+            'schedule_only':not include_results}) as check:
         bls_data={**existing,'periods':periods}
-        checks.extend(sync_sources(client,bls_data,start,end,now,raw))
+        if source_kinds is None or 'bls' in source_kinds:
+            checks.extend(sync_sources(client,bls_data,start,end,now,raw))
         periods=bls_data['periods']
         for kind,template in SOURCES.items():
             if kind=='bls':continue
+            if source_kinds is not None and kind not in source_kinds:continue
             for year in (range(start.year,end.year+1) if kind=='bls' else [None]):
                 url=template.format(year=year)
                 try:
@@ -368,15 +384,16 @@ def sync_periods(client, start, end, events, now=None, path=None):
                         new,clocks=parse_g17_schedule(document,url,stamp,method)
                         rules=[r for r in rules if r.get('id') not in {c['id'] for c in clocks}]+clocks
                     else:new=parse_schedule(kind,document,url,stamp)
-                    # Replace successful source snapshots, retain others after failures.
-                    if kind in ('retail','g17'):merge_publisher(new)
-                    else:periods=[r for r in periods if r['source_url']!=url]+new
+                    for row in new:
+                        row.update(raw_hash=captures[url]['raw_hash'],raw_path=captures[url]['raw_path'],
+                                   confirmation_type='automatic_publisher_schedule')
+                    merge_publisher(new)
                     checks.append(dict(source_url=url,status='success',checked_at=stamp))
                 except Exception as error:
                     checks.append(dict(source_url=url,status='error',error_code=type(error).__name__))
         for rid,url,parser in [(9,'https://www.census.gov/retail/sales.html',parse_retail_report),
                                (13,'https://www.federalreserve.gov/releases/g17/Current/default.htm',parse_g17_report)]:
-            if not any(e.get('release_id')==rid for e in events):continue
+            if not include_results or not any(e.get('release_id')==rid for e in events):continue
             try:
                 receipt=parser(fetch(url).text,url,stamp)
                 if not receipt.get('release_time'):
@@ -389,13 +406,14 @@ def sync_periods(client, start, end, events, now=None, path=None):
                 checks.append(dict(source_url=url,status='success',checked_at=stamp))
             except Exception as error:checks.append(dict(source_url=url,status='error',error_code=type(error).__name__))
         for stage,url in [('advance','https://www.census.gov/manufacturing/m3/adv/pdf/durgd.pdf'),('full','https://www.census.gov/manufacturing/m3/prel/pdf/s-i-o.pdf')]:
-            if not any(e.get('release_id')==95 for e in events):continue
+            if not include_results or not any(e.get('release_id')==95 for e in events):continue
             try:
                 result=parse_m3_result(fetch(url).content,stage,url,stamp)
                 results=[r for r in results if not(r['release_id']==95 and r['release_date']==result['release_date'] and r['estimate_stage']==stage)]+[result]
                 checks.append(dict(source_url=url,status='success',checked_at=stamp,release_date=result['release_date'],estimate_stage=stage))
             except Exception as error:checks.append(dict(source_url=url,status='error',error_code=type(error).__name__))
         for proof in periods:
+            if not include_results:continue
             if proof['release_id']!=53 or not proof.get('report_url') or not str(start)<=proof['release_date']<=min(str(end),str(now.date())):continue
             url=proof['report_url']
             # Links are accepted only from the public publisher schedule.
@@ -406,7 +424,7 @@ def sync_periods(client, start, end, events, now=None, path=None):
                 results=[r for r in results if not(r['release_id']==53 and r['release_date']==result['release_date'])]+[result]
                 checks.append(dict(source_url=url,status='success',checked_at=stamp))
             except Exception as error:checks.append(dict(source_url=url,status='error',error_code=type(error).__name__))
-        if any(e.get('release_id')==180 for e in events):
+        if (source_kinds is None or 'dol' in source_kinds) and any(e.get('release_id')==180 for e in events):
             base=next((r for r in reversed(read_evidence().get('rules',[])) if r.get('id')=='dol_weekly_claims'),None)
             if base:
                 url=base['source_url']
@@ -415,7 +433,7 @@ def sync_periods(client, start, end, events, now=None, path=None):
                     rules=[r for r in rules if r.get('id')!='dol_weekly_claims']+[updated]
                     checks.append(dict(source_url=url,status='success',checked_at=stamp))
                 except Exception as error:checks.append(dict(source_url=url,status='error',error_code=type(error).__name__))
-        past_claims=sorted({str(e['release_date']) for e in events if e.get('release_id')==180 and str(e['release_date'])<=str(now.date())})
+        past_claims=sorted({str(e['release_date']) for e in events if include_results and e.get('release_id')==180 and str(e['release_date'])<=str(now.date())})
         for day in past_claims:
             d=date.fromisoformat(day);url=f'https://oui.doleta.gov/press/{d.year}/{d:%m%d%y}.pdf'
             try:
@@ -427,7 +445,7 @@ def sync_periods(client, start, end, events, now=None, path=None):
                 checks.append(dict(source_url=url,status='error',error_code=type(error).__name__))
         # Statements, not daily target-bound observations, prove policy decisions.
         from app.analytics.fomc_calendar import read_schedule
-        days=sorted(e['release_date'] for e in read_schedule().get('events',[]) if e['release_date']<=str(now.date()))
+        days=sorted(e['release_date'] for e in read_schedule().get('events',[]) if include_results and e.get('event_type')=='fomc_decision' and e['release_date']<=str(now.date()))
         prior=max((d for d in days if d<str(start)),default=None)
         for day in [d for d in days if str(start)<=d<=str(end) or d==prior]:
             url=f'https://www.federalreserve.gov/newsevents/pressreleases/monetary{day.replace("-","")}a.htm'
@@ -448,6 +466,7 @@ def sync_periods(client, start, end, events, now=None, path=None):
         check['scope']['bls_conflicts']=conflicts
         if any(c['status']=='error' for c in checks):check.update(status='partial',error_code='publisher_source_unavailable')
         elif any(c['resolution']=='unresolved' for c in conflicts):check.update(status='partial',error_code='publisher_schedule_conflict')
+        elif source_kinds is not None:check.update(status='partial',error_code='publisher_scope_partial')
     return payload
 
 

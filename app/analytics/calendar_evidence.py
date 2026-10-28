@@ -7,6 +7,22 @@ ROOT = Path(__file__).resolve().parents[2]
 SNAPSHOT = ROOT / 'data/derived/calendar_periods_v1.json'
 REVIEWED = ROOT / 'config/calendar_period_evidence.json'
 
+# Existing numeric release families only. FOMC and ISM retain their adapters.
+PUBLISHER_GROUPS = {9,13,27,53,54,95,97,219,221}
+PUBLISHER_PRIORITY = {'official_release':4, 'official_schedule':3,
+                      'reviewed_official_schedule':2, 'official_g17_monthly_rule':2}
+
+
+def schedule_records(evidence):
+    from app.ingestion.bls_schedule import select_records, publisher_identity, PRIORITY
+    rows = evidence.get('periods', [])
+    bls, conflicts = select_records([r for r in rows if r.get('binding_method') in
+        set(PRIORITY) | {'official_schedule','reviewed_official_schedule','official_release'}])
+    publisher, additional = select_records(
+        [r for r in rows if r.get('binding_method') in PUBLISHER_PRIORITY],
+        PUBLISHER_GROUPS, PUBLISHER_PRIORITY, publisher_identity)
+    return bls + publisher, conflicts + additional
+
 
 def read_evidence(path=None):
     result = {'periods': [], 'decisions': [], 'checks': [], 'rules': [], 'results': [],
@@ -25,11 +41,11 @@ def read_evidence(path=None):
 
 def period_evidence(evidence, release_id, day, sid):
     candidates=evidence.get('periods', [])
-    from app.ingestion.bls_schedule import GROUPS, select_records
+    from app.ingestion.bls_schedule import GROUPS
     if release_id in {g[0] for g in GROUPS.values()}:
-        candidates,_=select_records(candidates)
-    elif release_id in (9,13):
-        candidates,_=select_records(candidates,{9,13},{'official_release':4,'official_schedule':3,'official_g17_monthly_rule':2})
+        candidates,_=schedule_records(evidence)
+    elif release_id in PUBLISHER_GROUPS:
+        candidates,_=schedule_records(evidence)
     rows = [r for r in candidates if r['release_id'] == release_id
             and r['release_date'] == day and sid in r['series_ids']]
     # Conflicting schedules are not resolved by choosing the latest period.

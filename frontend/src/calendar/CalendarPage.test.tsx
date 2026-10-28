@@ -28,6 +28,45 @@ function mockApi(mode='ready',automatic=false){
 beforeEach(()=>{vi.useFakeTimers({toFake:['Date']});vi.setSystemTime(new Date(NOW));});
 afterEach(()=>{cleanup();vi.useRealTimers();vi.restoreAllMocks();vi.unstubAllGlobals();setLanguage('en');location.hash='';});
 
+test.each(['en','pl'] as const)('January publisher-only rows retain cross-year periods, zero previous and one-time provenance in %s',async language=>{
+ setLanguage(language);vi.setSystemTime(new Date('2027-01-11T12:00:00Z'));
+ const reading={...measure(),reference_period:'2026-12-01',previous_period:'2026-11-01',actual:null,previous:0,forecast:null};
+ const item:CalendarEvent={...events()[0],event_id:'release:10:2026-12-01:main',release_date:'2027-01-13',release_time:'08:30:00',source_timezone:'America/New_York',release_datetime_utc:'2027-01-13T13:30:00Z',measures:[reading],schedule_status:'confirmed',schedule_provenance:{source_url:'https://www.bls.gov/schedule/news_release/cpi.htm',retrieved_at:'2026-10-27T19:56:05Z',confirmation_type:'one_time_official_review'}};
+ vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>({start_date:'2027-01-11',end_date:'2027-01-17',events:[item],automatic_refresh_supported:false})})));
+ render(<CalendarPage/>);
+ const button=await screen.findByRole('button',{name:/2026/});
+ const row=button.closest('tr')!;
+ expect(row.querySelector('.agenda-time')).toHaveTextContent('14:30');
+ expect(row.querySelector('.agenda-actual')).toHaveTextContent('—');
+ expect(row.querySelector('td:last-child')).toHaveTextContent(language==='en'?'0.00%':'0,00%');
+ fireEvent.click(button);
+ expect(screen.getByText(tText('This schedule was confirmed by a one-time review of the official publisher page; automatic access remains unavailable.'))).toBeInTheDocument();
+});
+
+test.each(['en','pl'] as const)('Fed nonnumeric events retain separate rows, details, filters and unknown-time countdown exclusion in %s',async language=>{
+ setLanguage(language);
+ const kinds=['fomc_press_conference','fomc_minutes','fomc_sep'] as const;
+ const names=['FOMC Press Conference','FOMC Meeting Minutes','Fed Economic Projections (SEP)'];
+ const fed:CalendarEvent[]=kinds.map((kind,i)=>({...events()[0],release_id:null,event_id:`meeting:${kind}`,event_type:kind,release_name:names[i],series:[],measures:[],expects_numeric_result:false,release_date:'2026-10-28',release_time:i===2?null:'14:30:00',release_datetime_utc:i===2?null:'2026-10-28T18:30:00Z',source_timezone:'America/New_York',meeting_start_date:'2026-10-27',meeting_end_date:'2026-10-28',date_status:'confirmed',time_status:i===2?'unconfirmed':'confirmed',source_link:'https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm',document_status:'not_available',document_url:null}));
+ vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>({start_date:'2026-10-26',end_date:'2026-11-01',events:fed,automatic_refresh_supported:false})})));
+ render(<CalendarPage/>);
+ const button=await screen.findByRole('button',{name:tText(names[0])});
+ expect(screen.getByRole('button',{name:tText(names[1])})).toBeInTheDocument();
+ expect(screen.getByRole('button',{name:tText(names[2])})).toBeInTheDocument();
+ expect(nextInstant([fed[2]],new Date(NOW))).toBe(Infinity);
+ expect(filterEvents(fed,new Set([3]),false,new Set(['financial']))).toHaveLength(2);
+ fireEvent.click(button);
+ expect(screen.getByText(tText('Actual, Previous, Forecast and numerical comparisons do not apply to this event.'))).toBeInTheDocument();
+ expect(screen.getByText(tText('No official document is linked yet. Document availability does not determine whether the event took place.'))).toBeInTheDocument();
+ expect(screen.queryByText(tText('Awaiting data'))).not.toBeInTheDocument();
+ expect(screen.getByText(/2026-10-27.*2026-10-28/)).toBeInTheDocument();
+ fireEvent.keyDown(document.querySelector('.agenda-detail')!,{key:'Escape'});
+ expect(button).toHaveFocus();
+ fireEvent.click(screen.getByLabelText(/Only|Tylko/));
+ expect(screen.queryByRole('button',{name:tText(names[1])})).not.toBeInTheDocument();
+ expect(screen.getByRole('button',{name:tText(names[2])})).toBeInTheDocument();
+});
+
 
 test('main Calendar and old route keep the Monday-Sunday range with one shared column header',async()=>{
  mockApi();location.hash='#/overview/calendar';render(<App/>);await screen.findByRole('button',{name:'CPI MoM (Sep)'});

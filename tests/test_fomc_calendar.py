@@ -69,7 +69,8 @@ def test_refresh_is_durable_repeatable_and_failed_refresh_keeps_last_schedule(tm
         first = sync_schedule(client, path, tmp_path / "raw", now)
         assert sync_schedule(client, path, tmp_path / "raw", now) == first
     assert len(first["events"]) == 1
-    assert len(list((tmp_path / "raw").glob("*/*.htm.json"))) == 4
+    # Main calendar, meeting month and following month (independent Minutes date).
+    assert len(list((tmp_path / "raw").glob("*/*.htm.json"))) == 6
     assert fomc.read_schedule(path)["status"] == "available"
     original = path.read_bytes()
     with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200, text="No calendar"))) as client:

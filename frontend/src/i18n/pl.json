@@ -2024,5 +2024,22 @@
   "official_ism_calendar_and_month_rule": "Oficjalny kalendarz ISM i zasada miesiąca odniesienia",
   "reviewed_ism_calendar_and_month_rule": "Sprawdzony kalendarz ISM i zasada miesiąca odniesienia",
   "explicit_next_ism_report": "Jawna zapowiedź kolejnego raportu ISM",
-  "MacroLens Overview stars: key editorial events, including both ISM PMI reports, = 3; tracked editorial events (Retail Sales and weekly Claims) = 2. Otherwise source importance maps high = 3, medium = 2, low = 1; unknown importance is unavailable. Editorial tiers take precedence without changing source classes. This is not an Investing.com rating or a forecast of market impact.": "Gwiazdki w Overview MacroLens: kluczowe wydarzenia redakcyjne, w tym oba raporty ISM PMI, = 3; wyróżnione publikacje (sprzedaż detaliczna i tygodniowe wnioski o zasiłek) = 2. W pozostałych przypadkach ważność źródłowa: high = 3, medium = 2, low = 1; nieznana ważność pozostaje niedostępna. Priorytety redakcyjne mają pierwszeństwo bez zmiany klas źródłowych. Nie jest to ocena Investing.com ani prognoza wpływu na rynek."
+  "MacroLens Overview stars: key editorial events, including both ISM PMI reports, = 3; tracked editorial events (Retail Sales and weekly Claims) = 2. Otherwise source importance maps high = 3, medium = 2, low = 1; unknown importance is unavailable. Editorial tiers take precedence without changing source classes. This is not an Investing.com rating or a forecast of market impact.": "Gwiazdki w Overview MacroLens: kluczowe wydarzenia redakcyjne, w tym oba raporty ISM PMI, = 3; wyróżnione publikacje (sprzedaż detaliczna i tygodniowe wnioski o zasiłek) = 2. W pozostałych przypadkach ważność źródłowa: high = 3, medium = 2, low = 1; nieznana ważność pozostaje niedostępna. Priorytety redakcyjne mają pierwszeństwo bez zmiany klas źródłowych. Nie jest to ocena Investing.com ani prognoza wpływu na rynek.",
+  "FOMC Press Conference": "Konferencja prasowa FOMC",
+  "FOMC Meeting Minutes": "Protokół FOMC",
+  "Fed Economic Projections (SEP)": "Projekcje gospodarcze Fed (SEP)",
+  "Official FOMC press conference; a transcript may be published later.": "Oficjalna konferencja prasowa FOMC; transkrypt może zostać opublikowany później.",
+  "Official minutes of the linked FOMC meeting.": "Oficjalny protokół powiązanego posiedzenia FOMC.",
+  "Official economic projections; the dot plot is part of SEP.": "Oficjalne projekcje gospodarcze; dot plot jest częścią SEP.",
+  "Linked FOMC meeting": "Powiązane posiedzenie FOMC",
+  "Schedule confirmation": "Potwierdzenie terminu",
+  "Publisher timezone": "Strefa czasowa wydawcy",
+  "Publication date source": "Źródło daty publikacji",
+  "Official event document": "Oficjalny dokument wydarzenia",
+  "No official document is linked yet. Document availability does not determine whether the event took place.": "Nie ma jeszcze odnośnika do oficjalnego dokumentu. Dostępność dokumentu nie rozstrzyga, czy wydarzenie się odbyło.",
+  "Actual, Previous, Forecast and numerical comparisons do not apply to this event.": "Aktualny, Poprzednio, Prognoza i porównania liczbowe nie dotyczą tego wydarzenia.",
+  "This schedule was confirmed by a one-time review of the official publisher page; automatic access remains unavailable.": "Termin potwierdzono podczas jednorazowego sprawdzenia oficjalnej strony wydawcy; automatyczny dostęp pozostaje niedostępny.",
+  "Official schedule evidence conflicts; the date shown comes from FRED and no official time or period is assigned.": "Oficjalne dowody harmonogramu są sprzeczne; pokazana data pochodzi z FRED, bez przypisania oficjalnej godziny ani okresu.",
+  "G.17 annual revision": "G.17 — roczna rewizja",
+  "Annual revision of industrial production and capacity utilization history; no single monthly reading is assigned.": "Roczna rewizja historii produkcji przemysłowej i wykorzystania mocy; nie przypisano pojedynczego odczytu miesięcznego."
 }

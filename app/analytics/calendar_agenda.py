@@ -23,7 +23,7 @@ def validate_range(start,end):
 def scoped_check(checks,start,end,events,policy):
     sources=[]
     required={'fred:calendar','fed:calendar'}|event_resources(events)
-    if any(e.get('release_id') in (50,10,46,11,192,9,13) for e in events):required.add('calendar:periods')
+    if any((e.get('schedule_provenance') and e.get('release_id') is not None) or e.get('release_id') in (50,10,46,11,192,9,13) for e in events):required.add('calendar:periods')
     for original in checks['sources']:
         if original['resource'] not in required:continue
         row=dict(original);scope=row.get('scope',{});state=row['status']
@@ -32,7 +32,7 @@ def scoped_check(checks,start,end,events,policy):
             if not(covered_scope.get('start_date','9999')<=str(start) and covered_scope.get('end_date','')>=str(end)):
                 state='partial';row['scope_error']='selected_range_not_checked'
         if row['resource']=='fed:calendar':
-            relevant=[e for e in events if e.get('event_type')=='fomc_decision']
+            relevant=[e for e in events if str(e.get('event_type','')).startswith('fomc_')]
             missing=[e['release_date'] for e in relevant if not e.get('release_datetime_utc')]
             errors=[t['release_date'] for t in scope.get('time_checks',[]) if t['fetch_status']=='error' and str(start)<=t['release_date']<=str(end)]
             dates=scope.get('dates',[])
@@ -64,7 +64,7 @@ def calendar_agenda(start=None,end=None,now=None,category=None):
             data=release_calendar.list_calendar_events(start,end,category)
             data['events']=load_results(data['events'],start,end,now,connection)
             resources=event_resources(data['events'])
-            if any(e.get('release_id') in (50,10,46,11,192,9,13) for e in data['events']):resources.add('calendar:periods')
+            if any((e.get('schedule_provenance') and e.get('release_id') is not None) or e.get('release_id') in (50,10,46,11,192,9,13) for e in data['events']):resources.add('calendar:periods')
             checks=load_source_checks(start,resources,end)
             with connection.cursor() as cursor:
                 cursor.execute("SELECT publication_id FROM overview_refresh_state WHERE id=1")

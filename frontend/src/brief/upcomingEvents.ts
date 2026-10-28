@@ -6,6 +6,8 @@ import { formatPolandTime, shiftDate } from "../calendar/calendarDates";
 // Editorial selection order only; the calendar's importance metadata is unchanged.
 export const overviewEventPriorities = [
   { key: "fomc", aliases: ["FOMC policy decision"], priority: "Key event" },
+  { key: "fomc_press_conference", aliases: ["FOMC Press Conference"], priority: "Key event" },
+  { key: "fomc_sep", aliases: ["Fed Economic Projections (SEP)"], priority: "Key event" },
   { key: "employment", aliases: ["Employment Situation"], priority: "Key event" },
   { key: "cpi", aliases: ["Consumer Price Index"], priority: "Key event" },
   { key: "pce", aliases: ["Personal Income and Outlays"], priority: "Key event" },
@@ -14,9 +16,10 @@ export const overviewEventPriorities = [
   { key: "ism_services", aliases: ["ISM Services PMI"], priority: "Key event" },
   { key: "retail", aliases: ["Advance Monthly Sales for Retail and Food Services"], priority: "Tracked event" },
   { key: "claims", aliases: ["Unemployment Insurance Weekly Claims Report"], priority: "Tracked event" },
+  { key: "fomc_minutes", aliases: ["FOMC Meeting Minutes"], priority: "Tracked event" },
 ] as const;
 export function eventPriority(event: CalendarEvent) {
-  return event.event_type === "fomc_decision" ? overviewEventPriorities[0] : overviewEventPriorities.find(rule => (rule.aliases as readonly string[]).includes(event.release_name));
+  return event.event_type === "fomc_decision" ? overviewEventPriorities[0] : overviewEventPriorities.find(rule => rule.key===event.event_type || (rule.aliases as readonly string[]).includes(event.release_name));
 }
 export function eventInstant(event: CalendarEvent): number | null {
   const instant = event.release_datetime_utc ? Date.parse(event.release_datetime_utc) : NaN;
@@ -27,6 +30,7 @@ export function eventDay(event: CalendarEvent): string {
   return instant === null ? event.release_date : warsawDate(new Date(instant));
 }
 export function eventIdentity(event: CalendarEvent): string {
+  if(event.event_type?.startsWith('fomc_')&&event.event_type!=='fomc_decision'&&event.event_id)return event.event_id;
   return `${eventPriority(event)?.key ?? event.release_id ?? event.event_id ?? event.release_name}|${eventDay(event)}`;
 }
 export function eventDateLabel(event: CalendarEvent): string {

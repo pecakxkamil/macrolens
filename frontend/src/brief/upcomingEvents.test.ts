@@ -15,9 +15,20 @@ afterEach(() => setLanguage("en"));
 test.each(overviewEventPriorities)("explicit alias for $key has its configured priority", rule => {
   expect(eventPriority(event(rule.aliases[0]))).toBe(rule);
 });
-test("unknown, PMI, FOMC minutes and partial source names are not promoted", () => {
+test("unknown, PMI, noncanonical FOMC minutes and partial source names are not promoted", () => {
   for (const name of ["ISM PMI", "CPI", "Consumer Price Index details", "FOMC minutes", "H.15 Selected Interest Rates"]) expect(eventPriority(event(name))).toBeUndefined();
   expect(eventPriority(event("Official policy meeting", "2026-10-20", {event_type: "fomc_decision"}))?.key).toBe("fomc");
+});
+
+test('Fed event types have shared stars, separate identities and the four-event Overview limit',()=>{
+ const decision=event('FOMC policy decision','2026-10-21',{event_type:'fomc_decision',release_id:null});
+ const related:CalendarEvent[]=(['fomc_press_conference','fomc_sep','fomc_minutes'] as const).map((kind,i)=>event(kind,'2026-10-21',{event_id:`meeting:${kind}`,event_type:kind,release_id:null,expects_numeric_result:false,release_datetime_utc:i===1?null:`2026-10-21T${i===0?'18:30':'19:00'}:00Z`}));
+ expect(related.map(eventImportanceStars)).toEqual([3,3,2]);
+ const selected=overviewUpcomingEvents(data([decision,...related,related[0],event('Consumer Price Index')]),now);
+ expect(selected.selected).toHaveLength(4);
+ expect(selected.selected.filter(e=>e.event_type==='fomc_press_conference')).toHaveLength(1);
+ expect(selected.selected.some(e=>e.event_type==='fomc_sep')).toBe(true);
+ expect(selected.remaining.some(e=>e.event_type==='fomc_minutes')).toBe(true);
 });
 
 test('both exact ISM reports share editorial stars across Overview and Calendar without changing the four-event limit',()=>{

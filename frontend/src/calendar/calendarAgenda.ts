@@ -18,7 +18,7 @@ export function rangeError(start:string,end:string):string|null {
 }
 export const calendarCategories=[{id:'labor',label:'Labor'},{id:'inflation',label:'Inflation'},{id:'activity',label:'Growth and consumer'},{id:'housing',label:'Housing'},{id:'financial',label:'Fed and financial conditions'}];
 export function eventCategories(event:CalendarEvent):string[]{
- if(event.event_type==='fomc_decision')return ['financial'];
+ if(event.event_type?.startsWith('fomc_'))return ['financial'];
  return [...new Set(event.series.map(s=>['growth','consumer'].includes(s.category)?'activity':['financial_conditions','financial'].includes(s.category)?'financial':s.category))];
 }
 export function filterEvents(events:CalendarEvent[],stars:Set<number>,unknown:boolean,categories:Set<string>){return events.filter(e=>{const level=eventImportanceStars(e);return (level===null?unknown:stars.has(level))&&(categories.size===0||eventCategories(e).some(c=>categories.has(c)));});}

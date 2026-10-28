@@ -32,7 +32,7 @@ def read_schedule(path=None):
 def policy_outlook(now):
     schedule = read_schedule()
     eastern_day = now.astimezone(ZoneInfo("America/New_York")).date().isoformat()
-    future = [event for event in schedule["events"] if event["release_date"] >= eastern_day
+    future = [event for event in schedule["events"] if event.get('event_type') == 'fomc_decision' and event["release_date"] >= eastern_day
               and (not event["release_datetime_utc"] or datetime.fromisoformat(event["release_datetime_utc"]) > now)]
     next_event = min(future, key=lambda event: event["release_date"], default=None)
     return {"schedule_status": schedule["status"] if next_event or not schedule["events"] else "exhausted",

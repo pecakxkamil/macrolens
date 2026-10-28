@@ -152,8 +152,8 @@ def refresh_sources(connection, previous, now):
                     with httpx.Client(timeout=20, follow_redirects=True, headers={'User-Agent':'MacroLens calendar refresh'}) as client:
                         payload = sync_schedule(client)
                     unknown = [e['release_date'] for e in payload['events'] if e['release_date'] >= str(today) and not e['release_time']]
-                    result = {'resource':resource,'status':'partial' if unknown else 'success',
-                              'missing_times':unknown, 'scope':'meeting dates; explicitly published decision times'}
+                    result = {'resource':resource,'status':'partial' if unknown or payload.get('page_errors') else 'success',
+                              'missing_times':unknown, 'scope':'FOMC decisions, conferences, Minutes and SEP; independently confirmed event times'}
             versions[resource] = {'attempted_at':now.isoformat(), **({'start_date':str(sync_start),'end_date':str(sync_end)} if resource=='fred:calendar' else {})}
             results.append(result)
         except Exception:

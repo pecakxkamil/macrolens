@@ -283,6 +283,265 @@
       "retrieval_method": "official_page_read_via_web_tool",
       "capture_path": "data/raw/calendar-key-2026-10-27/bls-october-web-capture.json",
       "review_note": "One-time review of the saved official page response. Backend HTTP remains 403; this is not an automatic fetch or result evidence."
+    },
+    {
+      "release_id": 50,
+      "series_ids": [
+        "PAYEMS",
+        "UNRATE",
+        "CES0500000003"
+      ],
+      "release_date": "2026-11-06",
+      "reference_period": "2026-10-01",
+      "estimate_stage": null,
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+      "retrieved_at": "2026-10-27T19:56:05+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "confirmation_type": "one_time_official_review",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "reviewed_scope": {
+        "release_from": "2026-10-27",
+        "release_through": "2027-01-31"
+      },
+      "corroborating_sources": [],
+      "review_note": "One-time review of explicit official BLS rows. Backend January schedule request returned HTTP 403; this is not a successful automatic sync or a raw document import. No schedule RAW/hash is claimed. Only the reviewed October-January horizon is retained."
+    },
+    {
+      "release_id": 50,
+      "series_ids": [
+        "PAYEMS",
+        "UNRATE",
+        "CES0500000003"
+      ],
+      "release_date": "2026-12-04",
+      "reference_period": "2026-11-01",
+      "estimate_stage": null,
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+      "retrieved_at": "2026-10-27T19:56:05+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "confirmation_type": "one_time_official_review",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "reviewed_scope": {
+        "release_from": "2026-10-27",
+        "release_through": "2027-01-31"
+      },
+      "corroborating_sources": [],
+      "review_note": "One-time review of explicit official BLS rows. Backend January schedule request returned HTTP 403; this is not a successful automatic sync or a raw document import. No schedule RAW/hash is claimed. Only the reviewed October-January horizon is retained."
+    },
+    {
+      "release_id": 50,
+      "series_ids": [
+        "PAYEMS",
+        "UNRATE",
+        "CES0500000003"
+      ],
+      "release_date": "2027-01-08",
+      "reference_period": "2026-12-01",
+      "estimate_stage": null,
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+      "retrieved_at": "2026-10-27T19:56:05+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "confirmation_type": "one_time_official_review",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "reviewed_scope": {
+        "release_from": "2026-10-27",
+        "release_through": "2027-01-31"
+      },
+      "corroborating_sources": [
+        "https://www.bls.gov/schedule/2027/01_sched_list.htm"
+      ],
+      "review_note": "One-time review of explicit official BLS rows. Backend January schedule request returned HTTP 403; this is not a successful automatic sync or a raw document import. No schedule RAW/hash is claimed. Only the reviewed October-January horizon is retained."
+    },
+    {
+      "release_id": 10,
+      "series_ids": [
+        "CPIAUCSL",
+        "CPILFESL"
+      ],
+      "release_date": "2026-11-10",
+      "reference_period": "2026-10-01",
+      "estimate_stage": null,
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+      "retrieved_at": "2026-10-27T19:56:05+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "confirmation_type": "one_time_official_review",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "reviewed_scope": {
+        "release_from": "2026-10-27",
+        "release_through": "2027-01-31"
+      },
+      "corroborating_sources": [],
+      "review_note": "One-time review of explicit official BLS rows. Backend January schedule request returned HTTP 403; this is not a successful automatic sync or a raw document import. No schedule RAW/hash is claimed. Only the reviewed October-January horizon is retained."
+    },
+    {
+      "release_id": 10,
+      "series_ids": [
+        "CPIAUCSL",
+        "CPILFESL"
+      ],
+      "release_date": "2026-12-10",
+      "reference_period": "2026-11-01",
+      "estimate_stage": null,
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+      "retrieved_at": "2026-10-27T19:56:05+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "confirmation_type": "one_time_official_review",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "reviewed_scope": {
+        "release_from": "2026-10-27",
+        "release_through": "2027-01-31"
+      },
+      "corroborating_sources": [],
+      "review_note": "One-time review of explicit official BLS rows. Backend January schedule request returned HTTP 403; this is not a successful automatic sync or a raw document import. No schedule RAW/hash is claimed. Only the reviewed October-January horizon is retained."
+    },
+    {
+      "release_id": 10,
+      "series_ids": [
+        "CPIAUCSL",
+        "CPILFESL"
+      ],
+      "release_date": "2027-01-13",
+      "reference_period": "2026-12-01",
+      "estimate_stage": null,
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/news_release/cpi.htm",
+      "retrieved_at": "2026-10-27T19:56:05+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "confirmation_type": "one_time_official_review",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "reviewed_scope": {
+        "release_from": "2026-10-27",
+        "release_through": "2027-01-31"
+      },
+      "corroborating_sources": [
+        "https://www.bls.gov/schedule/2027/01_sched_list.htm"
+      ],
+      "review_note": "One-time review of explicit official BLS rows. Backend January schedule request returned HTTP 403; this is not a successful automatic sync or a raw document import. No schedule RAW/hash is claimed. Only the reviewed October-January horizon is retained."
+    },
+    {
+      "release_id": 46,
+      "series_ids": [
+        "PPIFIS"
+      ],
+      "release_date": "2026-11-13",
+      "reference_period": "2026-10-01",
+      "estimate_stage": null,
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/news_release/ppi.htm",
+      "retrieved_at": "2026-10-27T19:56:05+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "confirmation_type": "one_time_official_review",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "reviewed_scope": {
+        "release_from": "2026-10-27",
+        "release_through": "2027-01-31"
+      },
+      "corroborating_sources": [],
+      "review_note": "One-time review of explicit official BLS rows. Backend January schedule request returned HTTP 403; this is not a successful automatic sync or a raw document import. No schedule RAW/hash is claimed. Only the reviewed October-January horizon is retained."
+    },
+    {
+      "release_id": 46,
+      "series_ids": [
+        "PPIFIS"
+      ],
+      "release_date": "2026-12-15",
+      "reference_period": "2026-11-01",
+      "estimate_stage": null,
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/news_release/ppi.htm",
+      "retrieved_at": "2026-10-27T19:56:05+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "confirmation_type": "one_time_official_review",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "reviewed_scope": {
+        "release_from": "2026-10-27",
+        "release_through": "2027-01-31"
+      },
+      "corroborating_sources": [],
+      "review_note": "One-time review of explicit official BLS rows. Backend January schedule request returned HTTP 403; this is not a successful automatic sync or a raw document import. No schedule RAW/hash is claimed. Only the reviewed October-January horizon is retained."
+    },
+    {
+      "release_id": 46,
+      "series_ids": [
+        "PPIFIS"
+      ],
+      "release_date": "2027-01-14",
+      "reference_period": "2026-12-01",
+      "estimate_stage": null,
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/news_release/ppi.htm",
+      "retrieved_at": "2026-10-27T19:56:05+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "confirmation_type": "one_time_official_review",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "reviewed_scope": {
+        "release_from": "2026-10-27",
+        "release_through": "2027-01-31"
+      },
+      "corroborating_sources": [
+        "https://www.bls.gov/schedule/2027/01_sched_list.htm"
+      ],
+      "review_note": "One-time review of explicit official BLS rows. Backend January schedule request returned HTTP 403; this is not a successful automatic sync or a raw document import. No schedule RAW/hash is claimed. Only the reviewed October-January horizon is retained."
+    },
+    {
+      "release_id": 11,
+      "series_ids": [
+        "ECIALLCIV"
+      ],
+      "release_date": "2026-10-30",
+      "reference_period": "2026-07-01",
+      "estimate_stage": null,
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/news_release/eci.htm",
+      "retrieved_at": "2026-10-27T19:56:05+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "confirmation_type": "one_time_official_review",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "reviewed_scope": {
+        "release_from": "2026-10-27",
+        "release_through": "2027-01-31"
+      },
+      "corroborating_sources": [],
+      "review_note": "One-time review of explicit official BLS rows. Backend January schedule request returned HTTP 403; this is not a successful automatic sync or a raw document import. No schedule RAW/hash is claimed. Only the reviewed October-January horizon is retained."
+    },
+    {
+      "release_id": 11,
+      "series_ids": [
+        "ECIALLCIV"
+      ],
+      "release_date": "2027-01-29",
+      "reference_period": "2026-10-01",
+      "estimate_stage": null,
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "source_url": "https://www.bls.gov/schedule/news_release/eci.htm",
+      "retrieved_at": "2026-10-27T19:56:05+00:00",
+      "binding_method": "reviewed_official_schedule",
+      "confirmation_type": "one_time_official_review",
+      "retrieval_method": "official_page_read_via_web_tool",
+      "reviewed_scope": {
+        "release_from": "2026-10-27",
+        "release_through": "2027-01-31"
+      },
+      "corroborating_sources": [
+        "https://www.bls.gov/schedule/2027/01_sched_list.htm"
+      ],
+      "review_note": "One-time review of explicit official BLS rows. Backend January schedule request returned HTTP 403; this is not a successful automatic sync or a raw document import. No schedule RAW/hash is claimed. Only the reviewed October-January horizon is retained."
     }
   ],
   "rules": [

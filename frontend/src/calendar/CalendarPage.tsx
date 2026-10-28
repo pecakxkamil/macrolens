@@ -26,14 +26,24 @@ function fallbackMeasures(event:CalendarEvent):CalendarMeasure[]{return event.se
 function calendarMissingReason(reason:string){return ({ism_report_not_confirmed:'No validated ISM document matches this report month; an older report is not a new result.',revised_permits_provider_pending:'Census has published the revised permits, but a matching result has not yet been confirmed in FRED.',publication_stage_unconfirmed:'The revised publication stage has not been confirmed; the stored value is not assigned to it.',publisher_result_not_confirmed:'The stored snapshot predates this publication; a new result has not been confirmed.',claims_weeks_not_confirmed:'No official report or schedule confirms the separate claims weeks for this publication.',release_mapping_not_supported:'This publication has no supported series and transformation mapping.',publisher_schedule_no_matching_period:'No unambiguous matching period was found in the stored publisher schedules.',not_yet_published:'This confirmed period has not yet been published.',reference_period_unconfirmed:'No publisher evidence confirms the reference period for this event.',observation_missing:'No stored observation is available for the required period.',transformation_dependency_missing:'A required prior observation for this transformation is missing.',official_decision_not_available:'No official decision statement is stored for this meeting.',official_prior_decision_not_available:'No preceding official decision statement is stored.'} as Record<string,string>)[reason]??reason;}
 function EventDetails({event,measure,now,check,id,onClose}:{event:CalendarEvent;measure?:CalendarMeasure;now:Date;check:CalendarResponse['check'];id:string;onClose:()=>void}){
  const ism=event.event_type==='ism_report';
- const relevant=check?.sources.filter(s=>s.resource===(ism?'ism:calendar':event.event_type==='fomc_decision'?'fed:calendar':'fred:calendar')||s.resource===`${ism?'ism':'fred'}:${measure?.series_id}`);
+ const fed=event.event_type?.startsWith('fomc_');
+ const relevant=check?.sources.filter(s=>s.resource===(ism?'ism:calendar':fed?'fed:calendar':'fred:calendar')||s.resource===`${ism?'ism':'fred'}:${measure?.series_id}`);
  const ismSource=relevant?.find(s=>s.resource===`ism:${measure?.series_id}`);
  const ismSchedule=relevant?.find(s=>s.resource==='ism:calendar');
  return <tr className="agenda-detail" onKeyDown={e=>{if(e.key==='Escape'){e.stopPropagation();onClose();}}}><td colSpan={8}><div id={id}>
  <strong>{tText(event.release_name)}</strong><p>{tText(event.event_type==='fomc_decision'?'Official Federal Reserve policy decision; final day of the scheduled meeting.':event.description??'One publication may contain several separately measured indicators.')}</p>
  <p>{tText('Publication day')}: {formatCalendarDate(event.release_date)} · {eventInstant(event)!==null?formatPolandTime(event.release_datetime_utc).replace(/ PL$/,''):tText('Time unconfirmed')}{eventInstant(event)===null?` · ${tText('No confirmed publication time is stored; no midnight time is inferred.')}`:''}</p>
  {safeLink(event.source_link)?<a href={event.source_link!} target="_blank" rel="noreferrer">{tText('Publication source')}</a>:null}
+ {event.schedule_provenance?.confirmation_type==='one_time_official_review'?<p>{tText('This schedule was confirmed by a one-time review of the official publisher page; automatic access remains unavailable.')}</p>:null}
+ {event.schedule_status==='conflict'?<p>{tText('Official schedule evidence conflicts; the date shown comes from FRED and no official time or period is assigned.')}</p>:null}
  {safeLink(event.time_source_url)?<p><a href={event.time_source_url!} target="_blank" rel="noreferrer">{tText('Publication time source')}</a>{event.time_rule?` · ${event.time_rule.time} ${event.time_rule.source_timezone} · ${event.time_rule.valid_from} – ${event.time_rule.valid_through}`:''}</p>:null}
+ {fed&&event.expects_numeric_result===false?<>
+ <p>{tText('Linked FOMC meeting')}: {event.meeting_start_date} – {event.meeting_end_date}</p>
+ <p>{tText('Schedule confirmation')}: {tText(event.date_status==='confirmed'?'Confirmed':'Not confirmed')} · {tText('Publisher timezone')}: {event.source_timezone??'America/New_York'}</p>
+ {safeLink(event.date_source_url)?<p><a href={event.date_source_url!} target="_blank" rel="noreferrer">{tText('Publication date source')}</a></p>:null}
+ <p>{safeLink(event.document_url)?<a href={event.document_url!} target="_blank" rel="noreferrer">{tText('Official event document')}</a>:tText('No official document is linked yet. Document availability does not determine whether the event took place.')}</p>
+ {event.schedule_provenance?<p>{tText('Retrieved')}: {availabilityTime(event.schedule_provenance.retrieved_at)} · {tText('Document hash')}: {event.schedule_provenance.raw_hash}</p>:null}
+ </>:null}
  <ul>{relevant?.map(source=><li key={source.resource}>{tText(source.label)}: {tText(checkStatusLabel(source.range_status))}{source.checked_at?` · ${availabilityTime(source.checked_at)}`:''}</li>)}</ul>
  {measure?<div className="agenda-measure-detail"><strong>{tText(measure.label)}</strong>{measure.definition?<p>{tText(measure.definition)}</p>:null}
  <p>{measure.series_id} · {tText('Measure')}: {measure.feature_name} · {tText(measure.unit)}. {tText('Observation period')}: {measure.reference_period?formatObservationDate(measure.reference_period,measure.frequency):tText('Reference period unconfirmed')}.</p>
@@ -59,7 +69,7 @@ function EventDetails({event,measure,now,check,id,onClose}:{event:CalendarEvent;
  {measure.effective_date?<p>{tText('Decision effective date')}: {formatCalendarDate(measure.effective_date)}</p>:null}
  {measure.previous_effective_date?<p>{tText('Previous decision effective date')}: {formatCalendarDate(measure.previous_effective_date)}</p>:null}
  {(['actual','previous'] as const).map(kind=>{const proof=kind==='actual'?measure.actual_provenance:measure.previous_provenance;return proof?<p key={kind}>{tText(kind==='actual'?'Actual source':'Previous source')}: <a href={safeLink(String(proof.source_url??''))??undefined} target="_blank" rel="noreferrer">{tText(String(proof.version??'Official announcement'))}</a>{proof.vintage_date?` \u00b7 ${tText('Vintage date')}: ${proof.vintage_date}`:''}{proof.as_of?` \u00b7 ${tText('As of')}: ${proof.as_of}`:''}{proof.document_published_at?` \u00b7 ${tText('Document publication time')}: ${availabilityTime(String(proof.document_published_at))}`:''}{proof.retrieved_at?` \u00b7 ${tText('Retrieved')}: ${availabilityTime(String(proof.retrieved_at))}`:''}{proof.raw_hash?` \u00b7 ${tText('Document hash')}: ${proof.raw_hash}`:''}</p>:null;})}
- <p>{tText(comparableForecast(measure)?'Forecast is the consensus for this publication, period and measure.':'No integrated consensus source')}.</p></div>:<p>{tText('No numerical result')}</p>}
+ <p>{tText(comparableForecast(measure)?'Forecast is the consensus for this publication, period and measure.':'No integrated consensus source')}.</p></div>:<p>{tText(event.expects_numeric_result===false?'Actual, Previous, Forecast and numerical comparisons do not apply to this event.':'No numerical result')}</p>}
  </div></td></tr>;
 }
 function AgendaRow({event,measure,now,next,showCountdown,expanded,toggle,check,rowId}:{event:CalendarEvent;measure?:CalendarMeasure;now:Date;next:number;showCountdown:boolean;expanded:boolean;toggle:()=>void;check:CalendarResponse['check'];rowId:string}){
@@ -74,9 +84,9 @@ function AgendaRow({event,measure,now,next,showCountdown,expanded,toggle,check,r
  <th scope="row"><button type="button" id={buttonId} className="agenda-measure-name" aria-expanded={expanded} aria-controls={expanded?detailId:undefined} onClick={toggle}>{name}{period?` (${period})`:''}</button>{remaining?<small>{remaining}</small>:null}</th>
  <td className="agenda-stars"><span role="img" aria-label={tLabel(stars===null?'Importance unavailable':`Importance ${stars} of 3`)}>{stars===null?'\u2014':'\u2605'.repeat(stars)}</span></td>
  <td className="agenda-number agenda-secondary" data-label={tLabel('Forecast')}>{measure?compactMeasureValue(forecast,measure.unit):'\u2014'}</td>
- <td className="agenda-difference" data-label={tLabel('vs forecast')}>{vsForecast?<ComparisonTooltip comparison={vsForecast}/>:null}</td>
+ <td className="agenda-difference" data-label={tLabel('vs forecast')}>{vsForecast?<ComparisonTooltip comparison={vsForecast}/>:event.expects_numeric_result===false?'—':null}</td>
  <td className="agenda-number agenda-actual" data-label={tLabel('Actual')}>{measure?calendarReadingValue(measure,'actual'):'\u2014'}</td>
- <td className="agenda-difference" data-label={tLabel('vs previous')}>{vsPrevious?<ComparisonTooltip comparison={vsPrevious}/>:null}</td>
+ <td className="agenda-difference" data-label={tLabel('vs previous')}>{vsPrevious?<ComparisonTooltip comparison={vsPrevious}/>:event.expects_numeric_result===false?'—':null}</td>
  <td className="agenda-number agenda-secondary" data-label={tLabel('Previous')}>{measure?calendarReadingValue(measure,'previous'):'\u2014'}</td></tr>
  {expanded?<EventDetails event={event} measure={measure} now={now} check={check} id={detailId} onClose={close}/>:null}</Fragment>;
 }
