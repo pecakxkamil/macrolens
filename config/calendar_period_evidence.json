@@ -542,6 +542,46 @@
         "https://www.bls.gov/schedule/2027/01_sched_list.htm"
       ],
       "review_note": "One-time review of explicit official BLS rows. Backend January schedule request returned HTTP 403; this is not a successful automatic sync or a raw document import. No schedule RAW/hash is claimed. Only the reviewed October-January horizon is retained."
+    },
+    {
+      "release_id": 46,
+      "series_ids": [
+        "PPIFIS",
+        "PPIFES",
+        "WPSFD49116",
+        "PPIFID",
+        "PPICOR",
+        "WPUFD49116"
+      ],
+      "release_date": "2026-07-15",
+      "reference_period": "2026-06-01",
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "binding_method": "reviewed_official_schedule",
+      "source_url": "https://www.bls.gov/news.release/archives/ppi_07152026.htm",
+      "retrieved_at": "2026-10-28T11:50:56.610568+00:00",
+      "confirmation_type": "one_time_official_review",
+      "retrieval_method": "Official BLS release header and report month reviewed with web tool; direct HTTP remains 403. No original response bytes or hash are claimed."
+    },
+    {
+      "release_id": 46,
+      "series_ids": [
+        "PPIFIS",
+        "PPIFES",
+        "WPSFD49116",
+        "PPIFID",
+        "PPICOR",
+        "WPUFD49116"
+      ],
+      "release_date": "2026-08-13",
+      "reference_period": "2026-07-01",
+      "release_time": "08:30:00",
+      "source_timezone": "America/New_York",
+      "binding_method": "reviewed_official_schedule",
+      "source_url": "https://www.bls.gov/news.release/archives/ppi_08132026.htm",
+      "retrieved_at": "2026-10-28T11:50:56.610568+00:00",
+      "confirmation_type": "one_time_official_review",
+      "retrieval_method": "Official BLS release header and report month reviewed with web tool; direct HTTP remains 403. No original response bytes or hash are claimed."
     }
   ],
   "rules": [

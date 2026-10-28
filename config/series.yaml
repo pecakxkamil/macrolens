@@ -443,3 +443,68 @@ RSFSDP:
   transformations:
     - level
   revision_tracking: true
+
+PPIFES:
+  name: "Producer Price Index by Commodity: Final Demand: Final Demand Less Foods and Energy"
+  short_name: "Final Demand Less Foods and Energy"
+  category: inflation
+  frequency: monthly
+  unit: index
+  fred_units: "Index Apr 2010=100"
+  seasonal_adjustment: Seasonally Adjusted
+  source: US Bureau of Labor Statistics via FRED
+  transformations:
+    - mom
+  revision_tracking: true
+
+WPSFD49116:
+  name: "Producer Price Index by Commodity: Final Demand: Final Demand Less Foods, Energy, and Trade Services"
+  short_name: "Final Demand Less Foods, Energy, and Trade Services"
+  category: inflation
+  frequency: monthly
+  unit: index
+  fred_units: "Index Aug 2013=100"
+  seasonal_adjustment: Seasonally Adjusted
+  source: US Bureau of Labor Statistics via FRED
+  transformations:
+    - mom
+  revision_tracking: true
+
+PPIFID:
+  name: "Producer Price Index by Commodity: Final Demand"
+  short_name: "Final Demand"
+  category: inflation
+  frequency: monthly
+  unit: index
+  fred_units: "Index Nov 2009=100"
+  seasonal_adjustment: Not Seasonally Adjusted
+  source: US Bureau of Labor Statistics via FRED
+  transformations:
+    - yoy
+  revision_tracking: true
+
+PPICOR:
+  name: "Producer Price Index by Commodity: Final Demand: Final Demand Less Foods and Energy"
+  short_name: "Final Demand Less Foods and Energy"
+  category: inflation
+  frequency: monthly
+  unit: index
+  fred_units: "Index Apr 2010=100"
+  seasonal_adjustment: Not Seasonally Adjusted
+  source: US Bureau of Labor Statistics via FRED
+  transformations:
+    - yoy
+  revision_tracking: true
+
+WPUFD49116:
+  name: "Producer Price Index by Commodity: Final Demand: Final Demand Less Foods, Energy, and Trade Services"
+  short_name: "Final Demand Less Foods, Energy, and Trade Services"
+  category: inflation
+  frequency: monthly
+  unit: index
+  fred_units: "Index Aug 2013=100"
+  seasonal_adjustment: Not Seasonally Adjusted
+  source: US Bureau of Labor Statistics via FRED
+  transformations:
+    - yoy
+  revision_tracking: true

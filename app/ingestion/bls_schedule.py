@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 
 import httpx
 
+from app.analytics.ppi_measures import PPI_SERIES
 from app.ingestion.request_budget import before_request
 from app.ingestion.sync_fomc_calendar import Tree
 
@@ -19,7 +20,7 @@ from app.ingestion.sync_fomc_calendar import Tree
 GROUPS = {
     'Employment Situation': (50, ['PAYEMS', 'UNRATE', 'CES0500000003'], 'empsit'),
     'Consumer Price Index': (10, ['CPIAUCSL', 'CPILFESL'], 'cpi'),
-    'Producer Price Index': (46, ['PPIFIS'], 'ppi'),
+    'Producer Price Index': (46, list(PPI_SERIES), 'ppi'),
     'Employment Cost Index': (11, ['ECIALLCIV'], 'eci'),
     'Job Openings and Labor Turnover Survey': (192, ['JTSJOL'], 'jolts'),
 }

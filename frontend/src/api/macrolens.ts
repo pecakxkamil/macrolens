@@ -419,6 +419,9 @@ export interface SeriesFeaturesResponse {
 
 export interface CalendarMeasure {
  series_id:string;label:string;feature_name:string;frequency:string;unit:string;definition?:string;
+ year_over_year?:CalendarMeasure;
+ input_unit?:string;seasonal_adjustment?:string;transform_formula?:string;
+ index_inputs?:Record<string,{period:string;level:number;comparison_period:string;comparison_level:number;vintage_date:string}|null>;
  calculation_provenance?:Record<string,{current?:{observation_period:string;vintage_date:string;level:number;unit:string;components:Record<string,number>;source_urls:Record<string,string>}|null;previous?:{observation_period:string;vintage_date:string;level:number;components:Record<string,number>;source_urls:Record<string,string>}|null;formula:string}|null>;
  reference_period:string|null;previous_period:string|null;previous_kind:"previous_period"|"previous_estimate"|"previous_decision";
  actual:number|null;previous:number|null;forecast:number|null;consensus_status:"not_integrated"|"available";

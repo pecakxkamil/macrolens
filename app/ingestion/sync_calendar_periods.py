@@ -27,7 +27,7 @@ SOURCES = {
  'g17': 'https://www.federalreserve.gov/releases/g17/default.htm',
 }
 BLS = {name: (rid, sids) for name, (rid, sids, _) in BLS_GROUPS.items()}
-EVIDENCE_ADAPTER_VERSION=7
+EVIDENCE_ADAPTER_VERSION=8
 G17_METHOD='https://www.federalreserve.gov/releases/g17/OMB/2026/OMB_2026.htm'
 
 

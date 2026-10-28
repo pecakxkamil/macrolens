@@ -17,6 +17,11 @@ FEATURES_BY_SERIES = {
     "CIVPART": ("level", "change_3m", "change_6m", "moving_average_3m"),
     "CES0500000003": ("mom", "yoy", "annualized_3m"),
     "PPIFIS": ("mom",),
+    "PPIFES": ("mom",),
+    "WPSFD49116": ("mom",),
+    "PPIFID": ("yoy",),
+    "PPICOR": ("yoy",),
+    "WPUFD49116": ("yoy",),
     "CPIAUCSL": ("mom", "yoy", "annualized_3m"),
     "CPILFESL": ("mom", "yoy", "annualized_3m"),
     "PCEPI": ("mom", "yoy", "annualized_3m"),
@@ -49,6 +54,9 @@ FEATURES_BY_SERIES = {
 }
 
 YOY_LAG_BY_SERIES = {
+    "PPIFID": 12,
+    "PPICOR": 12,
+    "WPUFD49116": 12,
     "ICSA": 52,
     "CCSA": 52,
     "JTSJOL": 12,
@@ -122,13 +130,16 @@ def calculate_features(
     if "yoy" in feature_names:
         lag = YOY_LAG_BY_SERIES[series_id]
         calculated["yoy"] = ((values / values.shift(lag)) - 1) * 100
+        if series_id in ("PPIFID", "PPICOR", "WPUFD49116"):
+            elapsed = frame["observation_date"].dt.to_period("M").astype("int64").diff(lag)
+            calculated["yoy"] = calculated["yoy"].where(elapsed.eq(12) & (values.shift(lag) > 0) & (values > 0))
     if "mom" in feature_names:
         calculated["mom"] = ((values / values.shift(1)) - 1) * 100
-        if series_id in ("PPIFIS", "RSFSXMV"):
+        if series_id in ("PPIFIS", "RSFSXMV", "PPIFES", "WPSFD49116"):
             # Register the new monthly series without changing legacy v1 features.
             consecutive_month = frame["observation_date"].dt.to_period("M").astype("int64").diff().eq(1)
             calculated["mom"] = calculated["mom"].where(consecutive_month)
-            if series_id == "RSFSXMV":
+            if series_id in ("RSFSXMV", "PPIFES", "WPSFD49116"):
                 calculated["mom"] = calculated["mom"].where(values.shift(1) > 0)
     if "qoq" in feature_names:
         calculated["qoq"] = ((values / values.shift(1)) - 1) * 100

@@ -11,6 +11,7 @@ from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 import pandas as pd
 from app.analytics.features import calculate_features
+from app.analytics.ppi_measures import NEW_PPI_SERIES, PPI_LABELS, inputs as ppi_inputs, expand_ppi_evidence, availability_reason as ppi_availability_reason, decorate_and_fold
 from app.analytics.point_in_time import select_as_of
 from app.analytics.calendar_evidence import read_evidence, period_evidence
 
@@ -24,7 +25,7 @@ SPECS = {
  27:[('HOUST','raw','Housing starts','thousand homes/year (SAAR)'),('PERMIT','raw','Building permits','thousand homes/year (SAAR)')],
  53:[('GDPC1','qoq_annualized','Real GDP QoQ, annualized','percent')],
  180:[('ICSA','raw','Initial jobless claims','claims'),('CCSA','raw','Continuing jobless claims','claims')],
- 9:[('RSAFS','mom','Nominal retail sales MoM','percent'),('RSFSXMV','mom','Retail Sales ex Autos MoM','percent')],46:[('PPIFIS','mom','Producer inflation PPI MoM','percent')],
+ 9:[('RSAFS','mom','Nominal retail sales MoM','percent'),('RSFSXMV','mom','Retail Sales ex Autos MoM','percent')],46:[('PPIFIS','mom','Producer inflation PPI MoM','percent')]+[(sid,'mom' if sid in ('PPIFES','WPSFD49116') else 'yoy',PPI_LABELS[sid],'percent') for sid in ('PPIFES','WPSFD49116','PPIFID','PPICOR','WPUFD49116')],
  13:[('INDPRO','mom','Industrial production MoM','percent'),('TCU','raw','Capacity utilization','percent')],
  192:[('JTSJOL','raw','JOLTS job openings','thousand openings')],97:[('HSN1F','raw','New home sales','thousand homes/year (SAAR)')],
  190:[('MORTGAGE30US','raw','30Y mortgage rate','percent')],219:[('CFNAI','raw','CFNAI','index points')],221:[('NFCI','raw','NFCI','index points')],
@@ -52,6 +53,7 @@ def period_before(day,frequency):
 
 def value_at(sid,feature,points,period,frequency):
     if not period:return None
+    if sid in NEW_PPI_SERIES and ppi_inputs(points,period,feature)[1]:return None
     values={str(p['observation_date']):finite(p['value']) for p in points}
     if feature=='raw':return values.get(period)
     if not values:return None
@@ -77,7 +79,7 @@ def linked_period(rows,event_day,sid):
 
 def bind_events(events,panel,current,now,evidence=None,provider_updates=None,ism_documents=None):
     from app.analytics.retail_measures import expand_retail_evidence, append_control, EX_AUTOS_DEFINITION
-    evidence=expand_retail_evidence(evidence or {})
+    evidence=expand_ppi_evidence(expand_retail_evidence(evidence or {}))
     from app.ingestion.bls_schedule import select_records
     _,bls_conflicts=select_records(evidence.get('periods',[]))
     events=copy.deepcopy(events)
@@ -165,6 +167,10 @@ def bind_events(events,panel,current,now,evidence=None,provider_updates=None,ism
                     revised_reason='revised_permits_provider_pending' if receipt else 'publication_stage_unconfirmed'
             if stage=='revised_permits' and receipt and receipt.get('reported_value') is not None and actual is not None and actual!=finite(receipt['reported_value']):
                 actual=None;version=None;vintage=None;unconfirmed_result=True;revised_reason='revised_permits_provider_pending'
+            ppi_reason=None
+            if rid==46 and sid in NEW_PPI_SERIES and not future:
+                ppi_reason=ppi_availability_reason(sid,current_points,period,event,proof,provider_updates)
+                if ppi_reason:actual=None;version=None;vintage=None
             previous_period=period_before(period,frequency) if period else None
             previous_kind='previous_period'
             prior_snapshot=select_as_of(panel.get(sid,[]),date.fromisoformat(day)-timedelta(days=1))
@@ -190,8 +196,10 @@ def bind_events(events,panel,current,now,evidence=None,provider_updates=None,ism
                 'publication_provenance':receipt if stage=='revised_permits' else None,
                 'actual_provenance':provenance(sid,period,version,next((p for p in current_points if str(p['observation_date'])==period),None) if version=='current_vintage' else vintage,str(now.date()) if version=='current_vintage' else day) if actual is not None else None,
                 'previous_provenance':provenance(sid,previous_period,previous_version,next((p for p in (prior_snapshot if previous_kind=='previous_estimate' else known if previous_version=='stored_date_vintage' else current_points) if str(p['observation_date'])==previous_period),None),str(now.date()) if previous_version=='current_vintage' else day) if previous is not None else None,
-                'missing_reason':{'actual':revised_reason or ('publisher_result_not_confirmed' if unconfirmed_result else 'not_yet_published' if future and period else reason(actual,period,current_points)),'previous':reason(previous,previous_period,current_points)},
+                'missing_reason':{'actual':ppi_reason or revised_reason or ('publisher_result_not_confirmed' if unconfirmed_result else 'not_yet_published' if future and period else reason(actual,period,current_points)),'previous':reason(previous,previous_period,current_points)},
                 'source_url':f'https://fred.stlouisfed.org/series/{sid}'})
+        if rid==46:
+            decorate_and_fold(event,current)
         if rid==9:
             append_control(event,current,provider_updates)
         if event.get('event_type')=='fomc_decision':

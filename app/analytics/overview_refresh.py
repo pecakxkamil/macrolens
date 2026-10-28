@@ -59,6 +59,8 @@ def refresh_fred(series_id, previous, local, connection, now):
         metadata = fetch_series_metadata(series_id)
         from app.analytics.retail_measures import validate_metadata
         validate_metadata(series_id, metadata)
+        from app.analytics.ppi_measures import validate_metadata as validate_ppi_metadata
+        validate_ppi_metadata(series_id, metadata)
         changed = (previous.get('last_updated') != metadata['last_updated']
             or previous.get('local_signature') != local.get('signature') or previous.get('transformations') != spec)
         details = {'last_updated':metadata['last_updated'], 'observation_end':metadata.get('observation_end')}

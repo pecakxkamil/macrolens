@@ -37,7 +37,8 @@ def read_evidence(path=None):
         except (OSError, ValueError, KeyError, TypeError):
             continue
     from app.analytics.retail_measures import expand_retail_evidence
-    return expand_retail_evidence(result)
+    from app.analytics.ppi_measures import expand_ppi_evidence
+    return expand_ppi_evidence(expand_retail_evidence(result))
 
 
 def period_evidence(evidence, release_id, day, sid):

@@ -25,6 +25,22 @@ function mockApi(mode='ready',automatic=false){
   return {ok:true,json:async()=>({start_date:start,end_date:end,events:mode==='empty'?[]:events().filter(e=>e.release_date>=start&&e.release_date<=end),data_revision:'saved',automatic_refresh_supported:automatic,check:{status:'complete',checked_at:'2026-10-26T09:00:00Z',start_date:start,end_date:end,sources:[],required_resources:[]}})};
  }return new Promise(()=>{});});vi.stubGlobal('fetch',fetch);return fetch;
 }
+test.each(['en','pl'] as const)('PPI keeps three monthly rows and independent NSA annual context in %s',async language=>{
+ setLanguage(language);
+ const ids=['PPIFIS','PPIFES','WPSFD49116'],annualIds=['PPIFID','PPICOR','WPUFD49116'];
+ const readings=ids.map<CalendarMeasure>((sid,i)=>({...measure(),series_id:sid,actual:.68,previous:.25,data_version:'current_vintage',input_unit:'Index Apr 2010=100',seasonal_adjustment:'Seasonally Adjusted',transform_formula:'100 * (I[t] / I[t-1] - 1)',year_over_year:{...measure(),series_id:annualIds[i],feature_name:'yoy',actual:i===2?null:4.97,previous:4.81,data_version:'current_vintage',source_url:`https://fred.stlouisfed.org/series/${annualIds[i]}`,input_unit:'Index Apr 2010=100',seasonal_adjustment:'Not Seasonally Adjusted',transform_formula:'100 * (I[t] / I[t-12] - 1)',missing_reason:{actual:i===2?'ppi_publication_not_confirmed':null,previous:null}}}));
+ vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>({start_date:'2026-10-26',end_date:'2026-11-01',events:[{...events()[0],release_id:46,release_name:'Producer Price Index',measures:readings}],automatic_refresh_supported:false})})));
+ render(<CalendarPage/>);await waitFor(()=>expect(document.querySelectorAll('.agenda-entry')).toHaveLength(3));
+ const rows=[...document.querySelectorAll('.agenda-entry')];
+ expect(rows[0].querySelector('.agenda-actual')).toHaveTextContent(language==='en'?'4.97%':'4,97%');
+ expect(rows[2].querySelector('.agenda-actual')).toHaveTextContent(language==='en'?'0.68%':'0,68%');
+ expect(rows[2].querySelector('.agenda-actual small')).toHaveTextContent('\u2014');
+ fireEvent.click(rows[2].querySelector('.agenda-measure-name')!);
+ const details=document.querySelector('.agenda-detail')!;
+ expect(details).toHaveTextContent('WPUFD49116');expect(details).toHaveTextContent('I[t-12]');
+ expect(details.querySelector('a[href="https://fred.stlouisfed.org/series/WPUFD49116"]')).toBeInTheDocument();
+ expect(details).toHaveTextContent(language==='en'?'Current-vintage':'Bieżąca');
+});
 beforeEach(()=>{vi.useFakeTimers({toFake:['Date']});vi.setSystemTime(new Date(NOW));});
 afterEach(()=>{cleanup();vi.useRealTimers();vi.restoreAllMocks();vi.unstubAllGlobals();setLanguage('en');location.hash='';});
 
