@@ -18,6 +18,7 @@ export function rangeError(start:string,end:string):string|null {
 }
 export const calendarCategories=[{id:'labor',label:'Labor'},{id:'inflation',label:'Inflation'},{id:'activity',label:'Growth and consumer'},{id:'housing',label:'Housing'},{id:'financial',label:'Fed and financial conditions'}];
 export function eventCategories(event:CalendarEvent):string[]{
+ if(event.event_type==='adp_monthly')return ['labor'];
  if(event.event_type?.startsWith('michigan_'))return ['activity'];
  if(event.event_type?.startsWith('fomc_'))return ['financial'];
  return [...new Set(event.series.map(s=>['growth','consumer'].includes(s.category)?'activity':['financial_conditions','financial'].includes(s.category)?'financial':s.category))];

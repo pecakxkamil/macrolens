@@ -100,7 +100,8 @@ def full_rows():
         if resource == 'fred:calendar' else {'dates': ['2026-10-28']}
         if resource == 'fed:calendar' else {'confirmed_from':'2026-01-05','confirmed_through':'2026-12-03'}
         if resource == 'ism:calendar' else {'confirmed_years':[2026]}
-        if resource == 'michigan:calendar' else {'latest_publication_discovered': True}
+        if resource == 'michigan:calendar' else {'confirmed_from':'2026-01-01','confirmed_through':'2026-12-31'}
+        if resource == 'adp:calendar' else {'latest_publication_discovered': True}
         if resource.startswith('ism:') else {}) for i, resource in enumerate(coverage.REQUIRED)]
 
 

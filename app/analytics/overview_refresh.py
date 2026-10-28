@@ -281,6 +281,19 @@ def refresh_sources(connection, previous, now):
             results.append({'resource':resource,'status':'error','error_code':'michigan_schedule_unavailable'})
     else:
         results.append({'resource':resource,'status':'cached','outcome':'within_provider_interval'})
+    from app.ingestion.sync_adp_calendar import sync_schedule as sync_adp_schedule
+    resource='adp:calendar'
+    if _due(versions.get(resource,{}),now,slow_interval):
+        try:
+            with httpx.Client(timeout=20,follow_redirects=True) as client:
+                payload=sync_adp_schedule(client,now)
+            versions[resource]={'attempted_at':now.isoformat()}
+            results.append({'resource':resource,'status':payload['check']['status'],
+                'calendar_automation':'bounded_announcements_only','results_integration':'publisher_permission_required'})
+        except Exception:
+            versions[resource]={'attempted_at':now.isoformat()}
+            results.append({'resource':resource,'status':'error','error_code':'adp_schedule_unavailable'})
+    else:results.append({'resource':resource,'status':'cached','outcome':'within_provider_interval'})
     return versions, results
 
 

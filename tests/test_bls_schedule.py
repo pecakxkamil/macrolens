@@ -152,6 +152,8 @@ def test_calendar_uses_publisher_dates_even_without_fred_window_dates(monkeypatc
     from app.analytics import release_calendar, calendar_evidence
     from app.analytics import michigan_calendar
     monkeypatch.setattr(michigan_calendar,'calendar_events',lambda *args:[])
+    from app.analytics import adp_calendar
+    monkeypatch.setattr(adp_calendar,'calendar_events',lambda *args:[])
     from tests.test_release_calendar import FakeConnection, SERIES_PAYROLL
     metadata=(None,50,'Employment Situation','https://www.bls.gov/ces/',*SERIES_PAYROLL)
     monkeypatch.setattr(release_calendar,'get_connection',lambda:FakeConnection([[metadata]]))

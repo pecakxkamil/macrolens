@@ -244,6 +244,29 @@ test.each(['en','pl'] as const)('Michigan has two numeric report stages with res
  expect(preliminary).toBeInTheDocument();
 });
 
+test.each(['en','pl'] as const)('ADP monthly NER keeps independent periods, restricted results and no Pulse in %s',async language=>{
+ setLanguage(language);vi.setSystemTime(new Date('2026-11-03T12:00:00Z'));
+ const label='ADP National Employment Report';
+ const items:CalendarEvent[]=['2026-09-30','2026-11-04','2026-12-02'].map((day,i)=>({...events()[0],release_id:null,event_id:i===2?'adp:calendar:2026-12:monthly':`adp:2026-${i?'10':'09'}:monthly`,event_type:'adp_monthly',release_name:label,release_date:day,release_datetime_utc:i===2?null:day+(i?'T13:15:00Z':'T12:15:00Z'),reference_period:i===2?null:`2026-${i?'10':'09'}-01`,publication_stage:'monthly',expects_numeric_result:true,series:[],measures:[],result_integration_status:'publisher_permission_required',publisher_reports_url:'https://mediacenter.adp.com/press-releases?l=100',license_source_url:'https://www.adp.com/legal.aspx',document_status:i?'unconfirmed':'available',document_url:i?null:'https://mediacenter.adp.com/monthly-report'}));
+ vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>({events:items,start_date:'2026-11-02',end_date:'2026-11-08'})})));
+ render(<CalendarPage/>);
+ const button=await screen.findByRole('button',{name:tText(label)+(language==='en'?' (Oct)':' (paź)')});
+ expect(document.querySelectorAll('.agenda-entry')).toHaveLength(3);
+ expect(button.closest('tr')).toHaveTextContent('14:15');
+ expect(within(button.closest('tr')!).getByRole('img',{name:tText('Importance 3 of 3')})).toBeInTheDocument();
+ expect(screen.getAllByRole('link',{name:tText('Data at publisher')})).toHaveLength(1);
+ expect(screen.getAllByRole('link',{name:tText('Publisher reports')})).toHaveLength(2);
+ expect(filterEvents(items,new Set([3]),false,new Set(['labor']))).toHaveLength(3);
+ expect(filterEvents(items,new Set([3]),false,new Set(['activity']))).toHaveLength(0);
+ expect(countdown(nextInstant([items[2]],new Date()),new Date())).toBeNull();
+ fireEvent.click(button);const detail=document.getElementById(button.getAttribute('aria-controls')!)!;
+ expect(detail).toHaveTextContent(tText('Monthly NER'));
+ expect(detail).toHaveTextContent(tText('Previous would be the preceding month’s employment change, with its data version. No Previous value is integrated.'));
+ expect(within(detail).getByRole('link',{name:tText('Publisher usage agreement')})).toHaveAttribute('href','https://www.adp.com/legal.aspx');
+ expect(detail).not.toHaveTextContent(tText('No numerical result'));
+ fireEvent.keyDown(detail,{key:'Escape'});expect(button).toHaveFocus();
+});
+
 test('custom date validation and presets retain saved-data requests',async()=>{
  const fetch=mockApi();render(<CalendarPage/>);await screen.findByRole('button',{name:'CPI MoM (Sep)'});fireEvent.click(screen.getByRole('button',{name:'Date range'}));
  fireEvent.change(screen.getByLabelText('Start date'),{target:{value:'2026-11-01'}});fireEvent.change(screen.getByLabelText('End date'),{target:{value:'2026-10-01'}});fireEvent.click(screen.getByRole('button',{name:'Apply range'}));expect(screen.getByRole('alert')).toHaveTextContent('The start date must not follow');expect(fetch).toHaveBeenCalledTimes(1);

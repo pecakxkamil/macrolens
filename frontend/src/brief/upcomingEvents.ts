@@ -14,6 +14,7 @@ export const overviewEventPriorities = [
   { key: "gdp", aliases: ["Gross Domestic Product"], priority: "Key event" },
   { key: "ism_manufacturing", aliases: ["ISM Manufacturing PMI"], priority: "Key event" },
   { key: "ism_services", aliases: ["ISM Services PMI"], priority: "Key event" },
+  { key: "adp_monthly", aliases: ["ADP National Employment Report"], priority: "Key event" },
   { key: "michigan_preliminary", aliases: ["Michigan Consumer Sentiment — Preliminary"], priority: "Key event" },
   { key: "michigan_final", aliases: ["Michigan Consumer Sentiment — Final"], priority: "Tracked event" },
   { key: "retail", aliases: ["Advance Monthly Sales for Retail and Food Services"], priority: "Tracked event" },
@@ -32,7 +33,7 @@ export function eventDay(event: CalendarEvent): string {
   return instant === null ? event.release_date : warsawDate(new Date(instant));
 }
 export function eventIdentity(event: CalendarEvent): string {
-  if(event.event_type?.startsWith('michigan_')&&event.event_id)return event.event_id;
+  if((event.event_type?.startsWith('michigan_')||event.event_type==='adp_monthly')&&event.event_id)return event.event_id;
   if(event.event_type?.startsWith('fomc_')&&event.event_type!=='fomc_decision'&&event.event_id)return event.event_id;
   return `${eventPriority(event)?.key ?? event.release_id ?? event.event_id ?? event.release_name}|${eventDay(event)}`;
 }
@@ -69,7 +70,7 @@ export function overviewUpcomingEvents(data: EconomyBriefResponse, now: Date = n
     nextFomc: nextFomc && !selectedIds.has(eventIdentity(nextFomc)) ? nextFomc : null };
 }
 export function upcomingEventReport(event: CalendarEvent): string {
-  if(event.event_type?.startsWith('michigan_'))return `${event.release_name} (${event.reference_period}) - ${eventDateLabel(event)} [${eventDay(event)}] - ${formatPolandTime(event.release_datetime_utc)}. ${eventPriority(event)?.priority}. Numerical results are not integrated. Official reports: ${event.publisher_reports_url}.`;
+  if(event.event_type?.startsWith('michigan_')||event.event_type==='adp_monthly')return `${event.release_name} (${event.reference_period??"Reference period unconfirmed"}) - ${eventDateLabel(event)} [${eventDay(event)}] - ${formatPolandTime(event.release_datetime_utc)}. ${eventPriority(event)?.priority}. Numerical results are not integrated. Official reports: ${event.publisher_reports_url}.`;
   return `${event.release_name} - ${eventDateLabel(event)} [${eventDay(event)}] - ${formatPolandTime(event.release_datetime_utc)}. ${eventPriority(event)?.priority ?? "Other event"}.`;
 }
 

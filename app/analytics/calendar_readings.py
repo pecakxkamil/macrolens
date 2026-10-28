@@ -86,7 +86,7 @@ def bind_events(events,panel,current,now,evidence=None,provider_updates=None,ism
     _,bls_conflicts=select_records(evidence.get('periods',[]))
     events=copy.deepcopy(events)
     for event in events:
-        if str(event.get('event_type','')).startswith('michigan_'):
+        if str(event.get('event_type','')).startswith('michigan_') or event.get('event_type')=='adp_monthly':
             # Numeric report, integration restricted. Never bind delayed FRED data.
             event.update(measures=[], expects_numeric_result=True, actual=None, previous=None, forecast=None)
             continue

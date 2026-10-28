@@ -816,6 +816,18 @@ test.each(['en','pl'] as const)('Overview includes Michigan month and restricted
  expect(report).toContain('https://data.sca.isr.umich.edu/reports.php?year=2026');
 });
 
+test.each(['en','pl'] as const)('ADP appears in Overview as a monthly report without adding a domain in %s',async language=>{
+ setLanguage(language);vi.setSystemTime(new Date('2026-11-01T12:00:00Z'));const data=fixture();
+ data.calendar_start_date='2026-11-01';data.calendar_end_date='2026-11-07';
+ data.calendar.data!.events=[{release_id:null,event_id:'adp:2026-10:monthly',event_type:'adp_monthly',release_name:'ADP National Employment Report',release_date:'2026-11-04',release_time:'08:15:00',release_datetime_utc:'2026-11-04T13:15:00Z',source_timezone:'America/New_York',source_link:'https://adpemploymentreport.com/',importance:'high',date_precision:'date',series:[],measures:[],reference_period:'2026-10-01',publication_stage:'monthly',expects_numeric_result:true,result_integration_status:'publisher_permission_required',publisher_reports_url:'https://mediacenter.adp.com/press-releases?l=100'}];
+ mockApi(data);render(<EconomyBrief/>);
+ const link=await screen.findByRole('link',{name:language==='en'?'Publisher reports':'Raporty wydawcy'});
+ expect(link.closest('li')).toHaveTextContent('14:15');expect(document.querySelectorAll('.overview-domain')).toHaveLength(6);
+ expect(document.querySelectorAll('.overview-calendar .overview-event').length).toBeLessThanOrEqual(4);
+ const report=briefMarkdown(briefModel(data),data,data.assembled_at);
+ expect(report).toContain('2026-10-01');expect(report).toContain('https://mediacenter.adp.com/press-releases?l=100');
+});
+
 test("report identifies GDP and claims window comparisons without reinterpreting consecutive readings",()=>{
  const data=fixture();
  data.classification_basis={growth:[{component:"real_gdp",field:"momentum",label:"Real GDP momentum",classification:"accelerating",short:"Quarterly annualized versus annual growth.",observation_date:"2026-04-01",feature_as_of_date:"2026-09-30",inputs:[{label:"Quarterly annualized growth",feature_name:"qoq_annualized",value:2.22,unit:"percent"},{label:"Year-over-year growth",feature_name:"yoy",value:2.19,unit:"percent"}],rule:"This compares different windows, not consecutive quarters."}],labor:[{component:"initial_claims",field:"momentum",label:"Initial claims momentum",classification:"improving",short:"Four versus thirteen weeks.",observation_date:"2026-10-17",feature_as_of_date:"2026-10-22",inputs:[{label:"Four-week average",feature_name:"moving_average_4w",value:197250,unit:"persons"},{label:"Thirteen-week average",feature_name:"moving_average_13w",value:200000,unit:"persons"}],rule:"A lower four-week average indicates improvement."}]};

@@ -44,6 +44,8 @@ def isolated(monkeypatch):
     @contextmanager
     def check(*a,**k):yield {'scope':{},'status':'running'}
     monkeypatch.setattr(sync,'availability_check',check)
+    from app.ingestion import sync_adp_calendar
+    monkeypatch.setattr(sync_adp_calendar,'sync_schedule',lambda *a,**k:{'events':[],'check':{'status':'success'}})
 
 def run(tmp_path,content=None,years=(2026,2027),failure=False,archive=None,dates=None):
     requests=[]

@@ -17,6 +17,8 @@ NOW=datetime(2026,10,27,15,tzinfo=timezone.utc)
 def isolated_michigan_schedule(monkeypatch):
     from app.ingestion import sync_michigan_calendar
     monkeypatch.setattr(sync_michigan_calendar,'sync_schedule',lambda *a,**k:{'events':[],'check':{'status':'success'}})
+    from app.ingestion import sync_adp_calendar
+    monkeypatch.setattr(sync_adp_calendar,'sync_schedule',lambda *a,**k:{'events':[],'check':{'status':'success'}})
 
 
 

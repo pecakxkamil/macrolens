@@ -1,0 +1,422 @@
+{
+  "version": 1,
+  "adapter_version": 1,
+  "events": [
+    {
+      "event_id": "adp:2026-06:monthly",
+      "report_kind": "monthly",
+      "reference_period": "2026-06-01",
+      "release_date": "2026-07-01",
+      "release_time": null,
+      "date_status": "confirmed",
+      "reference_period_status": "confirmed",
+      "source_timezone": "America/New_York",
+      "time_status": "unconfirmed",
+      "schedule_status": "confirmed",
+      "schedule_provenance": {
+        "source_url": "https://mediacenter.adp.com/2026-07-01-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-98,000-Jobs-in-June-Annual-Pay-was-Up-4-4",
+        "retrieved_at": "2026-10-28T22:17:59.690321+00:00",
+        "raw_hash": "88a737216f5d1138f14116a89b718bcea5258692fa17a3b36edc771c7cd9419c",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only",
+        "document_date": "2026-07-01"
+      },
+      "time_source_url": null,
+      "time_provenance": null,
+      "document_url": "https://mediacenter.adp.com/2026-07-01-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-98,000-Jobs-in-June-Annual-Pay-was-Up-4-4",
+      "document_status": "available",
+      "document_provenance": {
+        "source_url": "https://mediacenter.adp.com/2026-07-01-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-98,000-Jobs-in-June-Annual-Pay-was-Up-4-4",
+        "retrieved_at": "2026-10-28T22:17:59.690321+00:00",
+        "raw_hash": "88a737216f5d1138f14116a89b718bcea5258692fa17a3b36edc771c7cd9419c",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only",
+        "document_date": "2026-07-01"
+      }
+    },
+    {
+      "event_id": "adp:2026-07:monthly",
+      "report_kind": "monthly",
+      "reference_period": "2026-07-01",
+      "release_date": "2026-08-05",
+      "release_time": "08:15:00",
+      "date_status": "confirmed",
+      "reference_period_status": "confirmed",
+      "source_timezone": "America/New_York",
+      "time_status": "confirmed",
+      "schedule_status": "confirmed",
+      "schedule_provenance": {
+        "source_url": "https://mediacenter.adp.com/2026-08-05-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-44,000-Jobs-in-July-Annual-Pay-was-Up-4-4",
+        "retrieved_at": "2026-10-28T22:17:59.731720+00:00",
+        "raw_hash": "3820048663b110e8d8691c187ed09fe29248488775d386c579cb03b0b4bba373",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only",
+        "document_date": "2026-08-05"
+      },
+      "time_source_url": "https://mediacenter.adp.com/2026-07-01-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-98,000-Jobs-in-June-Annual-Pay-was-Up-4-4",
+      "time_provenance": {
+        "source_url": "https://mediacenter.adp.com/2026-07-01-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-98,000-Jobs-in-June-Annual-Pay-was-Up-4-4",
+        "retrieved_at": "2026-10-28T22:17:59.690321+00:00",
+        "raw_hash": "88a737216f5d1138f14116a89b718bcea5258692fa17a3b36edc771c7cd9419c",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only",
+        "document_date": "2026-07-01"
+      },
+      "document_url": "https://mediacenter.adp.com/2026-08-05-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-44,000-Jobs-in-July-Annual-Pay-was-Up-4-4",
+      "document_status": "available",
+      "document_provenance": {
+        "source_url": "https://mediacenter.adp.com/2026-08-05-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-44,000-Jobs-in-July-Annual-Pay-was-Up-4-4",
+        "retrieved_at": "2026-10-28T22:17:59.731720+00:00",
+        "raw_hash": "3820048663b110e8d8691c187ed09fe29248488775d386c579cb03b0b4bba373",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only",
+        "document_date": "2026-08-05"
+      }
+    },
+    {
+      "event_id": "adp:2026-08:monthly",
+      "report_kind": "monthly",
+      "reference_period": "2026-08-01",
+      "release_date": "2026-09-02",
+      "release_time": "08:15:00",
+      "date_status": "confirmed",
+      "reference_period_status": "confirmed",
+      "source_timezone": "America/New_York",
+      "time_status": "confirmed",
+      "schedule_status": "confirmed",
+      "schedule_provenance": {
+        "source_url": "https://mediacenter.adp.com/2026-09-02-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-38,000-Jobs-in-August",
+        "retrieved_at": "2026-10-28T22:17:59.776552+00:00",
+        "raw_hash": "bd4730b2df76d3c720a60dcc89198be5299fa8b25caf420571a6d69f2412d71e",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only",
+        "document_date": "2026-09-02"
+      },
+      "time_source_url": "https://mediacenter.adp.com/2026-08-05-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-44,000-Jobs-in-July-Annual-Pay-was-Up-4-4",
+      "time_provenance": {
+        "source_url": "https://mediacenter.adp.com/2026-08-05-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-44,000-Jobs-in-July-Annual-Pay-was-Up-4-4",
+        "retrieved_at": "2026-10-28T22:17:59.731720+00:00",
+        "raw_hash": "3820048663b110e8d8691c187ed09fe29248488775d386c579cb03b0b4bba373",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only",
+        "document_date": "2026-08-05"
+      },
+      "document_url": "https://mediacenter.adp.com/2026-09-02-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-38,000-Jobs-in-August",
+      "document_status": "available",
+      "document_provenance": {
+        "source_url": "https://mediacenter.adp.com/2026-09-02-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-38,000-Jobs-in-August",
+        "retrieved_at": "2026-10-28T22:17:59.776552+00:00",
+        "raw_hash": "bd4730b2df76d3c720a60dcc89198be5299fa8b25caf420571a6d69f2412d71e",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only",
+        "document_date": "2026-09-02"
+      }
+    },
+    {
+      "event_id": "adp:2026-09:monthly",
+      "report_kind": "monthly",
+      "reference_period": "2026-09-01",
+      "release_date": "2026-09-30",
+      "release_time": "08:15:00",
+      "date_status": "confirmed",
+      "reference_period_status": "confirmed",
+      "source_timezone": "America/New_York",
+      "time_status": "confirmed",
+      "schedule_status": "confirmed",
+      "schedule_provenance": {
+        "source_url": "https://mediacenter.adp.com/2026-09-30-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-90,000-Jobs-in-September",
+        "retrieved_at": "2026-10-28T22:17:59.819147+00:00",
+        "raw_hash": "91a34065644f72c1cf20da53df925758e7bede207d731e3b57e1deebac48fe3a",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only",
+        "document_date": "2026-09-30"
+      },
+      "time_source_url": "https://mediacenter.adp.com/2026-09-02-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-38,000-Jobs-in-August",
+      "time_provenance": {
+        "source_url": "https://mediacenter.adp.com/2026-09-02-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-38,000-Jobs-in-August",
+        "retrieved_at": "2026-10-28T22:17:59.776552+00:00",
+        "raw_hash": "bd4730b2df76d3c720a60dcc89198be5299fa8b25caf420571a6d69f2412d71e",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only",
+        "document_date": "2026-09-02"
+      },
+      "document_url": "https://mediacenter.adp.com/2026-09-30-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-90,000-Jobs-in-September",
+      "document_status": "available",
+      "document_provenance": {
+        "source_url": "https://mediacenter.adp.com/2026-09-30-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-90,000-Jobs-in-September",
+        "retrieved_at": "2026-10-28T22:17:59.819147+00:00",
+        "raw_hash": "91a34065644f72c1cf20da53df925758e7bede207d731e3b57e1deebac48fe3a",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only",
+        "document_date": "2026-09-30"
+      }
+    },
+    {
+      "event_id": "adp:2026-10:monthly",
+      "report_kind": "monthly",
+      "reference_period": "2026-10-01",
+      "release_date": "2026-11-04",
+      "release_time": "08:15:00",
+      "date_status": "confirmed",
+      "reference_period_status": "confirmed",
+      "source_timezone": "America/New_York",
+      "time_status": "confirmed",
+      "schedule_status": "confirmed",
+      "schedule_provenance": {
+        "source_url": "https://mediacenter.adp.com/2026-09-30-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-90,000-Jobs-in-September",
+        "retrieved_at": "2026-10-28T22:17:59.819147+00:00",
+        "raw_hash": "91a34065644f72c1cf20da53df925758e7bede207d731e3b57e1deebac48fe3a",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only",
+        "document_date": "2026-09-30"
+      },
+      "time_source_url": "https://mediacenter.adp.com/2026-09-30-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-90,000-Jobs-in-September",
+      "time_provenance": {
+        "source_url": "https://mediacenter.adp.com/2026-09-30-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-90,000-Jobs-in-September",
+        "retrieved_at": "2026-10-28T22:17:59.819147+00:00",
+        "raw_hash": "91a34065644f72c1cf20da53df925758e7bede207d731e3b57e1deebac48fe3a",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only",
+        "document_date": "2026-09-30"
+      },
+      "document_url": null,
+      "document_status": "unconfirmed",
+      "document_provenance": null
+    },
+    {
+      "event_id": "adp:calendar:2026-12:monthly",
+      "report_kind": "monthly",
+      "reference_period": null,
+      "release_date": "2026-12-02",
+      "release_time": null,
+      "date_status": "confirmed",
+      "reference_period_status": "unconfirmed",
+      "source_timezone": "America/New_York",
+      "time_status": "unconfirmed",
+      "schedule_status": "confirmed",
+      "schedule_provenance": {
+        "source_url": "https://adpemploymentreport.com/",
+        "reviewed_at": "2026-10-28T22:17:59.829147+00:00",
+        "retrieved_at": "2026-10-28T22:17:59.829147+00:00",
+        "confirmation_type": "one_time_official_review",
+        "retrieval_method": "browser_dom_review",
+        "review_scope": "Visible Calendar: monthly Upcoming Reports includes December 02, 2026; no reference month or clock displayed. No 2027 schedule displayed. Weekly NER Pulse list excluded."
+      },
+      "time_source_url": null,
+      "time_provenance": null,
+      "document_url": null,
+      "document_status": "unconfirmed",
+      "document_provenance": null
+    }
+  ],
+  "history": [
+    {
+      "event_id": "adp:2026-07:monthly",
+      "replaced_at": "2026-10-28T22:17:59.351017+00:00",
+      "previous": {
+        "event_id": "adp:2026-07:monthly",
+        "report_kind": "monthly",
+        "reference_period": "2026-07-01",
+        "release_date": "2026-08-05",
+        "release_time": "08:15:00",
+        "date_status": "confirmed",
+        "reference_period_status": "confirmed",
+        "source_timezone": "America/New_York",
+        "time_status": "confirmed",
+        "schedule_status": "confirmed",
+        "schedule_provenance": {
+          "source_url": "https://mediacenter.adp.com/2026-07-01-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-98,000-Jobs-in-June-Annual-Pay-was-Up-4-4",
+          "retrieved_at": "2026-10-28T22:17:59.690321+00:00",
+          "raw_hash": "88a737216f5d1138f14116a89b718bcea5258692fa17a3b36edc771c7cd9419c",
+          "http_status": 200,
+          "response_body_retained": false,
+          "retrieval_method": "backend_http_metadata_only",
+          "document_date": "2026-07-01"
+        },
+        "time_source_url": "https://mediacenter.adp.com/2026-07-01-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-98,000-Jobs-in-June-Annual-Pay-was-Up-4-4",
+        "time_provenance": {
+          "source_url": "https://mediacenter.adp.com/2026-07-01-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-98,000-Jobs-in-June-Annual-Pay-was-Up-4-4",
+          "retrieved_at": "2026-10-28T22:17:59.690321+00:00",
+          "raw_hash": "88a737216f5d1138f14116a89b718bcea5258692fa17a3b36edc771c7cd9419c",
+          "http_status": 200,
+          "response_body_retained": false,
+          "retrieval_method": "backend_http_metadata_only",
+          "document_date": "2026-07-01"
+        },
+        "document_url": null,
+        "document_status": "unconfirmed",
+        "document_provenance": null
+      }
+    },
+    {
+      "event_id": "adp:2026-08:monthly",
+      "replaced_at": "2026-10-28T22:17:59.351017+00:00",
+      "previous": {
+        "event_id": "adp:2026-08:monthly",
+        "report_kind": "monthly",
+        "reference_period": "2026-08-01",
+        "release_date": "2026-09-02",
+        "release_time": "08:15:00",
+        "date_status": "confirmed",
+        "reference_period_status": "confirmed",
+        "source_timezone": "America/New_York",
+        "time_status": "confirmed",
+        "schedule_status": "confirmed",
+        "schedule_provenance": {
+          "source_url": "https://mediacenter.adp.com/2026-08-05-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-44,000-Jobs-in-July-Annual-Pay-was-Up-4-4",
+          "retrieved_at": "2026-10-28T22:17:59.731720+00:00",
+          "raw_hash": "3820048663b110e8d8691c187ed09fe29248488775d386c579cb03b0b4bba373",
+          "http_status": 200,
+          "response_body_retained": false,
+          "retrieval_method": "backend_http_metadata_only",
+          "document_date": "2026-08-05"
+        },
+        "time_source_url": "https://mediacenter.adp.com/2026-08-05-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-44,000-Jobs-in-July-Annual-Pay-was-Up-4-4",
+        "time_provenance": {
+          "source_url": "https://mediacenter.adp.com/2026-08-05-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-44,000-Jobs-in-July-Annual-Pay-was-Up-4-4",
+          "retrieved_at": "2026-10-28T22:17:59.731720+00:00",
+          "raw_hash": "3820048663b110e8d8691c187ed09fe29248488775d386c579cb03b0b4bba373",
+          "http_status": 200,
+          "response_body_retained": false,
+          "retrieval_method": "backend_http_metadata_only",
+          "document_date": "2026-08-05"
+        },
+        "document_url": null,
+        "document_status": "unconfirmed",
+        "document_provenance": null
+      }
+    },
+    {
+      "event_id": "adp:2026-09:monthly",
+      "replaced_at": "2026-10-28T22:17:59.351017+00:00",
+      "previous": {
+        "event_id": "adp:2026-09:monthly",
+        "report_kind": "monthly",
+        "reference_period": "2026-09-01",
+        "release_date": "2026-09-30",
+        "release_time": "08:15:00",
+        "date_status": "confirmed",
+        "reference_period_status": "confirmed",
+        "source_timezone": "America/New_York",
+        "time_status": "confirmed",
+        "schedule_status": "confirmed",
+        "schedule_provenance": {
+          "source_url": "https://mediacenter.adp.com/2026-09-02-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-38,000-Jobs-in-August",
+          "retrieved_at": "2026-10-28T22:17:59.776552+00:00",
+          "raw_hash": "bd4730b2df76d3c720a60dcc89198be5299fa8b25caf420571a6d69f2412d71e",
+          "http_status": 200,
+          "response_body_retained": false,
+          "retrieval_method": "backend_http_metadata_only",
+          "document_date": "2026-09-02"
+        },
+        "time_source_url": "https://mediacenter.adp.com/2026-09-02-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-38,000-Jobs-in-August",
+        "time_provenance": {
+          "source_url": "https://mediacenter.adp.com/2026-09-02-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-38,000-Jobs-in-August",
+          "retrieved_at": "2026-10-28T22:17:59.776552+00:00",
+          "raw_hash": "bd4730b2df76d3c720a60dcc89198be5299fa8b25caf420571a6d69f2412d71e",
+          "http_status": 200,
+          "response_body_retained": false,
+          "retrieval_method": "backend_http_metadata_only",
+          "document_date": "2026-09-02"
+        },
+        "document_url": null,
+        "document_status": "unconfirmed",
+        "document_provenance": null
+      }
+    }
+  ],
+  "check": {
+    "status": "partial",
+    "checked_at": "2026-10-28T22:17:59.351017+00:00",
+    "dates": [
+      "2026-07-01",
+      "2026-08-05",
+      "2026-09-02",
+      "2026-09-30",
+      "2026-11-04",
+      "2026-12-02"
+    ],
+    "confirmed_periods": [
+      "2026-06-01",
+      "2026-07-01",
+      "2026-08-01",
+      "2026-09-01",
+      "2026-10-01"
+    ],
+    "calendar_automation": "bounded_announcements_only",
+    "captures": [
+      {
+        "source_url": "https://mediacenter.adp.com/press-releases?l=100",
+        "retrieved_at": "2026-10-28T22:17:59.548983+00:00",
+        "raw_hash": "e182876b96282797afae10062f8d3e32f94379144e2011b1750ad5cd673fe7b8",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only"
+      },
+      {
+        "source_url": "https://mediacenter.adp.com/search-newsroom?query=2026&l=100",
+        "retrieved_at": "2026-10-28T22:17:59.585870+00:00",
+        "raw_hash": "c9c2dc4da17976644b323210b8570c0844a13761c09e404c9a5a61e26d302db7",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only"
+      },
+      {
+        "source_url": "https://mediacenter.adp.com/2026-07-01-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-98,000-Jobs-in-June-Annual-Pay-was-Up-4-4",
+        "retrieved_at": "2026-10-28T22:17:59.690321+00:00",
+        "raw_hash": "88a737216f5d1138f14116a89b718bcea5258692fa17a3b36edc771c7cd9419c",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only",
+        "document_date": "2026-07-01"
+      },
+      {
+        "source_url": "https://mediacenter.adp.com/2026-08-05-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-44,000-Jobs-in-July-Annual-Pay-was-Up-4-4",
+        "retrieved_at": "2026-10-28T22:17:59.731720+00:00",
+        "raw_hash": "3820048663b110e8d8691c187ed09fe29248488775d386c579cb03b0b4bba373",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only",
+        "document_date": "2026-08-05"
+      },
+      {
+        "source_url": "https://mediacenter.adp.com/2026-09-02-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-38,000-Jobs-in-August",
+        "retrieved_at": "2026-10-28T22:17:59.776552+00:00",
+        "raw_hash": "bd4730b2df76d3c720a60dcc89198be5299fa8b25caf420571a6d69f2412d71e",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only",
+        "document_date": "2026-09-02"
+      },
+      {
+        "source_url": "https://mediacenter.adp.com/2026-09-30-ADP-National-Employment-Report-Private-Sector-Employment-Increased-by-90,000-Jobs-in-September",
+        "retrieved_at": "2026-10-28T22:17:59.819147+00:00",
+        "raw_hash": "91a34065644f72c1cf20da53df925758e7bede207d731e3b57e1deebac48fe3a",
+        "http_status": 200,
+        "response_body_retained": false,
+        "retrieval_method": "backend_http_metadata_only",
+        "document_date": "2026-09-30"
+      }
+    ],
+    "errors": [
+      {
+        "source_url": "https://adpemploymentreport.com/",
+        "error_code": "publisher_calendar_requires_review"
+      }
+    ],
+    "results_integration": "publisher_permission_required"
+  }
+}

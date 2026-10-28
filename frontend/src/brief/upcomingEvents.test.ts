@@ -49,6 +49,14 @@ test('Michigan stages retain stable identities, shared editorial stars and the f
  expect(overviewUpcomingEvents(data([preliminary,final,event('Employment Situation'),event('Gross Domestic Product'),event('Consumer Price Index')]),now).selected).toHaveLength(4);
 });
 
+test('ADP monthly is independent from NFP and retains shared stars, identity and four-event limit',()=>{
+ const adp=event('ADP National Employment Report','2026-10-20',{event_id:'adp:2026-09:monthly',event_type:'adp_monthly',reference_period:'2026-09-01'});
+ expect(eventImportanceStars(adp)).toBe(3);
+ expect(eventIdentity({...adp,release_date:'2026-10-21'})).toBe(eventIdentity(adp));
+ expect(overviewUpcomingEvents(data([adp,adp,event('Employment Situation')]),now).selected).toHaveLength(2);
+ expect(overviewUpcomingEvents(data([adp,event('Employment Situation'),event('Consumer Price Index'),event('Gross Domestic Product'),event('Personal Income and Outlays')]),now).selected).toHaveLength(4);
+});
+
 test("select at most four by editorial priority, then display in date order", () => {
   const events = [event("Unemployment Insurance Weekly Claims Report", "2026-10-18"), event("Advance Monthly Sales for Retail and Food Services", "2026-10-19"), event("Employment Situation", "2026-10-23"), event("Consumer Price Index", "2026-10-20"), event("Personal Income and Outlays", "2026-10-22"), event("Gross Domestic Product", "2026-10-21")];
   const result = overviewUpcomingEvents(data(events), now);

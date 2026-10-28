@@ -149,6 +149,9 @@ def list_calendar_events(
     if category in (None, 'consumer'):
         from app.analytics.michigan_calendar import calendar_events as michigan_events
         selected.extend(michigan_events(start,end))
+    if category in (None, 'labor'):
+        from app.analytics.adp_calendar import calendar_events as adp_events
+        selected.extend(adp_events(start,end))
     if category in (None, "financial_conditions"):
         selected.extend({**event, "release_date": date.fromisoformat(event["release_date"])}
                         for event in policy["events"] if str(start) <= event["release_date"] <= str(end))
@@ -159,6 +162,8 @@ def list_calendar_events(
     from app.ingestion.sync_michigan_calendar import read_schedule as read_michigan_schedule
     michigan=read_michigan_schedule()
     michigan_years=sorted({int(e['reference_period'][:4]) for e in michigan['events']})
+    from app.ingestion.sync_adp_calendar import read_schedule as read_adp_schedule
+    adp=read_adp_schedule()
     return {
         "start_date": start,
         "end_date": end,
@@ -166,6 +171,9 @@ def list_calendar_events(
         "events": selected,
         "michigan_calendar": {"published_years":michigan_years,"check":michigan['check'],
             "requested_year_status":{str(y):'confirmed' if y in michigan_years else 'not_published_in_checked_sources' for y in range(start.year,end.year+1)}},
+        "adp_calendar": {"check":adp['check'],"coverage":"bounded_official_evidence",
+            "confirmed_dates":sorted(row['release_date'] for row in adp['events']),
+            "requested_year_status":{str(y):'bounded_evidence' if any(row['release_date'].startswith(str(y)) for row in adp['events']) else 'not_published_in_checked_sources' for y in range(start.year,end.year+1)}},
         "official_schedule_conflicts": conflicts,
         "policy_calendar": {key: policy[key] for key in ("status", "retrieved_at", "source_url")},
     }

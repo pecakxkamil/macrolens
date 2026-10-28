@@ -450,8 +450,8 @@ export interface CalendarEvent {
   description?:string;
   measures?:CalendarMeasure[];
   expects_numeric_result?:boolean;
-  event_type?: "fomc_decision" | "fomc_press_conference" | "fomc_minutes" | "fomc_sep" | "ism_report" | "michigan_preliminary" | "michigan_final";
-  reference_period?:string;publication_stage?:'preliminary'|'final';category?:string;
+  event_type?: "fomc_decision" | "fomc_press_conference" | "fomc_minutes" | "fomc_sep" | "ism_report" | "michigan_preliminary" | "michigan_final" | "adp_monthly";
+  reference_period?:string|null;reference_period_status?:'confirmed'|'unconfirmed';publication_stage?:'preliminary'|'final'|'monthly';category?:string;
   result_integration_status?:'publisher_permission_required';result_status?:'restricted';
   publisher_reports_url?:string;license_source_url?:string;document_kind?:string|null;
   meeting_id?: string;
@@ -479,6 +479,7 @@ export interface CalendarEvent {
 }
 
 export interface CalendarResponse {
+  adp_calendar?:{coverage:string;confirmed_dates:string[];requested_year_status:Record<string,string>;check:unknown};
   michigan_calendar?:{published_years:number[];requested_year_status:Record<string,'confirmed'|'not_published_in_checked_sources'>;check:unknown};
   automatic_refresh_supported?:boolean;data_revision?:string;refresh?:OverviewRefreshState;check?:CalendarCheck;max_range_days?:number;
   policy_calendar?: { status: string; retrieved_at: string | null; source_url: string };

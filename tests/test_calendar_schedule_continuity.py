@@ -40,6 +40,8 @@ def offline_sources(monkeypatch):
     monkeypatch.setattr(ism_calendar,'calendar_events',lambda *args:[])
     from app.analytics import michigan_calendar
     monkeypatch.setattr(michigan_calendar,'calendar_events',lambda *args:[])
+    from app.analytics import adp_calendar
+    monkeypatch.setattr(adp_calendar,'calendar_events',lambda *args:[])
 
 
 @pytest.mark.parametrize('rid,day,period,stage,clock',[

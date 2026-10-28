@@ -21,6 +21,7 @@ REQUIRED = {**{f'fred:{sid}': ('FRED', sid) for sid in sorted(FRED_SERIES)},
     'fed:calendar': ('Federal Reserve', 'FOMC schedule'),
     'ism:calendar': ('ISM', 'ISM publication schedule'),
     'michigan:calendar': ('University of Michigan', 'Michigan publication schedule'),
+    'adp:calendar': ('ADP', 'ADP monthly publication schedule'),
     'ism:ISM_MANUFACTURING_PMI': ('ISM via PR Newswire', 'ISM Manufacturing PMI'),
     'ism:ISM_SERVICES_PMI': ('ISM via PR Newswire', 'ISM Services PMI')}
 
@@ -40,6 +41,8 @@ def eligible(row, today, end_date=None):
     scope = row['scope']
     if row['resource']=='michigan:calendar':
         return set(range(today.year,(end_date or today).year+1)) <= set(scope.get('confirmed_years',[]))
+    if row['resource']=='adp:calendar':
+        return scope.get('confirmed_from','9999')<=str(today) and scope.get('confirmed_through','')>=str(end_date or today)
     if row['resource']=='ism:calendar':
         return bool(scope.get('confirmed_from') and scope.get('confirmed_through') and scope['confirmed_from']<=str(today) and scope['confirmed_through']>=str(end_date or today))
     if row['resource'].startswith('ism:'):

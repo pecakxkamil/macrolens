@@ -26,6 +26,8 @@ def isolated_ism_schedule(monkeypatch):
     monkeypatch.setattr(sync_ism_calendar,'read_schedule',lambda:{'adapter_version':sync_ism_calendar.SCHEDULE_ADAPTER_VERSION})
     from app.ingestion import sync_michigan_calendar
     monkeypatch.setattr(sync_michigan_calendar,'sync_schedule',lambda *a,**k:{'events':[],'check':{'status':'success'}})
+    from app.ingestion import sync_adp_calendar
+    monkeypatch.setattr(sync_adp_calendar,'sync_schedule',lambda *a,**k:{'events':[],'check':{'status':'success'}})
 
 
 class MemoryStore:

@@ -54,6 +54,8 @@ def no_local_policy_snapshot(monkeypatch):
     monkeypatch.setattr(ism_calendar,'read_schedule',lambda:{'events':[]})
     from app.analytics import michigan_calendar
     monkeypatch.setattr(michigan_calendar,'read_schedule',lambda:{'events':[]})
+    from app.analytics import adp_calendar
+    monkeypatch.setattr(adp_calendar,'read_schedule',lambda:{'events':[]})
 
 
 def event_rows():

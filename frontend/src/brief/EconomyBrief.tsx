@@ -69,7 +69,7 @@ function EventRow({ event }: { event: CalendarEvent }) {
   const stars = eventImportanceStars(event);
   return <li className="overview-event">
     <time dateTime={event.release_datetime_utc ?? eventDay(event)}>{tText(eventShortDateLabel(event))} · {tText(formatPolandTime(event.release_datetime_utc))}</time>
-    <strong>{tText(event.release_name)}{event.event_type?.startsWith('michigan_')&&event.reference_period?<> ({formatObservationDate(event.reference_period,'monthly')})<br/><a href={event.document_url??event.publisher_reports_url} target="_blank" rel="noreferrer">{tText(event.document_status==='available'&&event.document_url?'Data at publisher':'Publisher reports')}</a></>:null}</strong>
+    <strong>{tText(event.release_name)}{(event.event_type?.startsWith('michigan_')||event.event_type==='adp_monthly')?<> ({event.reference_period?formatObservationDate(event.reference_period,'monthly'):tText('Reference period unconfirmed')})<br/><a href={event.document_url??event.publisher_reports_url} target="_blank" rel="noreferrer">{tText(event.document_status==='available'&&event.document_url?'Data at publisher':'Publisher reports')}</a></>:null}</strong>
     <span className="overview-event-stars" role="img" aria-label={tLabel(stars === null ? "Importance unavailable" : `Importance ${stars} of 3`)}><span aria-hidden="true">{stars === null ? "\u2014" : "\u2605".repeat(stars)}</span></span>
   </li>;
 }

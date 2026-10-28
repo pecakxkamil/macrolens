@@ -41,22 +41,22 @@ function ProducerYearly({measure}:{measure:CalendarMeasure}){
 function EventDetails({event,measure,now,check,id,onClose}:{event:CalendarEvent;measure?:CalendarMeasure;now:Date;check:CalendarResponse['check'];id:string;onClose:()=>void}){
  const ism=event.event_type==='ism_report';
  const fed=event.event_type?.startsWith('fomc_');
- const michigan=event.event_type?.startsWith('michigan_');
- const relevant=check?.sources.filter(s=>s.resource===(michigan?'michigan:calendar':ism?'ism:calendar':fed?'fed:calendar':'fred:calendar')||s.resource===`${ism?'ism':'fred'}:${measure?.series_id}`);
+ const michigan=event.event_type?.startsWith('michigan_'),adp=event.event_type==='adp_monthly';
+ const relevant=check?.sources.filter(s=>s.resource===(adp?'adp:calendar':michigan?'michigan:calendar':ism?'ism:calendar':fed?'fed:calendar':'fred:calendar')||s.resource===`${ism?'ism':'fred'}:${measure?.series_id}`);
  const ismSource=relevant?.find(s=>s.resource===`ism:${measure?.series_id}`);
  const ismSchedule=relevant?.find(s=>s.resource==='ism:calendar');
  return <tr className="agenda-detail" onKeyDown={e=>{if(e.key==='Escape'){e.stopPropagation();onClose();}}}><td colSpan={8}><div id={id}>
  <strong>{tText(event.release_name)}</strong><p>{tText(event.event_type==='fomc_decision'?'Official Federal Reserve policy decision; final day of the scheduled meeting.':event.description??'One publication may contain several separately measured indicators.')}</p>
  <p>{tText('Publication day')}: {formatCalendarDate(event.release_date)} · {eventInstant(event)!==null?formatPolandTime(event.release_datetime_utc).replace(/ PL$/,''):tText('Time unconfirmed')}{eventInstant(event)===null?` · ${tText('No confirmed publication time is stored; no midnight time is inferred.')}`:''}</p>
  {safeLink(event.source_link)?<a href={event.source_link!} target="_blank" rel="noreferrer">{tText('Publication source')}</a>:null}
- {michigan?<>
- <p>{tText('Observation period')}: {event.reference_period?formatObservationDate(event.reference_period,'monthly'):tText('Reference period unconfirmed')} · {tText(event.publication_stage==='preliminary'?'Preliminary':'Final')}</p>
+ {michigan||adp?<>
+ <p>{tText('Observation period')}: {event.reference_period?formatObservationDate(event.reference_period,'monthly'):tText('Reference period unconfirmed')} · {tText(adp?'Monthly NER':event.publication_stage==='preliminary'?'Preliminary':'Final')}</p>
  <p>{tText('Numerical results are not integrated. Dashboard redistribution requires clarification or permission from the publisher. The scheduled release and document availability are separate from access to its numbers.')}</p>
  <p><a href={event.publisher_reports_url} target="_blank" rel="noreferrer">{tText('Publisher reports')}</a>{' · '}<a href={event.license_source_url} target="_blank" rel="noreferrer">{tText('Publisher usage agreement')}</a></p>
  <p>{event.document_status==='available'&&safeLink(event.document_url)?<a href={event.document_url!} target="_blank" rel="noreferrer">{tText('Official event document')}</a>:tText('No matching report link has been verified; this does not establish that the report is unpublished.')}</p>
  {event.document_kind==='current_summary_link'?<p>{tText('This link opens the publisher’s changing current summary, verified for this month and stage at the recorded check time; it is not an archived report.')}</p>:null}
  <p>{tText('Forecast')}: — · {tText('No integrated consensus source')}.</p>
- <p>{tText('Previous would compare the preceding month, not Preliminary versus Final of the same month. No Previous value is integrated.')}</p>
+ <p>{tText(adp?'Previous would be the preceding month’s employment change, with its data version. No Previous value is integrated.':'Previous would compare the preceding month, not Preliminary versus Final of the same month. No Previous value is integrated.')}</p>
  {safeLink(event.date_source_url)?<p><a href={event.date_source_url!} target="_blank" rel="noreferrer">{tText('Publication date source')}</a></p>:null}
  {event.schedule_status==='changed'?<p>{tText('The publisher changed this event’s date or confirmed time; its identity is preserved.')}</p>:null}
  {event.schedule_provenance?<p>{tText('Retrieved')}: {availabilityTime(event.schedule_provenance.retrieved_at)} · {tText('Document hash')}: {event.schedule_provenance.raw_hash}</p>:null}
@@ -104,7 +104,7 @@ function EventDetails({event,measure,now,check,id,onClose}:{event:CalendarEvent;
 }
 function AgendaRow({event,measure,now,next,showCountdown,expanded,toggle,check,rowId}:{event:CalendarEvent;measure?:CalendarMeasure;now:Date;next:number;showCountdown:boolean;expanded:boolean;toggle:()=>void;check:CalendarResponse['check'];rowId:string}){
  const stars=eventImportanceStars(event),instant=eventInstant(event),remaining=showCountdown?countdownText(next,now):null;
- const name=measure?compactMeasureName(measure):tText(event.release_name),period=measure?compactPeriod(measure,event.release_date):event.event_type?.startsWith('michigan_')&&event.reference_period?compactPeriod({reference_period:event.reference_period,frequency:'monthly',feature_name:'raw'},event.release_date):'';
+ const name=measure?compactMeasureName(measure):tText(event.release_name),period=measure?compactPeriod(measure,event.release_date):(event.event_type?.startsWith('michigan_')||event.event_type==='adp_monthly')&&event.reference_period?compactPeriod({reference_period:event.reference_period,frequency:'monthly',feature_name:'raw'},event.release_date):'';
  const forecast=measure&&comparableForecast(measure)?measure.forecast:null;
  const vsForecast=measure?calendarComparison(measure,'forecast'):null,vsPrevious=measure?calendarComparison(measure,'previous'):null;
  const buttonId=`agenda-button-${rowId}`,detailId=`agenda-detail-${rowId}`;
@@ -167,5 +167,5 @@ export function CalendarPage(){
   });
  })}</tbody>)}</table>:null}
  <p className="agenda-comparison-legend">{tText("Difference color: typical interpretation for the economic area, not market direction.")}</p>
- <p className="agenda-attribution">{tText('Sources')}: <a href="https://fred.stlouisfed.org/">FRED / ALFRED</a>, <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm">{tText('Federal Reserve')}</a>{data?.events.some(event=>event.event_type==='ism_report')?<>, <a href="https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/">ISM</a></>:null}{data?.events.some(event=>event.event_type?.startsWith('michigan_'))?<>, <a href="https://data.sca.isr.umich.edu/survey-info.php">University of Michigan Surveys of Consumers</a></>:null}. {tText('Stars express MacroLens editorial importance, not market direction or an Investing.com rating.')}</p></main>;
+ <p className="agenda-attribution">{tText('Sources')}: <a href="https://fred.stlouisfed.org/">FRED / ALFRED</a>, <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm">{tText('Federal Reserve')}</a>{data?.events.some(event=>event.event_type==='ism_report')?<>, <a href="https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/">ISM</a></>:null}{data?.events.some(event=>event.event_type==='adp_monthly')?<>, <a href="https://adpemploymentreport.com/">ADP Research</a></>:null}{data?.events.some(event=>event.event_type?.startsWith('michigan_'))?<>, <a href="https://data.sca.isr.umich.edu/survey-info.php">University of Michigan Surveys of Consumers</a></>:null}. {tText('Stars express MacroLens editorial importance, not market direction or an Investing.com rating.')}</p></main>;
 }
