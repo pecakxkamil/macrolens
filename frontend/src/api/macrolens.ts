@@ -437,7 +437,7 @@ export interface CalendarMeasure {
  vintage_date:string|null;realtime_end:string|null;result_status:"available"|"scheduled"|"awaiting_data";mapping_status:string;source_url:string;
  actual_range?:[number,number]|null;previous_range?:[number,number]|null;
  effective_date?:string|null;previous_effective_date?:string|null;
- period_provenance?:{source_url:string;reference_period:string;binding_method:string;retrieved_at?:string;estimate_stage?:string;source_check?:{status:string;source_url:string;error_code?:string}|null}|null;
+ period_provenance?:{source_url:string;reference_period:string;binding_method:string;retrieved_at?:string;estimate_stage?:string;report_url?:string;source_check?:{status:string;source_url:string;error_code?:string}|null}|null;
  actual_provenance?:Record<string,unknown>|null;previous_provenance?:Record<string,unknown>|null;
  result_provenance?:{source_url:string;release_date:string;reference_period:string;estimate_stage?:string;retrieved_at?:string}|null;
  publication_provenance?:{source_url:string;release_date:string;reference_period:string;estimate_stage?:string;retrieved_at?:string}|null;
@@ -449,7 +449,7 @@ export interface CalendarMeasure {
 }
 export interface CalendarCheck {
  status:"complete"|"partial"|"error"|"not_recorded";checked_at:string|null;start_date:string;end_date:string;
- required_resources:string[];sources:Array<{resource:string;label:string;range_status:string;checked_at:string|null;error_code:string|null;scope_error?:string;missing_times?:string[];later_missing_times?:string[];scope?:{latest_publication_discovered?:boolean;discovered_report_month?:string;report_month?:string;result_downloaded?:boolean;annual_schedule_status?:string;annual_error_code?:string}}>;
+ required_resources:string[];sources:Array<{resource:string;label:string;range_status:string;checked_at:string|null;error_code:string|null;last_attempt_at?:string|null;last_finished_at?:string|null;last_success_at?:string|null;scope_error?:string;missing_times?:string[];later_missing_times?:string[];scope?:{last_updated?:string;observation_end?:string;observation_fetch_status?:'fetched'|'metadata_unchanged';observations_received?:number;sources?:Array<{source_url:string;status:string;error_code?:string}>;latest_publication_discovered?:boolean;discovered_report_month?:string;report_month?:string;result_downloaded?:boolean;annual_schedule_status?:string;annual_error_code?:string}}>;
 }
 export interface CalendarEvent {
   publisher?:string;usage_rights?:PublisherUsageRights;

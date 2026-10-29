@@ -65,7 +65,8 @@ def refresh_fred(series_id, previous, local, connection, now):
         validate_employment_metadata(series_id, metadata)
         changed = (previous.get('last_updated') != metadata['last_updated']
             or previous.get('local_signature') != local.get('signature') or previous.get('transformations') != spec)
-        details = {'last_updated':metadata['last_updated'], 'observation_end':metadata.get('observation_end')}
+        details = {'last_updated':metadata['last_updated'], 'observation_end':metadata.get('observation_end'),
+                   'observation_fetch_status':'fetched' if changed else 'metadata_unchanged'}
         if changed:
             payload = fetch_series_observations(series_id, observation_start=local.get('start'))
             # Full CURRENT snapshot over the stored history catches older revisions;

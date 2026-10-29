@@ -142,7 +142,9 @@ def test_fred_check_handles_no_new_data_revisions_and_new_periods(monkeypatch,re
     if revision:
         september=computed[0][(computed[0].observation_date==date(2026,9,1))&(computed[0].feature_name=='mom')]
         assert september.iloc[0].feature_value==pytest.approx((120/115-1)*100)
-    assert next(iter(isolated_provenance.values()))['status']=='success'
+    recorded=next(iter(isolated_provenance.values()))
+    assert recorded['status']=='success'
+    assert recorded['scope']['observation_fetch_status']==('fetched' if updated else 'metadata_unchanged')
 
 
 def test_source_failure_records_error_without_overwriting_last_success(monkeypatch,isolated_provenance):

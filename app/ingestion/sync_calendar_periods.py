@@ -297,17 +297,47 @@ def parse_m3_result(content,stage,url,retrieved):
 
 
 def parse_bea_result(html,proof,url,retrieved):
+    from urllib.parse import urlparse
+    location=urlparse(url)
+    if location.scheme!='https' or location.hostname not in ('www.bea.gov','bea.gov') or not location.path.startswith('/news/'):
+        raise ValueError('Not an official BEA news document')
     tree=Tree(html)
     headings=[' '.join(n.text().split()) for n in tree.root.find(lambda n:n.tag=='h1')]
     title=next((h for h in headings if re.search(r'GDP|Gross Domestic Product',h)), '')
     quarter=re.search(r'([1-4](?:st|nd|rd|th) Quarter \d{4})',title,re.I)
     stage=re.search(r'(Advance|Second|Third|Updated) Estimate',title,re.I)
-    dates={n.attrs['content'][:10] for n in tree.root.find(lambda n:n.tag=='meta' and n.attrs.get('property')=='article:published_time' and n.attrs.get('content'))}
-    if not dates:
-        dates={n.attrs['datetime'][:10] for n in tree.root.find(lambda n:n.tag=='time' and n.attrs.get('datetime'))}
+    fields=[n.attrs['content'] for n in tree.root.find(lambda n:n.tag=='meta' and n.attrs.get('property')=='article:published_time' and n.attrs.get('content'))]
+    fields += [n.attrs['datetime'] for n in tree.root.find(lambda n:n.tag=='time' and n.attrs.get('datetime'))]
+    dates={value[:10] for value in fields}
+    announced=set()
+    expected_clock=proof.get('release_time') or '08:30:00'
+    if proof.get('source_timezone','America/New_York')!='America/New_York':
+        raise ValueError('BEA event timezone not confirmed')
+    # Only the publisher's release header, never an arbitrary date in the body.
+    headers=tree.root.find(lambda n:bool(set(n.attrs.get('class','').split()) & {'release-embargo','field--name-field-release-date'}))
+    for node in headers:
+        text=' '.join(node.text().split())
+        match=re.fullmatch(r'EMBARGOED UNTIL RELEASE AT (\d{1,2}:\d{2}) (a\.m\.|p\.m\.) (EDT|EST), (Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday), (\w+ \d{1,2}, \d{4})(?: BEA .*)?',text)
+        if not match:raise ValueError('BEA embargo header not confirmed')
+        day=parsed_date(match[5]);clock=datetime.strptime(match[1]+' '+match[2].replace('.','').upper(),'%I:%M %p').time()
+        local=datetime.combine(date.fromisoformat(day),clock,tzinfo=ZoneInfo('America/New_York'))
+        if local.strftime('%A')!=match[4] or local.tzname()!=match[3] or clock.isoformat()!=expected_clock:
+            raise ValueError('BEA embargo weekday/time/timezone conflict')
+        dates.add(day);announced.add(local.astimezone(timezone.utc).isoformat())
+    for value in fields:
+        if 'T' not in value:continue  # Retain legacy date-only metadata.
+        instant=datetime.fromisoformat(value.replace('Z','+00:00'))
+        if instant.tzinfo is None:raise ValueError('BEA publication metadata has no timezone')
+        local=instant.astimezone(ZoneInfo('America/New_York'))
+        if local.date().isoformat()!=proof['release_date'] or local.time().isoformat()!=expected_clock:
+            raise ValueError('BEA publication metadata time conflict')
+        announced.add(instant.astimezone(timezone.utc).isoformat())
     if not quarter or not stage or parsed_date(quarter[1])!=proof['reference_period'] or stage[1].lower()!=proof.get('estimate_stage') or dates!={proof['release_date']}:
         raise ValueError('BEA result date/period/stage not confirmed')
-    return dict(release_id=53,series_ids=['GDPC1'],release_date=proof['release_date'],reference_period=proof['reference_period'],estimate_stage=stage[1].lower(),source_url=url,retrieved_at=retrieved)
+    if len(announced)>1:raise ValueError('Conflicting BEA publication times')
+    result=dict(release_id=53,series_ids=['GDPC1'],release_date=proof['release_date'],reference_period=proof['reference_period'],estimate_stage=stage[1].lower(),source_url=url,retrieved_at=retrieved)
+    if announced:result.update(announced_at=next(iter(announced)),release_time=expected_clock,source_timezone='America/New_York')
+    return result
 
 
 def parse_claims(content, url, retrieved):

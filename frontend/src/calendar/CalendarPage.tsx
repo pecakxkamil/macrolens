@@ -8,6 +8,7 @@ import {tText,tLabel} from '../i18n/language';
 import {formatAgendaDate,formatCalendarDate,formatPolandTime} from './calendarDates';
 import {calendarComparison,comparableForecast} from './calendarComparisons';
 import {ComparisonTooltip} from './ComparisonTooltip';
+import {ReadingAvailability} from './ReadingAvailability';
 import {compactMeasureName,compactPeriod,compactMeasureValue,calendarReadingValue} from './calendarPresentation';
 import {calendarCategories,countdownText,countdownDelay,filterEvents,groupAgenda,nextInstant,presetRange,rangeError,resultPending,type DatePreset} from './calendarAgenda';
 
@@ -38,7 +39,7 @@ function ProducerYearly({measure}:{measure:CalendarMeasure}){
  {(['actual','previous'] as const).filter(kind=>annual.missing_reason?.[kind]).map(kind=><p key={kind}>{tText(kind==='actual'?'Actual':'Previous')}: {tText(calendarMissingReason(annual.missing_reason![kind]!))}</p>)}
  <a href={annual.source_url} target="_blank" rel="noreferrer">{tText('Source')}</a></section>;
 }
-function EventDetails({event,measure,now,check,id,onClose}:{event:CalendarEvent;measure?:CalendarMeasure;now:Date;check:CalendarResponse['check'];id:string;onClose:()=>void}){
+function EventDetails({event,measure,now,check,refresh,revision,id,onClose}:{event:CalendarEvent;measure?:CalendarMeasure;now:Date;check:CalendarResponse['check'];refresh?:CalendarResponse['refresh'];revision?:string;id:string;onClose:()=>void}){
  const ism=event.event_type==='ism_report';
  const fed=event.event_type?.startsWith('fomc_');
  const michigan=event.event_type?.startsWith('michigan_'),adp=event.event_type==='adp_monthly',empire=event.event_type==='empire_state';
@@ -93,6 +94,7 @@ function EventDetails({event,measure,now,check,id,onClose}:{event:CalendarEvent;
  </>:null}
  <ul>{relevant?.map(source=><li key={source.resource}>{tText(source.label)}: {tText(checkStatusLabel(source.range_status))}{source.checked_at?` · ${availabilityTime(source.checked_at)}`:''}</li>)}</ul>
  {measure?<div className="agenda-measure-detail"><strong>{tText(measure.label)}</strong>{measure.definition?<p>{tText(measure.definition)}</p>:null}
+ <ReadingAvailability measure={measure} check={check} refresh={refresh} revision={revision} now={now}/>
  <ProducerInputs measure={measure}/><ProducerYearly measure={measure}/>
  {measure.survey?<p>{measure.survey} · {measure.source_series_id} · {tText(measure.seasonal_adjustment??'')}</p>:null}
  <p>{measure.series_id} · {tText('Measure')}: {measure.feature_name} · {tText(measure.unit)}. {tText('Observation period')}: {measure.reference_period?formatObservationDate(measure.reference_period,measure.frequency):tText('Reference period unconfirmed')}.</p>
@@ -122,7 +124,7 @@ function EventDetails({event,measure,now,check,id,onClose}:{event:CalendarEvent;
  <p>{tText(comparableForecast(measure)?'Forecast is the consensus for this publication, period and measure.':'No integrated consensus source')}.</p></div>:event.result_integration_status==='publisher_permission_required'?null:<p>{tText(event.expects_numeric_result===false?'Actual, Previous, Forecast and numerical comparisons do not apply to this event.':'No numerical result')}</p>}
  </div></td></tr>;
 }
-function AgendaRow({event,measure,now,next,showCountdown,expanded,toggle,check,rowId}:{event:CalendarEvent;measure?:CalendarMeasure;now:Date;next:number;showCountdown:boolean;expanded:boolean;toggle:()=>void;check:CalendarResponse['check'];rowId:string}){
+function AgendaRow({event,measure,now,next,showCountdown,expanded,toggle,check,refresh,revision,rowId}:{event:CalendarEvent;measure?:CalendarMeasure;now:Date;next:number;showCountdown:boolean;expanded:boolean;toggle:()=>void;check:CalendarResponse['check'];refresh?:CalendarResponse['refresh'];revision?:string;rowId:string}){
  const stars=eventImportanceStars(event),instant=eventInstant(event),remaining=showCountdown?countdownText(next,now):null;
  const name=measure?compactMeasureName(measure):tText(event.release_name),period=measure?compactPeriod(measure,event.release_date):(event.event_type?.startsWith('michigan_')||event.event_type==='adp_monthly')&&event.reference_period?compactPeriod({reference_period:event.reference_period,frequency:'monthly',feature_name:'raw'},event.release_date):'';
  const forecast=measure&&comparableForecast(measure)?measure.forecast:null;
@@ -138,7 +140,7 @@ function AgendaRow({event,measure,now,next,showCountdown,expanded,toggle,check,r
  <td className="agenda-number agenda-actual" data-label={tLabel('Actual')}>{event.result_integration_status==='publisher_permission_required'?<a href={safeLink(event.document_url)??event.publisher_reports_url} target="_blank" rel="noreferrer">{tText(event.document_status==='available'&&event.document_url?'Data at publisher':'Publisher reports')}</a>:measure?calendarReadingValue(measure,'actual'):'\u2014'}{measure?.year_over_year?<><br/><small>{tText('YoY (NSA)')}: {calendarReadingValue(measure.year_over_year,'actual')}</small></>:null}</td>
  <td className="agenda-difference" data-label={tLabel('vs previous')}>{vsPrevious?<ComparisonTooltip comparison={vsPrevious}/>:event.expects_numeric_result===false?'—':null}</td>
  <td className="agenda-number agenda-secondary" data-label={tLabel('Previous')}>{measure?calendarReadingValue(measure,'previous'):'\u2014'}{measure?.year_over_year?<><br/><small>{tText('YoY (NSA)')}: {calendarReadingValue(measure.year_over_year,'previous')}</small></>:null}</td></tr>
- {expanded?<EventDetails event={event} measure={measure} now={now} check={check} id={detailId} onClose={close}/>:null}</Fragment>;
+ {expanded?<EventDetails event={event} measure={measure} now={now} check={check} refresh={refresh} revision={revision} id={detailId} onClose={close}/>:null}</Fragment>;
 }
 export function CalendarPage(){
  const [now,setNow]=useState(()=>new Date());
@@ -183,7 +185,7 @@ export function CalendarPage(){
   return (measures.length?measures:[undefined]).map((measure,index)=>{
    const key=`${identity(event)}:${measure?`${measure.series_id}:${measure.feature_name}`:'event'}`;
    const firstNext=events.find(e=>eventInstant(e)===next);
-   return <AgendaRow key={key} event={event} measure={measure} now={now} next={next} showCountdown={index===0&&firstNext!==undefined&&identity(firstNext)===identity(event)} expanded={selected===key} toggle={()=>setSelected(v=>v===key?undefined:key)} check={data?.check} rowId={encodeURIComponent(key)}/>;
+   return <AgendaRow key={key} event={event} measure={measure} now={now} next={next} showCountdown={index===0&&firstNext!==undefined&&identity(firstNext)===identity(event)} expanded={selected===key} toggle={()=>setSelected(v=>v===key?undefined:key)} check={data?.check} refresh={refresh??data?.refresh} revision={data?.data_revision} rowId={encodeURIComponent(key)}/>;
   });
  })}</tbody>)}</table>:null}
  <p className="agenda-comparison-legend">{tText("Difference color: typical interpretation for the economic area, not market direction.")}</p>
