@@ -37,7 +37,8 @@ export function compactMeasureValue(value:number|null,unit:string){
  else if(['thousand jobs','thousand homes/year (SAAR)','thousand openings','thousands','thousands SAAR','thousands of openings'].includes(unit))suffix=getLanguage()==='pl'?'tys.':'k';
  else if(['index','index points'].includes(unit))suffix=getLanguage()==='pl'?'pkt':'pt';
  else if(unit==='hours')suffix=getLanguage()==='pl'?'godz.':'hours';
- const formatted=new Intl.NumberFormat(getLocale(),{maximumFractionDigits:unit==='claims'?0:2}).format(number);
+ else if(unit==='USD bn')suffix=getLanguage()==='pl'?'mld USD':'USD bn';
+ const formatted=new Intl.NumberFormat(getLocale(),{maximumFractionDigits:unit==='claims'?0:unit==='USD bn'?3:2}).format(number);
  return `${formatted}${suffix?'\u00a0'+suffix:''}`;
 }
 

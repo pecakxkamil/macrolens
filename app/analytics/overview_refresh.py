@@ -306,6 +306,18 @@ def refresh_sources(connection, previous, now):
             versions[resource]={'attempted_at':now.isoformat()}
             results.append({'resource':resource,'status':'error','error_code':'empire_source_unavailable'})
     else:results.append({'resource':resource,'status':'cached','outcome':'within_provider_interval'})
+    from app.ingestion.sync_ft900 import sync_source as sync_trade
+    resource='census:ft900'
+    if _due(versions.get(resource,{}),now,slow_interval):
+        try:
+            with httpx.Client(timeout=30,follow_redirects=True) as client:
+                payload=sync_trade(client,connection,now)
+            versions[resource]={'attempted_at':now.isoformat()}
+            results.append({'resource':resource,'status':payload['status']})
+        except Exception:
+            versions[resource]={'attempted_at':now.isoformat()}
+            results.append({'resource':resource,'status':'error','error_code':'ft900_source_unavailable'})
+    else:results.append({'resource':resource,'status':'cached','outcome':'within_provider_interval'})
     return versions, results
 
 

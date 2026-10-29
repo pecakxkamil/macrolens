@@ -47,7 +47,7 @@ export function calendarComparison(m:CalendarMeasure,kind:ComparisonKind):Compar
   :m.previous_kind==='previous_period'&&m.previous_period===priorPeriod(m)))return null;
  const delta=m.actual!-base!,pl=getLanguage()==='pl';
  if(!Number.isFinite(delta))return null;
- const digits=m.unit==='claims'?0:2;
+ const digits=m.unit==='claims'?0:m.unit==='USD bn'?3:2;
  const rounded=Number(delta.toFixed(digits));
  const amount=new Intl.NumberFormat(getLocale(),{minimumFractionDigits:['CFNAI','NFCI'].includes(m.series_id)?2:0,maximumFractionDigits:digits}).format(Math.abs(rounded));
  const unit=m.unit==='percent'?(pl?'pkt proc.':'pp')
@@ -55,7 +55,7 @@ export function calendarComparison(m:CalendarMeasure,kind:ComparisonKind):Compar
   :m.unit==='claims'?(pl?'wniosków':'claims')
   :m.unit==='thousand jobs'?(pl?'tys. miejsc pracy':'k jobs')
   :['thousands','thousands SAAR','thousand homes/year (SAAR)','thousand openings','thousands of openings'].includes(m.unit)?(pl?'tys.':'k')
-  :m.unit==='hours'?(pl?'godz.':'hours'):m.unit;
+  :m.unit==='hours'?(pl?'godz.':'hours'):m.unit==='USD bn'?(pl?'mld USD':'USD bn'):m.unit;
  const absolute=`${amount}${unit?'\u00a0'+unit:''}`;
  const shortUnit=m.unit==='thousand jobs'?(pl?'tys.':'k'):['index','index points'].includes(m.unit)?(pl?'pkt':'pt'):unit;
  const text=`${rounded>0?'+':rounded<0?'−':''}${amount}${shortUnit?'\u00a0'+shortUnit:''}`;

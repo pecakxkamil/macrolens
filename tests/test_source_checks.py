@@ -102,7 +102,8 @@ def full_rows():
         if resource == 'ism:calendar' else {'confirmed_years':[2026]}
         if resource == 'michigan:calendar' else {'confirmed_from':'2026-01-01','confirmed_through':'2026-12-31'}
         if resource == 'adp:calendar' else {'schedule_checked':True,'csv_validated':True,'confirmed_years':[2026]}
-        if resource == 'nyfed:empire-state' else {'latest_publication_discovered': True}
+        if resource == 'nyfed:empire-state' else {'schedule_checked':True,'report_checked':True,'exhibit1_validated':True,'result_pending':False,'confirmed_years':[2026,2027]}
+        if resource == 'census:ft900' else {'latest_publication_discovered': True}
         if resource.startswith('ism:') else {}) for i, resource in enumerate(coverage.REQUIRED)]
 
 

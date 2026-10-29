@@ -816,6 +816,19 @@ test.each(['en','pl'] as const)('Overview includes Michigan month and restricted
  expect(report).toContain('https://data.sca.isr.umich.edu/reports.php?year=2026');
 });
 
+test.each(['en','pl'] as const)('FT900 attribution and source links survive Overview export with six cards in %s',async language=>{
+ setLanguage(language);vi.setSystemTime(new Date('2026-11-01T12:00:00Z'));const data=fixture();
+ data.calendar_start_date='2026-11-01';data.calendar_end_date='2026-11-07';
+ data.calendar.data!.events=[{release_id:null,event_id:'ft900:2026-09:monthly',event_type:'ft900',release_name:'U.S. Trade Balance — Goods and Services',reference_period:'2026-09-01',release_date:'2026-11-04',release_time:'08:30:00',release_datetime_utc:'2026-11-04T13:30:00Z',source_timezone:'America/New_York',source_link:'https://www.census.gov/foreign-trade/schedule.html',importance:'medium',date_precision:'date',series:[],usage_rights:{source:'U.S. Census Bureau / U.S. Bureau of Economic Analysis',copyright:'Source: U.S. Census Bureau and U.S. Bureau of Economic Analysis.',terms_url:'https://www.bea.gov/help/faq/147',original_url:'https://www.census.gov/foreign-trade/Press-Release/current_press_release/exh1.xlsx',modifications:'MacroLens converts millions to billions; current-vintage, no publisher endorsement.',redistribution_conditions:'BEA public-domain policy with exceptions.'}}];
+ mockApi(data);render(<EconomyBrief/>);
+ const link=await screen.findByRole('link',{name:language==='en'?'BEA data use policy':'Zasady wykorzystania danych BEA'});
+ expect(link.closest('li')).toHaveTextContent('14:30');expect(link.closest('li')).toHaveTextContent('U.S. Census Bureau');
+ expect(document.querySelectorAll('.overview-domain')).toHaveLength(6);
+ expect(document.querySelectorAll('.overview-calendar .overview-event').length).toBeLessThanOrEqual(4);
+ const report=briefMarkdown(briefModel(data),data,data.assembled_at);
+ expect(report).toContain('https://www.bea.gov/help/faq/147');expect(report).toContain('no publisher endorsement');
+});
+
 test.each(['en','pl'] as const)('Empire attribution is present in Overview and exported report without a seventh card in %s',async language=>{
  setLanguage(language);vi.setSystemTime(new Date('2026-11-14T12:00:00Z'));const data=fixture();
  data.calendar_start_date='2026-11-14';data.calendar_end_date='2026-11-20';

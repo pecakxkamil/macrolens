@@ -10,6 +10,29 @@ import {countdown,filterEvents,groupAgenda,nextInstant,presetRange,rangeError,re
 const NOW='2026-10-26T10:00:00Z';
 const cpi={series_id:'CPIAUCSL',name:'Consumer Price Index',short_name:'CPI',frequency:'monthly',unit:'index',category:'inflation'};
 function measure(label='CPI MoM'):CalendarMeasure{return {series_id:'CPIAUCSL',label,feature_name:'mom',frequency:'monthly',unit:'percent',reference_period:'2026-09-01',previous_period:'2026-08-01',previous_kind:'previous_period',actual:.3,previous:.2,forecast:null,consensus_status:'not_integrated',data_version:'stored_date_vintage',revision_confirmed:false,binding_method:'alfred_release_date',vintage_date:'2026-10-26',realtime_end:'9999-12-31',result_status:'available',mapping_status:'confirmed',source_url:'https://fred.stlouisfed.org/series/CPIAUCSL'};}
+
+test.each(['en','pl'] as const)('FT900 signed billion-dollar balance, neutral difference and sources in %s',async language=>{
+ setLanguage(language);
+ const rights={source:'U.S. Census Bureau / U.S. Bureau of Economic Analysis',copyright:'Source: U.S. Census Bureau and U.S. Bureau of Economic Analysis.',original_title:'U.S. International Trade in Goods and Services',terms_url:'https://www.bea.gov/help/faq/147',original_url:'https://www.census.gov/foreign-trade/Press-Release/current_press_release/exh1.xlsx',modifications:'MacroLens converts millions to billions of USD and computes signed differences. Current-vintage values may include revisions; negative balances are deficits. No publisher endorsement is implied.',redistribution_conditions:'BEA public-domain policy with exceptions.'};
+ const m:CalendarMeasure={...measure('Trade Balance — SA'),series_id:'CENSUS_FT900_TOTAL',feature_name:'raw',unit:'USD bn',actual:-105.572,previous:-92.826,reference_period:'2026-08-01',previous_period:'2026-07-01',data_version:'current_vintage',source_url:rights.original_url,source_value_millions:'-105572'};
+ const item:CalendarEvent={...events()[0],release_id:null,event_id:'ft900:2026-08:monthly',event_type:'ft900',release_name:'U.S. Trade Balance — Goods and Services',importance:'medium',category:'growth',reference_period:'2026-08-01',usage_rights:rights,document_url:'https://www.census.gov/foreign-trade/Press-Release/ft900/ft900_2608.pdf',document_status:'available',series:[{...cpi,series_id:m.series_id,category:'growth'}],measures:[m]};
+ const next:CalendarEvent={...item,event_id:'ft900:2026-09:monthly',reference_period:'2026-09-01',release_date:'2026-11-04',release_datetime_utc:'2026-11-04T13:30:00Z',measures:[{...m,reference_period:'2026-09-01',previous_period:'2026-08-01',actual:null,previous:-105.572,result_status:'scheduled'}]};
+ vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>({start_date:'2026-10-26',end_date:'2026-11-04',events:[item,next],automatic_refresh_supported:false})})));
+ render(<CalendarPage/>);const button=await screen.findByRole('button',{name:tText('Trade Balance — SA')+(language==='en'?' (Aug)':' (sie)')});
+ const row=button.closest('tr')!;expect(row.querySelector('.agenda-actual')).toHaveTextContent(language==='en'?'-105.572':'-105,572');
+ expect(row).toHaveTextContent(language==='en'?'USD bn':'mld USD');expect(row).toHaveTextContent(language==='en'?'12.746':'12,746');expect(row).not.toHaveTextContent('%');
+ expect(row.querySelector('.favorable,.unfavorable')).toBeNull();
+ expect(filterEvents([item,next],new Set([3]),false,new Set())).toHaveLength(0);expect(filterEvents([item,next],new Set([2]),false,new Set(['activity']))).toHaveLength(2);
+ expect(nextInstant([next],new Date('2026-11-04T13:16:00Z'))).toBe(new Date('2026-11-04T13:30:00Z').getTime());
+ expect(countdown(nextInstant([next],new Date('2026-11-04T13:16:00Z')),new Date('2026-11-04T13:16:00Z'))).toBeTruthy();
+ fireEvent.click(button);const detail=document.getElementById(button.getAttribute('aria-controls')!)!;
+ expect(detail).toHaveTextContent('U.S. Census Bureau');expect(detail).toHaveTextContent('U.S. Bureau of Economic Analysis');
+ expect(within(detail).getByRole('link',{name:tText('Official Exhibit 1 XLSX')})).toHaveAttribute('href',rights.original_url);
+ expect(within(detail).getByRole('link',{name:tText('BEA data use policy')})).toHaveAttribute('href',rights.terms_url);
+ expect(within(detail).queryByRole('link',{name:tText('View indicator')})).not.toBeInTheDocument();
+ fireEvent.keyDown(detail,{key:'Escape'});expect(button).toHaveFocus();
+ expect(document.querySelectorAll('.agenda-entry')[1].querySelector('.agenda-actual')).toHaveTextContent('—');
+});
 function events():CalendarEvent[]{return [
  {release_id:10,release_name:'Consumer Price Index',release_date:'2026-10-26',release_time:'08:30:00',source_timezone:'America/New_York',release_datetime_utc:'2026-10-26T12:30:00Z',importance:'high',source_link:'https://www.bls.gov/cpi/',date_precision:'date',series:[cpi],measures:[measure(),{...measure('Core CPI MoM'),series_id:'CPILFESL'}]},
  {release_id:50,release_name:'Employment Situation',release_date:'2026-10-26',release_time:'08:30:00',source_timezone:'America/New_York',release_datetime_utc:'2026-10-26T12:30:00Z',importance:'high',source_link:null,date_precision:'date',series:[{...cpi,series_id:'UNRATE',category:'labor'}],measures:[{...measure('Unemployment rate'),series_id:'UNRATE',feature_name:'raw'}]},

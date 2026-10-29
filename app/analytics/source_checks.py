@@ -17,6 +17,7 @@ SNAPSHOT_SERIES = {
 FRED_SERIES = SNAPSHOT_SERIES | {sid.strip() for spec in READINGS
     for sid in spec[2].split('/') if not sid.strip().startswith('ISM_')}
 REQUIRED = {**{f'fred:{sid}': ('FRED', sid) for sid in sorted(FRED_SERIES)},
+    'census:ft900': ('U.S. Census Bureau / U.S. Bureau of Economic Analysis', 'FT900'),
     'nyfed:empire-state': ('Federal Reserve Bank of New York', 'Empire State Manufacturing Survey'),
     'fred:calendar': ('FRED', 'Release calendar'),
     'fed:calendar': ('Federal Reserve', 'FOMC schedule'),
@@ -40,6 +41,8 @@ def instant(value):
 
 def eligible(row, today, end_date=None):
     scope = row['scope']
+    if row['resource']=='census:ft900':
+        return scope.get('schedule_checked') is True and scope.get('report_checked') is True and scope.get('exhibit1_validated') is True and not scope.get('result_pending') and set(range(today.year,(end_date or today).year+1))<=set(scope.get('confirmed_years',[]))
     if row['resource']=='nyfed:empire-state':
         return scope.get('schedule_checked') is True and scope.get('csv_validated') is True and set(range(today.year,(end_date or today).year+1))<=set(scope.get('confirmed_years',[]))
     if row['resource']=='michigan:calendar':

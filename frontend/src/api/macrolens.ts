@@ -422,6 +422,7 @@ export interface PublisherUsageRights {
  source:string;copyright:string;terms_url:string;original_url:string;modifications:string;redistribution_conditions:string;
 }
 export interface CalendarMeasure {
+ source_value_millions?:string|null;previous_source_value_millions?:string|null;
  usage_rights?:PublisherUsageRights;report_current?:number|null;
  document_versions?:Array<{id:string;raw_hash:string;retrieved_at:string;source_url:string;revisions:unknown[]}>;
  series_id:string;label:string;feature_name:string;frequency:string;unit:string;definition?:string;
@@ -452,13 +453,13 @@ export interface CalendarCheck {
 }
 export interface CalendarEvent {
   publisher?:string;usage_rights?:PublisherUsageRights;
-  result_state?:{schedule:string;document:string;numeric:string;data_version:string;report_csv_difference:boolean;publication_time_observed:null;csv_update_time_observed:null};
+  result_state?:{schedule:string;document:string;numeric:string;data_version:string;report_csv_difference?:boolean;report_exhibit_difference?:boolean;publication_time_observed:null;csv_update_time_observed:null};
   release_id: number | null;
   event_id?: string;
   description?:string;
   measures?:CalendarMeasure[];
   expects_numeric_result?:boolean;
-  event_type?: "fomc_decision" | "fomc_press_conference" | "fomc_minutes" | "fomc_sep" | "ism_report" | "michigan_preliminary" | "michigan_final" | "adp_monthly" | "empire_state";
+  event_type?: "fomc_decision" | "fomc_press_conference" | "fomc_minutes" | "fomc_sep" | "ism_report" | "michigan_preliminary" | "michigan_final" | "adp_monthly" | "empire_state" | "ft900";
   reference_period?:string|null;reference_period_status?:'confirmed'|'unconfirmed';publication_stage?:'preliminary'|'final'|'monthly';category?:string;
   result_integration_status?:'publisher_permission_required';result_status?:'restricted';
   publisher_reports_url?:string;license_source_url?:string;document_kind?:string|null;
@@ -487,6 +488,7 @@ export interface CalendarEvent {
 }
 
 export interface CalendarResponse {
+  ft900_calendar?:{published_years:number[];tbd_periods:string[]};
   empire_state_calendar?:{published_years:number[];requested_year_status:Record<string,string>};
   adp_calendar?:{coverage:string;confirmed_dates:string[];requested_year_status:Record<string,string>;check:unknown};
   michigan_calendar?:{published_years:number[];requested_year_status:Record<string,'confirmed'|'not_published_in_checked_sources'>;check:unknown};

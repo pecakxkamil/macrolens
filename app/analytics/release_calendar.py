@@ -155,6 +155,8 @@ def list_calendar_events(
     if category in (None, 'growth'):
         from app.analytics.empire_state import calendar_events as empire_events
         selected.extend(empire_events(start,end))
+        from app.analytics.ft900_calendar import calendar_events as ft900_events
+        selected.extend(ft900_events(start,end))
     if category in (None, "financial_conditions"):
         selected.extend({**event, "release_date": date.fromisoformat(event["release_date"])}
                         for event in policy["events"] if str(start) <= event["release_date"] <= str(end))
@@ -170,11 +172,14 @@ def list_calendar_events(
     from app.analytics.empire_state import read_schedule as read_empire_schedule
     empire=read_empire_schedule()
     empire_years=sorted({int(e['reference_period'][:4]) for e in empire['events']})
+    from app.ingestion.sync_ft900 import read_schedule as ft900_schedule
+    trade=ft900_schedule()
     return {
         "start_date": start,
         "end_date": end,
         "category": category,
         "events": selected,
+        "ft900_calendar": {"published_years":sorted({int(e['release_date'][:4]) for e in trade['events']}),"tbd_periods":trade.get('tbd_periods',[])},
         "empire_state_calendar": {"published_years":empire_years,
             "requested_year_status":{str(y):'confirmed' if y in empire_years else 'not_published_in_checked_sources' for y in range(start.year,end.year+1)}},
         "michigan_calendar": {"published_years":michigan_years,"check":michigan['check'],

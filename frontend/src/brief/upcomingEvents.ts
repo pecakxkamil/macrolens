@@ -19,6 +19,7 @@ export const overviewEventPriorities = [
   { key: "michigan_final", aliases: ["Michigan Consumer Sentiment — Final"], priority: "Tracked event" },
   { key: "retail", aliases: ["Advance Monthly Sales for Retail and Food Services"], priority: "Tracked event" },
   { key: "empire_state", aliases: ["Empire State Manufacturing Survey"], priority: "Tracked event" },
+  { key: "ft900", aliases: ["U.S. Trade Balance — Goods and Services"], priority: "Tracked event" },
   { key: "claims", aliases: ["Unemployment Insurance Weekly Claims Report"], priority: "Tracked event" },
   { key: "fomc_minutes", aliases: ["FOMC Meeting Minutes"], priority: "Tracked event" },
 ] as const;
@@ -34,6 +35,7 @@ export function eventDay(event: CalendarEvent): string {
   return instant === null ? event.release_date : warsawDate(new Date(instant));
 }
 export function eventIdentity(event: CalendarEvent): string {
+  if(event.event_type==='ft900'&&event.event_id)return event.event_id;
   if(event.event_type==='empire_state'&&event.event_id)return event.event_id;
   if((event.event_type?.startsWith('michigan_')||event.event_type==='adp_monthly')&&event.event_id)return event.event_id;
   if(event.event_type?.startsWith('fomc_')&&event.event_type!=='fomc_decision'&&event.event_id)return event.event_id;
@@ -72,7 +74,7 @@ export function overviewUpcomingEvents(data: EconomyBriefResponse, now: Date = n
     nextFomc: nextFomc && !selectedIds.has(eventIdentity(nextFomc)) ? nextFomc : null };
 }
 export function upcomingEventReport(event: CalendarEvent): string {
-  if(event.event_type==='empire_state')return `${event.release_name} (${event.reference_period}) - ${eventDateLabel(event)} - ${formatPolandTime(event.release_datetime_utc)}. ${event.usage_rights?.copyright} ${event.usage_rights?.original_url} ${event.usage_rights?.terms_url}. ${event.usage_rights?.modifications}`;
+  if((event.event_type==='empire_state'||event.event_type==='ft900'))return `${event.release_name} (${event.reference_period}) - ${eventDateLabel(event)} - ${formatPolandTime(event.release_datetime_utc)}. ${event.usage_rights?.copyright} ${event.usage_rights?.original_url} ${event.usage_rights?.terms_url}. ${event.usage_rights?.modifications}`;
   if(event.event_type?.startsWith('michigan_')||event.event_type==='adp_monthly')return `${event.release_name} (${event.reference_period??"Reference period unconfirmed"}) - ${eventDateLabel(event)} [${eventDay(event)}] - ${formatPolandTime(event.release_datetime_utc)}. ${eventPriority(event)?.priority}. Numerical results are not integrated. Official reports: ${event.publisher_reports_url}.`;
   return `${event.release_name} - ${eventDateLabel(event)} [${eventDay(event)}] - ${formatPolandTime(event.release_datetime_utc)}. ${eventPriority(event)?.priority ?? "Other event"}.`;
 }

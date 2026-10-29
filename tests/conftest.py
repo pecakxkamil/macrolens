@@ -12,6 +12,15 @@ _attempts = []
 
 
 @pytest.fixture(autouse=True)
+def isolate_unrelated_ft900_source(request, monkeypatch):
+    if request.node.module.__name__.endswith('test_ft900'):
+        return
+    from app.ingestion import sync_ft900
+    monkeypatch.setattr(sync_ft900,'read_schedule',lambda *a,**k:{'events':[],'history':[],'tbd_periods':[]})
+    monkeypatch.setattr(sync_ft900,'sync_source',lambda *a,**k:{'status':'success'})
+
+
+@pytest.fixture(autouse=True)
 def isolate_unrelated_empire_source(request, monkeypatch):
     """Existing source tests do not consume a developer's local NY Fed store.
 

@@ -49,5 +49,5 @@ export function countdownDelay(instant:number,now:Date){
  const remaining=instant-now.getTime();if(!Number.isFinite(remaining)||remaining<=0)return null;
  return remaining<60000?remaining:remaining%(remaining>=86400000?86400000:60000)+1;
 }
-export function measureValue(value:number|null,unit:string){if(value===null||!Number.isFinite(value))return '—';const digits=['claims','thousand homes/year (SAAR)','thousand jobs','thousand openings'].includes(unit)?0:2;const number=new Intl.NumberFormat(getLocale(),{maximumFractionDigits:digits,minimumFractionDigits:unit==='percent'?2:0}).format(value);return number+(unit==='percent'?'%':'');}
+export function measureValue(value:number|null,unit:string){if(value===null||!Number.isFinite(value))return '—';const digits=['claims','thousand homes/year (SAAR)','thousand jobs','thousand openings'].includes(unit)?0:unit==='USD bn'?3:2;const number=new Intl.NumberFormat(getLocale(),{maximumFractionDigits:digits,minimumFractionDigits:unit==='percent'?2:0}).format(value);return number+(unit==='percent'?'%':'');}
 export function resultPending(event:CalendarEvent,measure:CalendarMeasure,now:Date){const instant=eventInstant(event);return measure.actual===null&&(instant!==null?instant<=now.getTime():eventDay(event)<todayIso(now));}
