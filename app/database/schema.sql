@@ -135,3 +135,28 @@ CREATE TABLE IF NOT EXISTS overview_refresh_state (
     results JSONB NOT NULL DEFAULT '[]'
 );
 INSERT INTO overview_refresh_state(id) VALUES (1) ON CONFLICT DO NOTHING;
+
+-- Immutable direct-publisher receipts. Existing observation keys and FRED/PIT
+-- semantics stay unchanged; RAW retains intraday versions of a daily snapshot.
+CREATE TABLE IF NOT EXISTS publisher_documents (
+    id UUID PRIMARY KEY,
+    source TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    source_url TEXT NOT NULL,
+    retrieved_at TIMESTAMPTZ NOT NULL,
+    http_status INTEGER NOT NULL,
+    raw_hash VARCHAR(64) NOT NULL,
+    raw_path TEXT NOT NULL,
+    metadata JSONB NOT NULL,
+    UNIQUE (source, kind, raw_hash)
+);
+ALTER TABLE observation_vintages ADD COLUMN IF NOT EXISTS source_document_id UUID
+    REFERENCES publisher_documents(id);
+ALTER TABLE observation_vintages ADD COLUMN IF NOT EXISTS publication_document_id UUID
+    REFERENCES publisher_documents(id);
+CREATE INDEX IF NOT EXISTS publisher_documents_source_retrieved_idx
+    ON publisher_documents (source, retrieved_at, id);
+CREATE INDEX IF NOT EXISTS observation_vintages_source_document_idx
+    ON observation_vintages (source_document_id) WHERE source_document_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS observation_vintages_publication_document_idx
+    ON observation_vintages (publication_document_id) WHERE publication_document_id IS NOT NULL;

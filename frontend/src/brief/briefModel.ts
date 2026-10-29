@@ -73,6 +73,7 @@ export function changeText(item: BriefComparison): string {
   return `${item.label} (${item.series_id}, ${item.feature_name}): ${current}; previous: ${previous}. ${item.change_type}: ${delta}.${trailing}`;
 }
 export function eventText(event: CalendarEvent): string {
+  if(event.event_type==='empire_state')return `${event.release_name} (${event.reference_period}) - ${formatCalendarDate(event.release_date)} - ${formatPolandTime(event.release_datetime_utc)}. ${event.usage_rights?.copyright} ${event.usage_rights?.original_url} ${event.usage_rights?.terms_url}. ${event.usage_rights?.modifications}`;
   if(event.event_type?.startsWith('michigan_')||event.event_type==='adp_monthly')return `${event.release_name} - ${formatCalendarDate(event.release_date)} - ${formatPolandTime(event.release_datetime_utc)}. Survey month: ${event.reference_period??"Reference period unconfirmed"}. Stage: ${event.publication_stage}. Numerical integration: publisher permission required. Official reports: ${event.publisher_reports_url}.`;
   const known = event.release_datetime_utc && !Number.isNaN(new Date(event.release_datetime_utc).getTime());
   const day = known ? warsawDate(new Date(event.release_datetime_utc!)) : event.release_date;

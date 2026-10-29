@@ -11,6 +11,21 @@ _guard = None
 _attempts = []
 
 
+@pytest.fixture(autouse=True)
+def isolate_unrelated_empire_source(request, monkeypatch):
+    """Existing source tests do not consume a developer's local NY Fed store.
+
+    Empire integration tests opt into their explicit synthetic documents/DB.
+    Network and database guards below remain in force for every test.
+    """
+    if request.node.module.__name__.endswith('test_empire_state'):
+        return
+    from app.analytics import empire_state
+    from app.ingestion import sync_empire_state
+    monkeypatch.setattr(empire_state,'read_schedule',lambda *a,**k:{'events':[],'history':[]})
+    monkeypatch.setattr(sync_empire_state,'sync_source',lambda *a,**k:{'status':'success'})
+
+
 def pytest_configure(config):
     # Install before collection too: importing a test module must not reach a
     # provider/database before per-test fixtures get a chance to run.

@@ -79,13 +79,17 @@ def linked_period(rows,event_day,sid):
     return latest if first==event_day or sid=='GDPC1' else None
 
 
-def bind_events(events,panel,current,now,evidence=None,provider_updates=None,ism_documents=None):
+def bind_events(events,panel,current,now,evidence=None,provider_updates=None,ism_documents=None,empire_state=None):
     from app.analytics.retail_measures import expand_retail_evidence, append_control, EX_AUTOS_DEFINITION
     evidence=expand_employment_evidence(expand_ppi_evidence(expand_retail_evidence(evidence or {})))
     from app.ingestion.bls_schedule import select_records
     _,bls_conflicts=select_records(evidence.get('periods',[]))
     events=copy.deepcopy(events)
     for event in events:
+        if event.get('event_type')=='empire_state':
+            from app.analytics.empire_state import bind_measure
+            event['measures']=[bind_measure(event,empire_state or {'observations':{},'documents':[]},now)]
+            continue
         if str(event.get('event_type','')).startswith('michigan_') or event.get('event_type')=='adp_monthly':
             # Numeric report, integration restricted. Never bind delayed FRED data.
             event.update(measures=[], expects_numeric_result=True, actual=None, previous=None, forecast=None)
@@ -250,7 +254,9 @@ def policy_measure(event,decisions,now):
 def load_results(events,start,end,now,connection):
     from app.analytics.ism_calendar import load_documents
     ism_documents=load_documents(connection) if any(e.get('event_type')=='ism_report' for e in events) else []
-    series=sorted({s['series_id'] for event in events if event.get('event_type')!='ism_report' for s in event['series']})
+    from app.analytics.empire_state import load_state
+    empire=load_state(connection) if any(e.get('event_type')=='empire_state' for e in events) else None
+    series=sorted({s['series_id'] for event in events if event.get('event_type') not in ('ism_report','empire_state') for s in event['series']})
     panel=defaultdict(list);current=defaultdict(list);updates={}
     if series:
         with connection.cursor() as cursor:
@@ -267,4 +273,4 @@ def load_results(events,start,end,now,connection):
                 WHERE resource=ANY(%s) AND status='success' AND scope ? 'last_updated'
                 ORDER BY resource,finished_at DESC''',(['fred:'+sid for sid in series],))
             updates={resource.split(':',1)[1]:updated for resource,updated in cursor.fetchall()}
-    return bind_events(events,panel,current,now,read_evidence(),updates,ism_documents)
+    return bind_events(events,panel,current,now,read_evidence(),updates,ism_documents,empire)

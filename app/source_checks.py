@@ -18,8 +18,9 @@ def utc_now():
     return datetime.now(timezone.utc)
 
 
-def write_run(run):
-    connection = get_connection()
+def write_run(run, connection=None):
+    owned = connection is None
+    connection = connection or get_connection()
     try:
         with connection.cursor() as cursor:
             cursor.execute("""INSERT INTO source_check_runs
@@ -29,12 +30,12 @@ def write_run(run):
                     status=EXCLUDED.status, scope=EXCLUDED.scope, error_code=EXCLUDED.error_code""",
                 (run['id'], run['resource'], run['attempted_at'], run['finished_at'],
                  run['status'], json.dumps(run['scope']), run['error_code']))
-        connection.commit()
+        if owned: connection.commit()
     except Exception:
-        connection.rollback()
+        if owned: connection.rollback()
         raise
     finally:
-        connection.close()
+        if owned: connection.close()
 
 
 def _record(run):
@@ -47,7 +48,7 @@ def _record(run):
 
 
 @contextmanager
-def availability_check(resource, scope=None):
+def availability_check(resource, scope=None, connection=None):
     run = dict(id=str(uuid4()), resource=resource, attempted_at=utc_now(),
                finished_at=None, status='running', scope=dict(scope or {}), error_code=None)
     _record(run)
@@ -61,4 +62,9 @@ def availability_check(resource, scope=None):
         if run['status'] == 'running':
             run['status'] = 'success'
         run['finished_at'] = utc_now()
-        _record(run)
+        if connection is None:
+            _record(run)
+        else:
+            # A direct-publisher importer can commit its final success receipt
+            # together with observations and the published Overview generation.
+            write_run(run, connection)

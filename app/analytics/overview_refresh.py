@@ -294,6 +294,18 @@ def refresh_sources(connection, previous, now):
             versions[resource]={'attempted_at':now.isoformat()}
             results.append({'resource':resource,'status':'error','error_code':'adp_schedule_unavailable'})
     else:results.append({'resource':resource,'status':'cached','outcome':'within_provider_interval'})
+    from app.ingestion.sync_empire_state import sync_source as sync_empire
+    resource='nyfed:empire-state'
+    if _due(versions.get(resource,{}),now,slow_interval):
+        try:
+            with httpx.Client(timeout=25,follow_redirects=True) as client:
+                payload=sync_empire(client,connection,now)
+            versions[resource]={'attempted_at':now.isoformat()}
+            results.append({'resource':resource,'status':payload['status']})
+        except Exception:
+            versions[resource]={'attempted_at':now.isoformat()}
+            results.append({'resource':resource,'status':'error','error_code':'empire_source_unavailable'})
+    else:results.append({'resource':resource,'status':'cached','outcome':'within_provider_interval'})
     return versions, results
 
 

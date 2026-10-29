@@ -244,6 +244,28 @@ test.each(['en','pl'] as const)('Michigan has two numeric report stages with res
  expect(preliminary).toBeInTheDocument();
 });
 
+test.each(['en','pl'] as const)('Empire State shows one neutral level measure, provenance and NY Fed rights in %s',async language=>{
+ setLanguage(language);vi.setSystemTime(new Date('2026-10-29T12:00:00Z'));
+ const rights={source:'Federal Reserve Bank of New York',copyright:'© 2026 Federal Reserve Bank of New York. Content from the New York Fed subject to the Terms of Use at newyorkfed.org.',terms_url:'https://www.newyorkfed.org/privacy/termsofuse',original_url:'https://www.newyorkfed.org/medialibrary/media/survey/empire/data/esms_seasonallyadjusted_diffusion.csv',modifications:'MacroLens computes index-point differences. The New York Fed does not endorse MacroLens.',redistribution_conditions:'https://www.newyorkfed.org/privacy/termsofuse'};
+ const actual:CalendarMeasure={...measure('General Business Conditions — SA'),series_id:'NYFED_EMPIRE_GACDISA',feature_name:'raw',unit:'index points',reference_period:'2026-10-01',previous_period:'2026-09-01',actual:25.5,previous:7.6,data_version:'current_vintage',source_url:rights.original_url,usage_rights:rights,actual_provenance:{source_url:rights.original_url,version:'current_vintage',raw_hash:'a'.repeat(64),retrieved_at:'2026-10-29T10:00:00Z'}};
+ const item:CalendarEvent={...events()[0],release_id:null,event_id:'empire-state:2026-10:monthly',event_type:'empire_state',release_name:'Empire State Manufacturing Survey',reference_period:'2026-10-01',release_date:'2026-10-15',release_datetime_utc:'2026-10-15T12:30:00Z',importance:'medium',series:[{...cpi,series_id:actual.series_id,category:'growth'}],measures:[actual],usage_rights:rights,document_status:'available',document_url:'https://www.newyorkfed.org/medialibrary/media/survey/empire/example.pdf'};
+ const next:CalendarEvent={...item,event_id:'empire-state:2026-11:monthly',reference_period:'2026-11-01',release_date:'2026-11-16',release_datetime_utc:'2026-11-16T13:30:00Z',measures:[{...actual,reference_period:'2026-11-01',previous_period:'2026-10-01',actual:null,previous:25.5,result_status:'scheduled',missing_reason:{actual:'not_yet_published',previous:null}}]};
+ vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>({events:[item,next],start_date:'2026-10-15',end_date:'2026-11-16'})})));
+ render(<CalendarPage/>);
+ const button=await screen.findByRole('button',{name:tText('General Business Conditions — SA')+(language==='en'?' (Oct)':' (paź)')});
+ expect(document.querySelectorAll('.agenda-entry')).toHaveLength(2);
+ const row=button.closest('tr')!;expect(row).toHaveTextContent(language==='en'?'17.9':'17,9');expect(row).not.toHaveTextContent('%');
+ expect(filterEvents([item,next],new Set([3]),false,new Set())).toHaveLength(0);
+ expect(filterEvents([item,next],new Set([2]),false,new Set(['activity']))).toHaveLength(2);
+ expect(row.querySelector('.agenda-difference .favorable')).toBeNull();
+ fireEvent.click(button);const detail=document.getElementById(button.getAttribute('aria-controls')!)!;
+ expect(detail).toHaveTextContent('Federal Reserve Bank of New York');expect(detail).toHaveTextContent('a'.repeat(64));
+ expect(within(detail).getByRole('link',{name:tText('NY Fed Terms of Use')})).toHaveAttribute('href',rights.terms_url);
+ expect(within(detail).getByRole('link',{name:tText('Original NY Fed CSV')})).toHaveAttribute('href',rights.original_url);
+ fireEvent.keyDown(detail,{key:'Escape'});expect(button).toHaveFocus();
+ const future=document.querySelectorAll('.agenda-entry')[1];expect(future.querySelector('.agenda-actual')).toHaveTextContent('—');expect(future).toHaveTextContent(language==='en'?'25.5':'25,5');
+});
+
 test.each(['en','pl'] as const)('ADP monthly NER keeps independent periods, restricted results and no Pulse in %s',async language=>{
  setLanguage(language);vi.setSystemTime(new Date('2026-11-03T12:00:00Z'));
  const label='ADP National Employment Report';

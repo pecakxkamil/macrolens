@@ -816,6 +816,19 @@ test.each(['en','pl'] as const)('Overview includes Michigan month and restricted
  expect(report).toContain('https://data.sca.isr.umich.edu/reports.php?year=2026');
 });
 
+test.each(['en','pl'] as const)('Empire attribution is present in Overview and exported report without a seventh card in %s',async language=>{
+ setLanguage(language);vi.setSystemTime(new Date('2026-11-14T12:00:00Z'));const data=fixture();
+ data.calendar_start_date='2026-11-14';data.calendar_end_date='2026-11-20';
+ data.calendar.data!.events=[{release_id:null,event_id:'empire-state:2026-11:monthly',event_type:'empire_state',release_name:'Empire State Manufacturing Survey',reference_period:'2026-11-01',release_date:'2026-11-16',release_time:'08:30:00',release_datetime_utc:'2026-11-16T13:30:00Z',source_timezone:'America/New_York',source_link:'https://www.newyorkfed.org/survey/empire/empiresurvey_overview',importance:'medium',date_precision:'date',series:[],usage_rights:{source:'Federal Reserve Bank of New York',copyright:'© 2026 Federal Reserve Bank of New York.',terms_url:'https://www.newyorkfed.org/privacy/termsofuse',original_url:'https://www.newyorkfed.org/medialibrary/media/survey/empire/data/esms_seasonallyadjusted_diffusion.csv',modifications:'MacroLens index-point differences; no New York Fed endorsement.',redistribution_conditions:'https://www.newyorkfed.org/privacy/termsofuse'}}];
+ mockApi(data);render(<EconomyBrief/>);
+ const link=await screen.findByRole('link',{name:language==='en'?'NY Fed Terms of Use':'Warunki wykorzystania NY Fed'});
+ expect(link.closest('li')).toHaveTextContent('14:30');expect(link.closest('li')).toHaveTextContent('Federal Reserve Bank of New York');
+ expect(document.querySelectorAll('.overview-domain')).toHaveLength(6);
+ expect(document.querySelectorAll('.overview-calendar .overview-event').length).toBeLessThanOrEqual(4);
+ const report=briefMarkdown(briefModel(data),data,data.assembled_at);
+ expect(report).toContain('https://www.newyorkfed.org/privacy/termsofuse');expect(report).toContain('no New York Fed endorsement');
+});
+
 test.each(['en','pl'] as const)('ADP appears in Overview as a monthly report without adding a domain in %s',async language=>{
  setLanguage(language);vi.setSystemTime(new Date('2026-11-01T12:00:00Z'));const data=fixture();
  data.calendar_start_date='2026-11-01';data.calendar_end_date='2026-11-07';

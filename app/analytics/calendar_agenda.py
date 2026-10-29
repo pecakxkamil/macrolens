@@ -10,7 +10,8 @@ MAX_CALENDAR_DAYS=366
 
 
 def event_resources(events):
-    resources={('ism:' if e.get('event_type')=='ism_report' else 'fred:')+s['series_id'] for e in events for s in e['series']}
+    resources={('ism:' if e.get('event_type')=='ism_report' else 'fred:')+s['series_id'] for e in events if e.get('event_type')!='empire_state' for s in e['series']}
+    if any(e.get('event_type')=='empire_state' for e in events):resources.add('nyfed:empire-state')
     if any(str(e.get('event_type','')).startswith('michigan_') for e in events):resources.add('michigan:calendar')
     if any(e.get('event_type')=='adp_monthly' for e in events):resources.add('adp:calendar')
     if any(e.get('event_type')=='ism_report' for e in events):resources.add('ism:calendar')

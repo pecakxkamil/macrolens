@@ -49,6 +49,14 @@ test('Michigan stages retain stable identities, shared editorial stars and the f
  expect(overviewUpcomingEvents(data([preliminary,final,event('Employment Situation'),event('Gross Domestic Product'),event('Consumer Price Index')]),now).selected).toHaveLength(4);
 });
 
+test('Empire uses two editorial stars, stable monthly identity and the existing four-event limit',()=>{
+ const empire=event('Empire State Manufacturing Survey','2026-10-20',{event_id:'empire-state:2026-10:monthly',event_type:'empire_state',reference_period:'2026-10-01'});
+ expect(eventImportanceStars(empire)).toBe(2);
+ expect(eventIdentity({...empire,release_date:'2026-10-21'})).toBe(eventIdentity(empire));
+ expect(overviewUpcomingEvents(data([empire,empire,event('Employment Situation')]),now).selected).toHaveLength(2);
+ expect(overviewUpcomingEvents(data([empire,event('Employment Situation'),event('Consumer Price Index'),event('Gross Domestic Product'),event('Personal Income and Outlays')]),now).selected).toHaveLength(4);
+});
+
 test('ADP monthly is independent from NFP and retains shared stars, identity and four-event limit',()=>{
  const adp=event('ADP National Employment Report','2026-10-20',{event_id:'adp:2026-09:monthly',event_type:'adp_monthly',reference_period:'2026-09-01'});
  expect(eventImportanceStars(adp)).toBe(3);
