@@ -78,4 +78,7 @@ def main():
     print('Generated test database removed; no user database schema/data changed.')
 
 
-if __name__=='__main__':main()
+if __name__=='__main__':
+    from tests.postgres_http_guard import no_publisher_http
+    with no_publisher_http():
+        main()

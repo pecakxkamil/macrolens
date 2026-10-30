@@ -174,4 +174,6 @@ def main():
 
 
 if __name__=='__main__':
-    main()
+    from tests.postgres_http_guard import no_publisher_http
+    with no_publisher_http():
+        main()

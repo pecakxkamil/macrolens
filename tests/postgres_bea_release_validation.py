@@ -118,4 +118,7 @@ def main():
         finally:admin.execute(sql.SQL('DROP DATABASE {}').format(sql.Identifier(name)))
     print('Only owned test database removed; user DB not modified')
 
-if __name__=='__main__':main()
+if __name__=='__main__':
+    from tests.postgres_http_guard import no_publisher_http
+    with no_publisher_http():
+        main()
