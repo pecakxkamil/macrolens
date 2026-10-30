@@ -1,4 +1,5 @@
 import { useOverviewRefresh } from "./useOverviewRefresh";
+import {BeaEvidence} from '../calendar/BeaEvidence';
 import { SourceCheckStatus } from "./SourceCheckStatus";
 import { economicInterpretation, fedDecisionMarkers } from "./economicInterpretation";
 import { InterpretationMarker } from "./InterpretationMarker";
@@ -58,8 +59,8 @@ function ReadingRow({ reading, onChart, explanations }: { reading: PreparedReadi
   return <tr className={`overview-reading-row${reading.raw?.unit === "index" ? " overview-reading-row--index" : ""}`} aria-label={tLabel(reading.label)}>
     <th scope="row"><div className="overview-reading-heading"><a href={reading.indicatorHref}>{tText(reading.label)}</a><span className="overview-reading-actions"><ChartButton title={reading.label} onClick={onChart} />{explanations ? <span className="overview-explanation"><EconomicExplanationTooltip label={`${reading.label}: Economic meaning`} explanation={economicExplanation(reading)} /></span> : null}</span></div><div className="overview-period"><time dateTime={reading.current.date}>{tText(reading.current.period)}</time></div></th>
     <td className="overview-value--latest"><div className="overview-value"><div className="overview-reading-number">{value(reading.current)}{reading.current.yoy !== undefined ? <small className="overview-yoy">{tText(reading.current.yoy)}{reading.current.yoy === "\u2014" ? "" : "%"} {tText("YoY")}</small> : null}</div><span className={`overview-change overview-change--${reading.tone}`}>
-      <InfoTooltip label={`${reading.label}: ${reading.labels.change} - ${directionLabel}`} description={readingHoverText(reading)} trigger={reading.arrow} closable
-        content={<span className="reading-change-details">{readingHoverLines(reading).map((line, index) => <span key={index}>{index > 0 ? " " : ""}{tText(line)}</span>)}</span>} />
+      <InfoTooltip label={`${reading.label}: ${reading.labels.change} - ${directionLabel}`} description={readingHoverText(reading)} trigger={reading.arrow} closable bounded={Boolean(reading.raw?.bea_direct)}
+        content={<div className="reading-change-details">{readingHoverLines(reading).map((line, index) => <span key={index}>{index > 0 ? " " : ""}{tText(line)}</span>)}{reading.raw?.bea_direct?<BeaEvidence measure={reading.raw.bea_direct}/>:null}</div>} />
     </span><InterpretationMarker label={reading.label} interpretation={interpretation} /></div></td>
     <td className="overview-value--earlier">{value(reading.previous)}<time dateTime={reading.previous.date}>{tText(reading.previous.period)}</time></td>
   </tr>;
@@ -108,7 +109,7 @@ export function EconomyBrief({explanations=false}: {explanations?:boolean} = {})
     {!data && !error ? <p className="loading-panel">{tText("Loading Economy Brief...")}</p> : null}
     {error ? <div className="error-panel" role="alert"><p>{tText("Economy Brief is unavailable. Check the API and try again.")}</p><button onClick={() => setRetry((value) => value + 1)}>{tText("Retry brief")}</button></div> : null}
     {data && model ? <main className="economy-brief">
-      <div className="overview-data-note"><p>{tText("Data sources:")} <a href="https://fred.stlouisfed.org/" target="_blank" rel="noreferrer">FRED</a>, <a href="https://www.ismworld.org/" target="_blank" rel="noreferrer">ISM</a>, <a href="https://www.federalreserve.gov/" target="_blank" rel="noreferrer">{tText("Federal Reserve")}</a>.</p>
+      <div className="overview-data-note"><p>{tText("Data sources:")} <a href="https://fred.stlouisfed.org/" target="_blank" rel="noreferrer">FRED</a>, <a href="https://www.ismworld.org/" target="_blank" rel="noreferrer">ISM</a>, <a href="https://www.federalreserve.gov/" target="_blank" rel="noreferrer">{tText("Federal Reserve")}</a>{data.reading_comparisons?.data?.some(r=>r.bea_direct)?<>, <a href="https://www.bea.gov/" target="_blank" rel="noreferrer">BEA</a></>:null}.</p>
         {data.reading_comparisons?.status !== "ready" ? <p role="status">{tText("Reading comparisons unavailable.")}</p> : model.domains.some((domain) => domain.compact.some((reading) => !reading.raw?.current)) ? <p role="status">{tText("Some readings unavailable.")}</p> : null}
       </div>
       <section aria-label={tLabel("Economy across six domains")}><div className="brief-grid">{model.domains.map((domain) => <article key={domain.key} className="domain-card overview-domain" aria-label={tLabel(`${domain.name} brief`)}>

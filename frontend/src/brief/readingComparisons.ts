@@ -42,6 +42,7 @@ export function comparisonDirection(item?: OverviewReadingComparison): ReadingDi
   return item.current.value > item.previous.value ? "higher" : "lower";
 }
 export function comparisonTone(item?: OverviewReadingComparison): "positive" | "negative" | "neutral" {
+  if(item?.bea_direct)return "neutral";
   const direction = comparisonDirection(item);
   return direction === "higher" ? "positive" : direction === "lower" ? "negative" : "neutral";
 }
@@ -56,15 +57,15 @@ function exactNumber(value: number): string { return new Intl.NumberFormat(getLo
 export function prepareReading(key: string, series: string, item?: OverviewReadingComparison) {
   const unit = item?.unit ?? "";
   const point = (value: OverviewReadingComparison["current"] | undefined, expected?: string | null, context?: OverviewReadingComparison["current"]) => {
-    const formatted = readingNumber(value?.value, unit, key === "unemployment" ? 1 : undefined);
-    const screenValue = screenNumber(key, unit, value?.value);
+    const formatted = readingNumber(value?.value, unit, value?.published_precision ?? (key === "unemployment" ? 1 : undefined));
+    const screenValue = value?.published_precision !== undefined && value?.published_precision !== null ? formatted : screenNumber(key, unit, value?.value);
     const screenSuffix = key === "job_openings" && formatted !== missing ? getLanguage() === "pl" ? " mln" : " m" : compactReadingValue("", unit);
     return {
       screenValue, screenSuffix: formatted === missing ? "" : screenSuffix,
       value: formatted, suffix: formatted === missing ? "" : compactReadingValue("", unit), display: screenValue === missing ? missing : screenValue + screenSuffix,
       period: value?.observation_date || expected ? formatObservationDate(value?.observation_date ?? expected!, item?.frequency) : missing,
       date: value?.observation_date ?? expected ?? undefined,
-      yoy: item?.feature_name === "mom" && series !== "PPIFIS" ? readingNumber(context?.observation_date === (value?.observation_date ?? expected) ? context?.value : null, "percent") : undefined,
+      yoy: item?.feature_name === "mom" && series !== "PPIFIS" ? readingNumber(context?.observation_date === (value?.observation_date ?? expected) ? context?.value : null, "percent",context?.published_precision??undefined) : undefined,
     };
   };
   const current = point(item?.current, undefined, item?.context_yoy?.current);
@@ -76,7 +77,7 @@ export function prepareReading(key: string, series: string, item?: OverviewReadi
   const rate = ["mom", "yoy", "annualized_3m", "qoq_annualized"].includes(item?.feature_name ?? "");
   const comparison = comparisonDirection(item);
   const arrow = comparison === "unavailable" ? "?" : comparison === "unchanged" ? missing : comparison === "higher" ? "\u2191" : "\u2193";
-  const difference = delta === null ? missing : `${delta > 0 ? "+" : ""}${readingNumber(delta, item!.change_unit)} ${readingUnit(item!.change_unit)}`;
+  const difference = delta === null ? missing : `${delta > 0 ? "+" : ""}${readingNumber(delta, item!.change_unit,item?.bea_direct?1:undefined)} ${readingUnit(item!.change_unit)}`;
   const exactDifference = delta === null ? missing : `${delta > 0 ? "+" : ""}${exactNumber(delta)} ${readingUnit(item!.change_unit)}`;
   const fullDifference = delta === null ? missing : `${delta > 0 ? "+" : ""}${exactNumber(delta)} ${fullUnit(item!.change_unit)}`;
   const period = ({ quarterly: "quarter", weekly: "week", daily: "observation" } as Record<string, string>)[item?.frequency ?? ""] ?? "month";
@@ -98,5 +99,7 @@ export function prepareReading(key: string, series: string, item?: OverviewReadi
 export type PreparedReading = ReturnType<typeof prepareReading>;
 export function readingReportLine(reading: PreparedReading): string {
   const value = (point: PreparedReading["current"]) => `${point.value} (${point.period})${point.yoy !== undefined ? `; YoY: ${point.yoy}${point.yoy === missing ? "" : "%"}` : ""}`;
-  return `${reading.label}${reading.reportUnit ? ` [${reading.reportUnit}]` : ""}: Latest: ${value(reading.current)}; ${reading.labels.previous}: ${value(reading.previous)}; ${reading.labels.earlier}: ${value(reading.earlier)}; ${reading.labels.change}: ${reading.change}.${reading.claimsAverage ? ` Same-week 4W average: ${reading.claimsAverage.value} claims (${reading.current.period}).` : ""}`;
+  const bea=reading.raw?.bea_direct;
+  const evidence=bea?` Source: U.S. Bureau of Economic Analysis; ${bea.source_url}; published precision: one decimal; method: published rate or level; captured snapshot, not verified first print; retrieved: ${bea.actual_provenance?.retrieved_at}; hash: ${bea.actual_provenance?.raw_hash}; stage: ${bea.actual_provenance?.estimate_stage ?? 'monthly'}; comparison: ${bea.comparison_status}; annual context source: ${bea.annual_context_source ?? "BEA or unavailable"}; FRED alternative: ${JSON.stringify(bea.fred_alternative)}; source comparison: ${bea.source_comparison}; policy: ${bea.usage_rights?.terms_url}; ${bea.usage_rights?.modifications}`:'';
+  return `${evidence} ${reading.label}${reading.reportUnit ? ` [${reading.reportUnit}]` : ""}: Latest: ${value(reading.current)}; ${reading.labels.previous}: ${value(reading.previous)}; ${reading.labels.earlier}: ${value(reading.earlier)}; ${reading.labels.change}: ${reading.change}.${reading.claimsAverage ? ` Same-week 4W average: ${reading.claimsAverage.value} claims (${reading.current.period}).` : ""}`;
 }

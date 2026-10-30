@@ -16,6 +16,7 @@ def event_resources(events):
     if any(str(e.get('event_type','')).startswith('michigan_') for e in events):resources.add('michigan:calendar')
     if any(e.get('event_type')=='adp_monthly' for e in events):resources.add('adp:calendar')
     if any(e.get('event_type')=='ism_report' for e in events):resources.add('ism:calendar')
+    if any(e.get('release_id') in (53,54) for e in events):resources.add('bea:reports')
     return resources
 
 

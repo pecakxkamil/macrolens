@@ -12,6 +12,17 @@ _attempts = []
 
 
 @pytest.fixture(autouse=True)
+def isolate_unrelated_bea_source(request,monkeypatch):
+    if request.node.module.__name__.endswith('test_bea_direct'):
+        return
+    from app.ingestion import sync_bea_reports
+    from app.analytics import bea_direct
+    monkeypatch.setattr(sync_bea_reports,'sync_source',lambda *a,**k:{'status':'success'})
+    monkeypatch.setattr(bea_direct,'load_state',lambda *a,**k:{'documents':[],'observations':{}})
+    monkeypatch.setattr(bea_direct,'overview',lambda rows,*a,**k:rows)
+
+
+@pytest.fixture(autouse=True)
 def isolate_unrelated_ft900_source(request, monkeypatch):
     if request.node.module.__name__.endswith('test_ft900'):
         return

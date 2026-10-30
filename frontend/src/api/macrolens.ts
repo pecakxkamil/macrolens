@@ -422,6 +422,10 @@ export interface PublisherUsageRights {
  source:string;copyright:string;terms_url:string;original_url:string;modifications:string;redistribution_conditions:string;
 }
 export interface CalendarMeasure {
+ annual_context_source?:'fred';
+ selected_source?:'bea_official'|'fred_fallback'|'not_available';published_precision?:number;previous_precision?:number|null;
+ source_comparison?:'conflict'|'consistent_with_rounding'|'bea_only';comparison_status?:'mixed_sources'|'same_bea_document'|'previous_unavailable';
+ fred_alternative?:{actual:number|null;previous:number|null;source_url?:string;data_version?:string;actual_provenance?:Record<string,unknown>|null};
  source_value_millions?:string|null;previous_source_value_millions?:string|null;
  usage_rights?:PublisherUsageRights;report_current?:number|null;
  document_versions?:Array<{id:string;raw_hash:string;retrieved_at:string;source_url:string;revisions:unknown[]}>;
@@ -784,11 +788,12 @@ export async function fetchLeadLag(options: HistoryOptions & {
 
 export interface BriefSection<T> { status: "ready" | "unavailable"; data: T | null; error: string | null }
 export interface BriefComparison {
+  bea_direct?:CalendarMeasure;
   series_id: string; feature_name: string; label: string; frequency: string; unit: string;
   change_unit: string; change_type: string; change: number | null;
   expected_previous_observation_date: string | null; latest_stored_observation_date: string | null;
-  current: { value: number; observation_date: string; feature_as_of_date: string | null; document_published_at?: string; source_url?: string; retrieved_at?: string; raw_hash?: string } | null;
-  previous: { value: number; observation_date: string; feature_as_of_date: string | null; document_published_at?: string; source_url?: string; retrieved_at?: string; raw_hash?: string } | null;
+  current: { value: number; observation_date: string; feature_as_of_date: string | null; published_precision?:number|null; document_published_at?: string; source_url?: string; retrieved_at?: string; raw_hash?: string } | null;
+  previous: { value: number; observation_date: string; feature_as_of_date: string | null; published_precision?:number|null; document_published_at?: string; source_url?: string; retrieved_at?: string; raw_hash?: string } | null;
 }
 export interface OverviewReadingComparison extends BriefComparison {
   domain: MciDomainKey; component: string; source_url?: string; attribution?: string;

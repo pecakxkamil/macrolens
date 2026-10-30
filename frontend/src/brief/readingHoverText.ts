@@ -5,7 +5,7 @@ import { readingNumber } from "./readingComparisons";
 function readingHoverContent(reading: PreparedReading) {
   const raw = reading.raw;
   if (!raw?.current || !raw.previous || reading.comparison === "unavailable" || raw.change === null) return { lines: [reading.label, "Comparison unavailable."], text: "Comparison unavailable." };
-  const precision = ["claims", "persons", "thousands", "thousands SAAR", "thousands of openings"].includes(raw.unit) ? 0 : 2;
+  const precision = raw.bea_direct?1:["claims", "persons", "thousands", "thousands SAAR", "thousands of openings"].includes(raw.unit) ? 0 : 2;
   const delta = Number(raw.change.toFixed(precision));
   const period = ({daily:"observation",weekly:"week",quarterly:"quarter"} as Record<string,string>)[raw.frequency] ?? "month";
   const special: Record<string, [string,string]> = {

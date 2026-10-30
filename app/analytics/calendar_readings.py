@@ -279,4 +279,8 @@ def load_results(events,start,end,now,connection):
                 WHERE resource=ANY(%s) AND status='success' AND scope ? 'last_updated'
                 ORDER BY resource,finished_at DESC''',(['fred:'+sid for sid in series],))
             updates={resource.split(':',1)[1]:updated for resource,updated in cursor.fetchall()}
-    return bind_events(events,panel,current,now,read_evidence(),updates,ism_documents,empire,trade)
+    bound=bind_events(events,panel,current,now,read_evidence(),updates,ism_documents,empire,trade)
+    if any(e.get('release_id') in (53,54) for e in events):
+        from app.analytics.bea_direct import apply,load_state
+        bound=apply(bound,load_state(connection),now)
+    return bound

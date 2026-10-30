@@ -9,6 +9,7 @@ import {formatAgendaDate,formatCalendarDate,formatPolandTime} from './calendarDa
 import {calendarComparison,comparableForecast} from './calendarComparisons';
 import {ComparisonTooltip} from './ComparisonTooltip';
 import {ReadingAvailability} from './ReadingAvailability';
+import {BeaEvidence} from './BeaEvidence';
 import {compactMeasureName,compactPeriod,compactMeasureValue,calendarReadingValue} from './calendarPresentation';
 import {calendarCategories,countdownText,countdownDelay,filterEvents,groupAgenda,nextInstant,presetRange,rangeError,resultPending,type DatePreset} from './calendarAgenda';
 
@@ -94,7 +95,8 @@ function EventDetails({event,measure,now,check,refresh,revision,id,onClose}:{eve
  </>:null}
  <ul>{relevant?.map(source=><li key={source.resource}>{tText(source.label)}: {tText(checkStatusLabel(source.range_status))}{source.checked_at?` · ${availabilityTime(source.checked_at)}`:''}</li>)}</ul>
  {measure?<div className="agenda-measure-detail"><strong>{tText(measure.label)}</strong>{measure.definition?<p>{tText(measure.definition)}</p>:null}
- <ReadingAvailability measure={measure} check={check} refresh={refresh} revision={revision} now={now}/>
+ <BeaEvidence measure={measure} check={check}/>
+ {measure.selected_source!=='bea_official'?<ReadingAvailability measure={measure} check={check} refresh={refresh} revision={revision} now={now}/>:null}
  <ProducerInputs measure={measure}/><ProducerYearly measure={measure}/>
  {measure.survey?<p>{measure.survey} · {measure.source_series_id} · {tText(measure.seasonal_adjustment??'')}</p>:null}
  <p>{measure.series_id} · {tText('Measure')}: {measure.feature_name} · {tText(measure.unit)}. {tText('Observation period')}: {measure.reference_period?formatObservationDate(measure.reference_period,measure.frequency):tText('Reference period unconfirmed')}.</p>

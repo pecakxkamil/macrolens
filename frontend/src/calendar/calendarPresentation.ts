@@ -43,6 +43,8 @@ export function compactMeasureValue(value:number|null,unit:string){
 }
 
 export function calendarReadingValue(measure:CalendarMeasure,kind:'actual'|'previous'){
+ const precision=kind==='actual'?measure.published_precision:measure.previous_precision;
+ if(precision!==undefined&&precision!==null&&measure[kind]!==null&&Number.isFinite(measure[kind]))return new Intl.NumberFormat(getLocale(),{minimumFractionDigits:precision,maximumFractionDigits:precision}).format(measure[kind]!)+'%';
  if(['CFNAI','NFCI'].includes(measure.series_id)&&['index','index points'].includes(measure.unit)&&measure[kind]!==null&&Number.isFinite(measure[kind])){
   const value=Number(measure[kind]!.toFixed(2));
   return new Intl.NumberFormat(getLocale(),{minimumFractionDigits:2,maximumFractionDigits:2}).format(Object.is(value,-0)?0:value)+'\u00a0'+(getLanguage()==='pl'?'pkt':'pt');

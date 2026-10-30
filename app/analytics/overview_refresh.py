@@ -139,6 +139,15 @@ def refresh_sources(connection, previous, now):
     from app.ingestion.sync_fomc_calendar import sync_schedule
     from app.ingestion import discover_ism, import_ism
     versions, results = copy.deepcopy(previous), []
+    # BEA is checked independently before a slow/failed FRED cycle can consume
+    # the shared budget. The same coordinator lock and 900-second job apply.
+    from app.ingestion.sync_bea_reports import sync_source as sync_bea
+    try:
+        with httpx.Client(timeout=25,follow_redirects=True) as client:
+            bea=sync_bea(client,connection,now)
+        results.append({'resource':'bea:reports','status':bea['status']})
+    except Exception:
+        results.append({'resource':'bea:reports','status':'error','error_code':'bea_report_unconfirmed'})
     requested = previous.get("calendar_requested_window")
     required_series = set(FRED_SERIES)
     if requested:

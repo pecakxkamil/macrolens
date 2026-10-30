@@ -256,7 +256,8 @@ def test_failed_source_uses_savepoint_and_partial_job_keeps_successful_sources(m
     versions,results=refresh.refresh_sources(Connection(),previous,NOW)
     assert calls[:6]==['savepoint','A','rollback','savepoint','B','release']
     assert versions['fred:B']=={'version':'new'} and 'fred:A' not in versions
-    assert results[0]['status']=='error' and results[1]['status']=='success'
+    by_resource={row['resource']:row for row in results}
+    assert by_resource['fred:A']['status']=='error' and by_resource['fred:B']['status']=='success'
 
 
 def test_rate_limit_stops_further_fred_requests_and_calendar(monkeypatch):

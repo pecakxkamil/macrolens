@@ -141,6 +141,8 @@ def load_reading_comparisons(today):
         with connection.cursor() as cursor:
             cursor.execute(sql, params)
             rows = cursor.fetchall()
+        from app.analytics.bea_direct import load_state
+        bea_state=load_state(connection)
     finally:
         connection.close()
     # Raw ICSA is an observation history, not a fabricated level feature. Its
@@ -161,4 +163,5 @@ def load_reading_comparisons(today):
                     item[key].update({k: v for k, v in points[item[key]["observation_date"]].items() if k not in ("value", "observation_date")})
             item["source_url"] = item["current"]["source_url"] if item["current"] else SERIES[item["series_id"]]["source_url"]
             item["attribution"] = SERIES[item["series_id"]]["attribution"]
-    return result
+    from app.analytics.bea_direct import overview
+    return overview(result,None,today,state=bea_state)

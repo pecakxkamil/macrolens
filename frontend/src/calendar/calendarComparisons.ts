@@ -37,6 +37,7 @@ export function comparableForecast(m:CalendarMeasure){
  return m.consensus_status==='available'&&confirmedMeasure(m)&&finite(m.forecast);
 }
 export function calendarComparison(m:CalendarMeasure,kind:ComparisonKind):Comparison|null{
+ if(kind==='previous'&&m.comparison_status==='mixed_sources')return null;
  if(!confirmedMeasure(m)||!finite(m.actual))return null;
  const base=kind==='forecast'?m.forecast:m.previous;
  if(!finite(base))return null;

@@ -296,16 +296,12 @@ def parse_m3_result(content,stage,url,retrieved):
     return dict(release_id=95,series_ids=['DGORDER'],release_date=day,reference_period=month,estimate_stage=stage,source_url=url,retrieved_at=retrieved,announced_at=instant)
 
 
-def parse_bea_result(html,proof,url,retrieved):
+def parse_bea_clock(html,proof,url):
     from urllib.parse import urlparse
     location=urlparse(url)
     if location.scheme!='https' or location.hostname not in ('www.bea.gov','bea.gov') or not location.path.startswith('/news/'):
         raise ValueError('Not an official BEA news document')
     tree=Tree(html)
-    headings=[' '.join(n.text().split()) for n in tree.root.find(lambda n:n.tag=='h1')]
-    title=next((h for h in headings if re.search(r'GDP|Gross Domestic Product',h)), '')
-    quarter=re.search(r'([1-4](?:st|nd|rd|th) Quarter \d{4})',title,re.I)
-    stage=re.search(r'(Advance|Second|Third|Updated) Estimate',title,re.I)
     fields=[n.attrs['content'] for n in tree.root.find(lambda n:n.tag=='meta' and n.attrs.get('property')=='article:published_time' and n.attrs.get('content'))]
     fields += [n.attrs['datetime'] for n in tree.root.find(lambda n:n.tag=='time' and n.attrs.get('datetime'))]
     dates={value[:10] for value in fields}
@@ -332,11 +328,22 @@ def parse_bea_result(html,proof,url,retrieved):
         if local.date().isoformat()!=proof['release_date'] or local.time().isoformat()!=expected_clock:
             raise ValueError('BEA publication metadata time conflict')
         announced.add(instant.astimezone(timezone.utc).isoformat())
-    if not quarter or not stage or parsed_date(quarter[1])!=proof['reference_period'] or stage[1].lower()!=proof.get('estimate_stage') or dates!={proof['release_date']}:
-        raise ValueError('BEA result date/period/stage not confirmed')
+    if dates!={proof['release_date']}:raise ValueError('BEA publication date conflict')
     if len(announced)>1:raise ValueError('Conflicting BEA publication times')
+    return next(iter(announced)) if announced else None
+
+
+def parse_bea_result(html,proof,url,retrieved):
+    announced=parse_bea_clock(html,proof,url)
+    tree=Tree(html)
+    headings=[' '.join(n.text().split()) for n in tree.root.find(lambda n:n.tag=='h1')]
+    title=next((h for h in headings if re.search(r'GDP|Gross Domestic Product',h)), '')
+    quarter=re.search(r'([1-4](?:st|nd|rd|th) Quarter \d{4})',title,re.I)
+    stage=re.search(r'(Advance|Second|Third|Updated) Estimate',title,re.I)
+    if not quarter or not stage or parsed_date(quarter[1])!=proof['reference_period'] or stage[1].lower()!=proof.get('estimate_stage'):
+        raise ValueError('BEA result date/period/stage not confirmed')
     result=dict(release_id=53,series_ids=['GDPC1'],release_date=proof['release_date'],reference_period=proof['reference_period'],estimate_stage=stage[1].lower(),source_url=url,retrieved_at=retrieved)
-    if announced:result.update(announced_at=next(iter(announced)),release_time=expected_clock,source_timezone='America/New_York')
+    if announced:result.update(announced_at=announced,release_time=proof.get('release_time') or '08:30:00',source_timezone='America/New_York')
     return result
 
 

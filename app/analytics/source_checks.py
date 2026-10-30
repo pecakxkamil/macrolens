@@ -17,6 +17,7 @@ SNAPSHOT_SERIES = {
 FRED_SERIES = SNAPSHOT_SERIES | {sid.strip() for spec in READINGS
     for sid in spec[2].split('/') if not sid.strip().startswith('ISM_')}
 REQUIRED = {**{f'fred:{sid}': ('FRED', sid) for sid in sorted(FRED_SERIES)},
+    'bea:reports': ('U.S. Bureau of Economic Analysis', 'GDP and Personal Income and Outlays published rates'),
     'census:ft900': ('U.S. Census Bureau / U.S. Bureau of Economic Analysis', 'FT900'),
     'nyfed:empire-state': ('Federal Reserve Bank of New York', 'Empire State Manufacturing Survey'),
     'fred:calendar': ('FRED', 'Release calendar'),
