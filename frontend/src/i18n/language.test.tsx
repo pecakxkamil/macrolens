@@ -28,6 +28,8 @@ afterEach(() => {
 
 test("corner switch translates all navigation labels, sets document language and remembers preference", async () => {
   const fetch = offline(); render(<App />);
+  await screen.findByRole("heading", { name: "USA Economy Now" });
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
   expect(screen.getByRole("button", { name: "English" })).toHaveAttribute("aria-pressed", "true");
   const count = fetch.mock.calls.length;
   fireEvent.click(screen.getByRole("button", { name: "Polski" }));

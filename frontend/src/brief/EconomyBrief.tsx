@@ -4,12 +4,11 @@ import { SourceCheckStatus } from "./SourceCheckStatus";
 import { economicInterpretation, fedDecisionMarkers } from "./economicInterpretation";
 import { InterpretationMarker } from "./InterpretationMarker";
 import { ReadingChartDialog, readingPreview, fedPreview, type PreviewChart } from "./ReadingChartDialog";
-import { EconomicExplanationTooltip } from "./EconomicExplanationTooltip";
-import { economicExplanation, fedExplanation } from "./economicExplanations";
+import { ChunkBoundary } from "../navigation/ChunkBoundary";
 import { readingHoverLines, readingHoverText } from "./readingHoverText";
 import { InfoTooltip } from "../components/InfoTooltip";
 import { tText, tLabel } from "../i18n/language";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { fetchEconomyBrief, type EconomyBriefResponse } from "../api/macrolens";
 import { briefMarkdown, briefModel } from "./briefModel";
 import type { PreparedFedTarget } from "./fedTarget";
@@ -18,6 +17,12 @@ import { formatPolandTime } from "../calendar/calendarDates";
 import type { CalendarEvent } from "../api/macrolens";
 import type { PreparedReading } from "./readingComparisons";
 import { formatObservationDate } from "../format";
+
+const ReadingExplanation = lazy(() => import("./ReadingExplanation"));
+function ExplanationSlot({ children }: { children: React.ReactNode }) {
+  const failed = <span role="status" aria-label={tLabel("Unable to load this section. Reload the page to retry.")}>!</span>;
+  return <ChunkBoundary fallback={failed}><Suspense fallback={<span role="status" aria-label={tLabel("Loading section...")}>…</span>}>{children}</Suspense></ChunkBoundary>;
+}
 
 export function downloadReport(markdown: string, generatedAt: string) {
   const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
@@ -57,7 +62,7 @@ function ReadingRow({ reading, onChart, explanations }: { reading: PreparedReadi
     return <strong><span className="overview-number">{point.screenValue}</span>{suffix ? <small className="overview-inline-unit">{reading.raw?.unit === "percentage points" ? suffix : tText(suffix)}</small> : null}</strong>;
   };
   return <tr className={`overview-reading-row${reading.raw?.unit === "index" ? " overview-reading-row--index" : ""}`} aria-label={tLabel(reading.label)}>
-    <th scope="row"><div className="overview-reading-heading"><a href={reading.indicatorHref}>{tText(reading.label)}</a><span className="overview-reading-actions"><ChartButton title={reading.label} onClick={onChart} />{explanations ? <span className="overview-explanation"><EconomicExplanationTooltip label={`${reading.label}: Economic meaning`} explanation={economicExplanation(reading)} /></span> : null}</span></div><div className="overview-period"><time dateTime={reading.current.date}>{tText(reading.current.period)}</time></div></th>
+    <th scope="row"><div className="overview-reading-heading"><a href={reading.indicatorHref}>{tText(reading.label)}</a><span className="overview-reading-actions"><ChartButton title={reading.label} onClick={onChart} />{explanations ? <span className="overview-explanation"><ExplanationSlot><ReadingExplanation reading={reading} /></ExplanationSlot></span> : null}</span></div><div className="overview-period"><time dateTime={reading.current.date}>{tText(reading.current.period)}</time></div></th>
     <td className="overview-value--latest"><div className="overview-value"><div className="overview-reading-number">{value(reading.current)}{reading.current.yoy !== undefined ? <small className="overview-yoy">{tText(reading.current.yoy)}{reading.current.yoy === "\u2014" ? "" : "%"} {tText("YoY")}</small> : null}</div><span className={`overview-change overview-change--${reading.tone}`}>
       <InfoTooltip label={`${reading.label}: ${reading.labels.change} - ${directionLabel}`} description={readingHoverText(reading)} trigger={reading.arrow} closable bounded={Boolean(reading.raw?.bea_direct)}
         content={<div className="reading-change-details">{readingHoverLines(reading).map((line, index) => <span key={index}>{index > 0 ? " " : ""}{tText(line)}</span>)}{reading.raw?.bea_direct?<BeaEvidence measure={reading.raw.bea_direct}/>:null}</div>} />
@@ -79,7 +84,7 @@ function EventRow({ event }: { event: CalendarEvent }) {
 function FedTargetBlock({ target, onChart, explanations }: { target: PreparedFedTarget;onChart:()=>void;explanations:boolean }) {
   const decision = fedDecisionMarkers(target);
   return <section className="overview-fed-target" aria-label={tLabel("Fed target range")}>
-    <h3 className="overview-reading-heading"><a href="#/explore/indicators/DFEDTARL">{tText("Fed target range")}</a><span className="overview-reading-actions"><ChartButton title="Fed target range" onClick={onChart} />{explanations ? <span className="overview-explanation"><EconomicExplanationTooltip label="Fed target range: Economic meaning" explanation={fedExplanation(target)} /></span> : null}</span></h3><strong className="overview-target-value">{tText(target.range)}</strong>
+    <h3 className="overview-reading-heading"><a href="#/explore/indicators/DFEDTARL">{tText("Fed target range")}</a><span className="overview-reading-actions"><ChartButton title="Fed target range" onClick={onChart} />{explanations ? <span className="overview-explanation"><ExplanationSlot><ReadingExplanation target={target} /></ExplanationSlot></span> : null}</span></h3><strong className="overview-target-value">{tText(target.range)}</strong>
     <dl><div><dt>{tText("Effective since")}</dt><dd>{tText(target.effective)}</dd></div>
       <div><dt>{tText("Last rate change")}</dt><dd className="overview-fed-last-change">{tText(target.lastChange)}{decision ? <><span className={`overview-change overview-change--${decision.tone}`} role="img" aria-label={tLabel(`Last recorded rate change: ${decision.tone === "positive" ? "higher" : "lower"} target range`)}>{decision.arrow}</span><InterpretationMarker label="Last recorded rate change" interpretation={decision.interpretation} /></> : null}</dd></div></dl>
   </section>;

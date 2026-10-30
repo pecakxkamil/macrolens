@@ -1,6 +1,6 @@
 import type { PreparedReading } from "./readingComparisons";
 import type { PreparedFedTarget } from "./fedTarget";
-import { readingVariant, flowFact } from "./economicExplanations";
+import { readingVariant, flowFact } from "./readingFacts";
 import { formatObservationDate } from "../format";
 
 export type Interpretation = { tone: "favorable" | "unfavorable" | "mixed"; symbol: string; label: string; reason: string };

@@ -5,6 +5,9 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import App from "../App";
 import { EconomyBrief } from "./EconomyBrief";
+// Compile the optional module during collection, outside the DOM wait budget.
+// Cold import ordering is exercised by lazyLoading and production-preview tests.
+import "./ReadingExplanation";
 import { readingHoverLines } from "./readingHoverText";
 import { upcomingEventReport } from "./upcomingEvents";
 import { briefMarkdown, briefModel, domainSelection, eventText } from "./briefModel";
@@ -646,7 +649,7 @@ test("optional economic notes toggle below language controls without refetching 
  const fetch=mockApi();const {unmount}=render(<App />);await screen.findByRole("heading",{name:"Labor"});
  const toggle=screen.getByRole("button",{name:"Overview explanations"});
  expect(toggle).toHaveAttribute("aria-pressed","false");expect(screen.queryByRole("button",{name:/Economic meaning/})).not.toBeInTheDocument();
- fireEvent.click(toggle);expect(screen.getAllByRole("button",{name:/Economic meaning/})).toHaveLength(22);
+ fireEvent.click(toggle);expect(await screen.findAllByRole("button",{name:/Economic meaning/})).toHaveLength(22);
  expect(localStorage.getItem("macrolens.overview.explanations")).toBe("true");expect(fetch).toHaveBeenCalledTimes(1);
  const note=screen.getByRole("button",{name:"CPI MoM: Economic meaning"});
  const heading=note.closest("th")!;

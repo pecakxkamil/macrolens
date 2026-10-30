@@ -21,15 +21,23 @@ if (typeof window !== "undefined") window.addEventListener("storage", (event) =>
 });
 const dictionary = polish as Record<string, string>;
 const normalize = (text: string) => text.replace(/\s+/g, " ").trim();
-const exact = new Map(Object.entries(dictionary).map(([key, value]) => [normalize(key).toLowerCase(), value]));
-const outputs = new Set(Object.values(dictionary));
 const cache = new Map<string, string>();
 const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 // One pass through approved phrases, longest first. Matches never run on their
 // own translated output, and identifiers/URLs are protected from substitutions.
-const keys = [...exact.keys()].filter((key) => key.length > 1).sort((a,b) => b.length - a.length);
-const phrases = new RegExp(`(?<![\\p{L}\\p{N}_])(?:${keys.map(escape).join("|")})(?![\\p{L}\\p{N}_])`, "giu");
+let index: { exact: Map<string, string>; outputs: Set<string>; phrases: RegExp } | undefined;
+function translationIndex() {
+  if (!index) {
+    const exact = new Map(Object.entries(dictionary).map(([key, value]) => [normalize(key).toLowerCase(), value]));
+    const outputs = new Set(Object.values(dictionary));
+    const keys = [...exact.keys()].filter((key) => key.length > 1).sort((a,b) => b.length - a.length);
+    const phrases = new RegExp(`(?<![\\p{L}\\p{N}_])(?:${keys.map(escape).join("|")})(?![\\p{L}\\p{N}_])`, "giu");
+    index = { exact, outputs, phrases };
+  }
+  return index;
+}
 function translated(text: string): string {
+  const { exact, outputs, phrases } = translationIndex();
   if (outputs.has(text)) return text;
   const cached = cache.get(text);
   if (cached !== undefined) return cached;

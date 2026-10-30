@@ -28,12 +28,13 @@ import {
 } from "./metricMetadata";
 
 import { resolveRoute } from "./navigation/routes";
-import { EconomyBrief } from "./brief/EconomyBrief";
+import { ChunkBoundary } from "./navigation/ChunkBoundary";
 import { InfoTooltip } from "./components/InfoTooltip";
 
 const ExploreDataPage = lazy(() => import("./navigation/ExploreDataPage").then((module) => ({ default: module.ExploreDataPage })));
 const ResearchPage = lazy(() => import("./navigation/ResearchPage").then((module) => ({ default: module.ResearchPage })));
 const CalendarPage = lazy(() => import("./calendar/CalendarPage").then((module) => ({ default: module.CalendarPage })));
+const EconomyBrief = lazy(() => import("./brief/EconomyBrief").then((module) => ({ default: module.EconomyBrief })));
 
 const freshnessLabels: Array<[keyof UsaEconomyNow["component_as_of_dates"], string]> = [
   ["labor", "Labor"],
@@ -690,12 +691,12 @@ export default function App() {
       <a href="#/research" aria-current={route.section === "research" ? "page" : undefined}>{tText("Research")}</a>
     </nav>
     <div className="app-shell">
-      <Suspense fallback={<p className="loading-panel">{tText("Loading section...")}</p>}>
+      <ChunkBoundary resetKey={route.hash}><Suspense fallback={<p className="loading-panel" role="status">{tText("Loading section...")}</p>}>
         {route.section === "explore" ? <ExploreDataPage route={route} />
           : route.section === "research" ? <ResearchPage route={route} />
           : route.section === "calendar" ? <CalendarPage />
           : <EconomyBrief explanations={explanations} />}
-      </Suspense>
+      </Suspense></ChunkBoundary>
     </div>
   </>;
 }

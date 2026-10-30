@@ -1,46 +1,15 @@
+import { flows, prices, readingVariant, flowFact, type ReadingVariant } from "./readingFacts";
+export { readingVariant, flowFact } from "./readingFacts";
+export type { ReadingVariant } from "./readingFacts";
 import type { PreparedReading } from "./readingComparisons";
 import { readingNumber, readingUnit } from "./readingComparisons";
 import type { PreparedFedTarget } from "./fedTarget";
 import { getLanguage, tText } from "../i18n/language";
 import { formatObservationDate } from "../format";
-import { explanationCopy, flowFacts, type ExplanationChannels } from "./economicExplanationCopy";
+import { explanationCopy, type ExplanationChannels } from "./economicExplanationCopy";
 
 export interface EconomicExplanation extends ExplanationChannels { observation: string }
-export type ReadingVariant = "missing"|"noPrevious"|"equal"|"approximatelyEqual"|"growingFaster"|"growingSlower"|"turnPositive"|"turnNegative"|"declineEasing"|"declineDeepening"|"zero"|"fromZeroUp"|"fromZeroDown"|"higher"|"lower";
 const groups:Record<string,string>={payrolls:"payroll",unemployment:"unemployment",initial_claims:"claims",job_openings:"jolts",average_hourly_earnings:"wages",headline_cpi:"cpi",core_cpi:"coreCpi",core_pce:"corePce",producer_ppi:"ppi",real_gdp:"activity",industrial_production:"production",real_consumption:"consumption",real_disposable_income:"income",retail_sales:"retail",housing_starts:"starts",building_permits:"permits",mortgage_rate:"mortgage",manufacturing_pmi:"manufacturingPmi",services_pmi:"servicesPmi",nfci:"nfci",yield_curve_2s10s:"curve"};
-const flows=new Set(["payrolls","average_hourly_earnings","headline_cpi","core_cpi","core_pce","producer_ppi","real_gdp","industrial_production","real_consumption","real_disposable_income","retail_sales"]);
-const prices=new Set(["headline_cpi","core_cpi","core_pce","producer_ppi"]);
-
-// Compare what the table displays before choosing sign-sensitive wording.
-// No classification, trend estimate or consensus comparison is calculated here.
-export function readingVariant(reading:PreparedReading):ReadingVariant {
- const raw=reading.raw;
- if(!raw?.current || !Number.isFinite(raw.current.value))return "missing";
- if(!raw.previous || !Number.isFinite(raw.previous.value))return "noPrevious";
- const current=raw.current.value,previous=raw.previous.value;
- if(reading.current.screenValue===reading.previous.screenValue)return current===previous?"equal":"approximatelyEqual";
- const precision=["claims","persons","thousands SAAR"].includes(raw.unit)?0:reading.key==="unemployment"?1:2;
- const c=Number(current.toFixed(precision)),p=Number(previous.toFixed(precision));
- if(!flows.has(reading.key))return c>p?"higher":"lower";
- const rounded=readingNumber(c,raw.unit,reading.key==="unemployment"?1:undefined);
- if(c===0 || /^[-+]?0([.,]0+)?$/.test(rounded))return "zero";
- if(p===0)return c>0?"fromZeroUp":"fromZeroDown";
- if(c>0&&p<0)return "turnPositive";
- if(c<0&&p>0)return "turnNegative";
- if(c>0)return c>p?"growingFaster":"growingSlower";
- return c>p?"declineEasing":"declineDeepening";
-}
-export function flowFact(reading:PreparedReading,variant:ReadingVariant):string {
- if(flowFacts[reading.key]?.[variant])return flowFacts[reading.key][variant];
- if(variant==="approximatelyEqual")return "Practically unchanged at displayed precision.";
- const c=reading.raw!.current!.value;
- if(variant==="equal")return c>0?"The positive pace was unchanged.":c<0?"The negative pace was unchanged.":"No change in either period.";
- if(variant==="zero")return c===0?"No change in the measured level during this period.":"The measured level was practically unchanged at displayed precision.";
- if(reading.key==="industrial_production")return ({growingFaster:"Production is still growing and its monthly growth rate increased.",growingSlower:"Production is still growing, but its monthly growth rate slowed.",turnPositive:"Production returned to growth after the previous monthly decline.",turnNegative:"Production fell after the previous monthly increase.",declineEasing:"The monthly production decline eased, but production is still falling.",declineDeepening:"The monthly production decline deepened.",fromZeroUp:"Production grew after an unchanged month.",fromZeroDown:"Production fell after an unchanged month."} as Record<string,string>)[variant]??"Previous period unavailable.";
- if(reading.key==="payrolls"&&variant==="growingSlower")return "Employment increased, but the monthly gain slowed.";
- if(prices.has(reading.key))return ({growingFaster:"Prices still rose, more quickly than before.",growingSlower:"Prices still rose, but more slowly.",turnPositive:"Prices rose after the previous decline.",turnNegative:"Prices fell after the previous increase.",declineEasing:"Prices fell less sharply; this is not a price increase.",declineDeepening:"The price decline deepened.",fromZeroUp:"Prices rose after an unchanged reading.",fromZeroDown:"Prices fell after an unchanged reading."} as Record<string,string>)[variant]??"Previous period unavailable.";
- return ({growingFaster:"Still growth, faster than before.",growingSlower:"Still growth, but slower than before.",turnPositive:"Growth after the previous decline.",turnNegative:"A decline after the previous increase.",declineEasing:"The decline became smaller; this is not growth.",declineDeepening:"The decline deepened.",fromZeroUp:"Growth after an unchanged reading.",fromZeroDown:"A decline after an unchanged reading."} as Record<string,string>)[variant]??"Previous period unavailable.";
-}
 function levelFact(reading:PreparedReading,variant:ReadingVariant):string {
  const c=reading.raw!.current!.value;
  const same=variant==="equal"?"The level was unchanged.":variant==="approximatelyEqual"?"Practically unchanged at displayed precision.":"";
