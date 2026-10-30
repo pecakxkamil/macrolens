@@ -13,6 +13,28 @@ async function settle(){await act(async()=>{await Promise.resolve();await Promis
 beforeEach(()=>{vi.useFakeTimers();vi.setSystemTime(NOW);vi.resetAllMocks();Object.defineProperty(document,"visibilityState",{configurable:true,value:"visible"});});
 afterEach(()=>{cleanup();vi.useRealTimers();});
 
+test('backend release-aware deadline wakes a visible card before the standard job and loads one committed generation',async()=>{
+ const at=new Date(+NOW+120_000).toISOString();
+ const initial={...stored(),refresh:completed({next_check_at:at,standard_next_check_at:new Date(+NOW+900_000).toISOString(),refresh_mode:'standard'})};
+ vi.mocked(requestOverviewRefresh).mockResolvedValue(completed({status:'running',refresh_mode:'bea_release_aware'}));
+ vi.mocked(fetchOverviewRefresh).mockResolvedValue(completed({publication_id:'bea-new',refresh_mode:'bea_release_aware'}));
+ vi.mocked(fetchEconomyBrief).mockResolvedValue({...stored(),data_revision:'bea-new',refresh:completed({publication_id:'bea-new'})});
+ const onData=vi.fn();renderHook(()=>useOverviewRefresh(initial,onData));await settle();
+ expect(requestOverviewRefresh).not.toHaveBeenCalled();
+ await act(async()=>{await vi.advanceTimersByTimeAsync(120_000);});expect(requestOverviewRefresh).toHaveBeenCalledTimes(1);expect(onData).not.toHaveBeenCalled();
+ await act(async()=>{await vi.advanceTimersByTimeAsync(2000);});expect(onData).toHaveBeenCalledTimes(1);expect(fetchOverviewRefresh).toHaveBeenCalledTimes(1);
+});
+
+test('a resumed hidden card makes one overdue request rather than replaying publication slots',async()=>{
+ Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidden'});
+ const initial={...stored(),refresh:completed({next_check_at:new Date(+NOW+120_000).toISOString()})};
+ vi.mocked(requestOverviewRefresh).mockResolvedValue(completed({refresh_mode:'bea_release_aware',next_check_at:new Date(+NOW+600_000).toISOString()}));
+ renderHook(()=>useOverviewRefresh(initial,noop));await settle();
+ await act(async()=>{await vi.advanceTimersByTimeAsync(420_000);});expect(requestOverviewRefresh).not.toHaveBeenCalled();
+ Object.defineProperty(document,'visibilityState',{configurable:true,value:'visible'});fireEvent(document,new Event('visibilitychange'));await settle();
+ expect(requestOverviewRefresh).toHaveBeenCalledTimes(1);expect(fetchOverviewRefresh).not.toHaveBeenCalled();
+});
+
 test("entry asks once, retains saved data and honors backend cadence on rerender and focus",async()=>{
  vi.mocked(requestOverviewRefresh).mockResolvedValue(completed());const onData=vi.fn();
  const {result,rerender}=renderHook(({data})=>useOverviewRefresh(data,onData),{initialProps:{data:stored()}});await settle();

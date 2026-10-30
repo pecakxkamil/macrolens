@@ -12,6 +12,23 @@ def encoded(value):
 
 
 class RefreshStore:
+    def interrupt_release_checks(self, now):
+        # Called only while holding the coordinator lease, after its work has
+        # stopped. Retain transport scope/backoff, but never leave it active.
+        with get_independent_connection() as connection:
+            connection.execute("""UPDATE source_check_runs SET status='error',
+                finished_at=%s,error_code='refresh_interrupted'
+                WHERE resource='bea:reports' AND status='running'
+                AND scope->>'check_mode' IN ('standard','bea_release_aware')""",(now,))
+
+    def release_context(self):
+        from app.analytics.bea_release_refresh import load_context
+        connection=get_independent_connection()
+        try:
+            connection.read_only=True
+            return load_context(connection)
+        finally:connection.close()
+
     def acquire(self):
         connection = get_independent_connection()
         try:
@@ -39,11 +56,11 @@ class RefreshStore:
         connection = get_independent_connection()
         try:
             with connection.cursor() as cursor:
-                cursor.execute('SELECT job_id,status,attempted_at,completed_at,next_check_at,publication_id,source_versions,results FROM overview_refresh_state WHERE id=1')
+                cursor.execute('SELECT job_id,status,attempted_at,completed_at,next_check_at,publication_id,source_versions,results,(SELECT created_at FROM overview_publications WHERE id=publication_id) FROM overview_refresh_state WHERE id=1')
                 row = cursor.fetchone()
             if row is None:
                 raise RuntimeError('Overview refresh schema has not been initialized.')
-            result = dict(zip(('job_id','status','attempted_at','completed_at','next_check_at','publication_id','source_versions','results'), row))
+            result = dict(zip(('job_id','status','attempted_at','completed_at','next_check_at','publication_id','source_versions','results','publication_created_at'), row))
             for key in ('job_id','publication_id'):
                 if result[key] is not None: result[key] = str(result[key])
             return result

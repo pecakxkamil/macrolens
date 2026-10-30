@@ -11,6 +11,16 @@ const NOW='2026-10-26T10:00:00Z';
 const cpi={series_id:'CPIAUCSL',name:'Consumer Price Index',short_name:'CPI',frequency:'monthly',unit:'index',category:'inflation'};
 function measure(label='CPI MoM'):CalendarMeasure{return {series_id:'CPIAUCSL',label,feature_name:'mom',frequency:'monthly',unit:'percent',reference_period:'2026-09-01',previous_period:'2026-08-01',previous_kind:'previous_period',actual:.3,previous:.2,forecast:null,consensus_status:'not_integrated',data_version:'stored_date_vintage',revision_confirmed:false,binding_method:'alfred_release_date',vintage_date:'2026-10-26',realtime_end:'9999-12-31',result_status:'available',mapping_status:'confirmed',source_url:'https://fred.stlouisfed.org/series/CPIAUCSL'};}
 
+test.each(['en','pl'] as const)('BEA release checks show durable limits and partial coverage in %s',async language=>{
+ setLanguage(language);const item={...events()[0],release_id:53,estimate_stage:'advance',measures:[{...measure('Real GDP'),series_id:'GDPC1',reference_period:'2026-07-01'}]};
+ const refresh={status:'partial',publication_id:'saved',next_check_at:'2026-10-26T10:02:00Z',results:[],refresh_mode:'bea_release_aware',bea_release_checks:[{id:'synthetic-gdp',release_id:53,release_date:item.release_date,reference_period:'2026-07-01',estimate_stage:'advance',scheduled_at:'2026-10-26T10:00:00Z',expires_at:'2026-10-26T10:30:00Z',attempts:2,max_attempts:5,status:'partial',next_check_at:'2026-10-26T10:05:00Z',confirmed_measures:0,expected_measures:1}]};
+ vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>({start_date:'2026-10-26',end_date:'2026-11-01',events:[item],automatic_refresh_supported:false,refresh})})));
+ render(<CalendarPage/>);fireEvent.click(await screen.findByRole('button',{name:new RegExp(tText('Real GDP'))}));
+ const section=screen.getByRole('region',{name:tText('BEA publication check')});
+ expect(section).toHaveTextContent('2/5');expect(section).toHaveTextContent('0/1');expect(section).toHaveTextContent(tText('BEA report partially confirmed'));
+ expect(section).toHaveTextContent(tText('Next permitted source check'));
+});
+
 test.each(['en','pl'] as const)('FT900 signed billion-dollar balance, neutral difference and sources in %s',async language=>{
  setLanguage(language);
  const rights={source:'U.S. Census Bureau / U.S. Bureau of Economic Analysis',copyright:'Source: U.S. Census Bureau and U.S. Bureau of Economic Analysis.',original_title:'U.S. International Trade in Goods and Services',terms_url:'https://www.bea.gov/help/faq/147',original_url:'https://www.census.gov/foreign-trade/Press-Release/current_press_release/exh1.xlsx',modifications:'MacroLens converts millions to billions of USD and computes signed differences. Current-vintage values may include revisions; negative balances are deficits. No publisher endorsement is implied.',redistribution_conditions:'BEA public-domain policy with exceptions.'};

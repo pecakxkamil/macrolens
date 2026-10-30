@@ -30,6 +30,24 @@ def public_state(state):
     return jsonable_encoder({key: value for key, value in state.items() if key != 'source_versions'})
 
 
+def refresh_bea(connection,versions,now,strict=False):
+    from app.ingestion import sync_bea_reports as source
+    from app.analytics.bea_release_refresh import KEY
+    selected=versions.pop('_bea_selection',None)
+    if selected==[]:return {'resource':source.RESOURCE,'status':'cached','outcome':'within_release_policy'}
+    try:
+        with httpx.Client(timeout=25,follow_redirects=True) as client:
+            payload=source.sync_source(client,connection,now,selected=selected,release_aware=selected is not None,check_mode=versions.get(KEY,{}).get('mode','standard'))
+        if payload.get('backoff_until'):versions.setdefault(KEY,{})['backoff_until']=payload['backoff_until']
+        return {'resource':source.RESOURCE,'status':payload['status']}
+    except Exception as error:
+        import psycopg
+        if strict and isinstance(error,psycopg.Error):raise
+        backoff=source.backoff_from_error(error,utc_now())
+        if backoff:versions.setdefault(KEY,{})['backoff_until']=backoff
+        return {'resource':source.RESOURCE,'status':'error','error_code':'bea_report_unconfirmed'}
+
+
 def collect_histories(today):
     result = {}
     for _, _, sid, feature, *_ in READINGS:
@@ -141,13 +159,7 @@ def refresh_sources(connection, previous, now):
     versions, results = copy.deepcopy(previous), []
     # BEA is checked independently before a slow/failed FRED cycle can consume
     # the shared budget. The same coordinator lock and 900-second job apply.
-    from app.ingestion.sync_bea_reports import sync_source as sync_bea
-    try:
-        with httpx.Client(timeout=25,follow_redirects=True) as client:
-            bea=sync_bea(client,connection,now)
-        results.append({'resource':'bea:reports','status':bea['status']})
-    except Exception:
-        results.append({'resource':'bea:reports','status':'error','error_code':'bea_report_unconfirmed'})
+    results.append(refresh_bea(connection,versions,now))
     requested = previous.get("calendar_requested_window")
     required_series = set(FRED_SERIES)
     if requested:
@@ -345,6 +357,8 @@ def run_refresh(store, previous, now, interval, retry):
             finished = utc_now()
             complete = brief['source_checks']['status'] == 'complete'
             failed = any(r['status'] in ('error','skipped') for r in results)
+            from app.analytics.bea_release_refresh import finish
+            versions=finish(versions,'standard',finished,interval,retry,failed)
             status = 'error' if not any(r['status'] in ('success','partial','cached') for r in results) else 'complete' if complete and not failed else 'partial'
             publication_id = store.publish(connection, brief, histories, finished)
             store.update({'status':status, 'completed_at':finished, 'next_check_at':finished+timedelta(seconds=retry if failed else interval),
@@ -353,10 +367,35 @@ def run_refresh(store, previous, now, interval, retry):
         connection.close()
 
 
+def run_bea_refresh(store,previous,now,interval,retry):
+    from app.analytics import bea_release_refresh as policy
+    from app.analytics import bea_direct
+    selected=previous['source_versions'].get('_bea_selection',[])
+    versions=copy.deepcopy(previous['source_versions'])
+    remaining=min((policy.instant(p['expires_at'])-now).total_seconds() for p in selected)
+    connection=get_independent_connection()
+    try:
+        with request_budget(min(seconds('OVERVIEW_REFRESH_TIMEOUT_SECONDS',600),remaining)),connection.transaction(),shared_connection(connection):
+            with connection.cursor() as cursor:cursor.execute("SET LOCAL statement_timeout = '60s'")
+            before=bea_direct.load_state(connection)
+            signature=lambda data,at:[policy.readings(p,data,at) for p in selected]
+            result=refresh_bea(connection,versions,now,strict=True)
+            after=bea_direct.load_state(connection)
+            finished=utc_now()
+            if signature(before,now)!=signature(after,finished):
+                brief=economy_brief.build_brief()
+                store.publish(connection,brief,collect_histories(now.astimezone(ZoneInfo('Europe/Warsaw')).date()),finished)
+            versions=policy.finish(versions,'bea_release_aware',finished,interval,retry)
+            store.update({'status':'error' if result['status']=='error' else 'partial','completed_at':finished,
+                'next_check_at':policy.instant(versions[policy.KEY]['standard_next_at']),'source_versions':versions,'results':[result]},connection)
+    finally:connection.close()
+
+
 class RefreshCoordinator:
-    def __init__(self, store=None, runner=run_refresh, clock=utc_now, launch=None):
+    def __init__(self, store=None, runner=run_refresh, clock=utc_now, launch=None, release_runner=run_bea_refresh):
         self.store = store or RefreshStore()
         self.runner, self.clock = runner, clock
+        self.release_runner=release_runner
         self.launch = launch or (lambda fn: threading.Thread(target=fn, daemon=True, name='overview-refresh').start())
 
     def intervals(self):
@@ -365,8 +404,22 @@ class RefreshCoordinator:
 
     def _interrupted(self, now):
         _, retry = self.intervals()
+        from app.analytics.bea_release_refresh import KEY
+        state=self.store.read();versions=state.get('source_versions',{})
+        control=versions.get(KEY)
+        if control:
+            if hasattr(self.store,'interrupt_release_checks'):self.store.interrupt_release_checks(now)
+            if control.get('mode')!='bea_release_aware':control['standard_next_at']=(now+timedelta(seconds=retry)).isoformat()
+            versions.pop('_bea_selection',None)
+            self.store.update({'source_versions':versions})
         self.store.update({'status':'error','completed_at':now,'next_check_at':now+timedelta(seconds=retry),
             'results':[{'resource':'overview','status':'error','error_code':'refresh_interrupted'}]})
+
+    def _view(self,state,context=None,busy=False):
+        if hasattr(self.store,'release_context'):
+            from app.analytics.bea_release_refresh import decorate
+            state=decorate(state,context if context is not None else self.store.release_context(),self.clock(),*self.intervals(),busy=busy)
+        return public_state(state)
 
     def status(self):
         state = self.store.read()
@@ -376,7 +429,7 @@ class RefreshCoordinator:
                 try: self._interrupted(self.clock())
                 finally: self.store.release(lease)
                 state = self.store.read()
-        return public_state(state)
+        return self._view(state)
 
     def request(self, calendar_start=None, calendar_end=None):
         if calendar_start or calendar_end:
@@ -384,7 +437,7 @@ class RefreshCoordinator:
             if not(calendar_start and calendar_end):raise ValueError('Both calendar range dates are required.')
             validate_range(calendar_start,calendar_end)
         lease = self.store.acquire()
-        if lease is None: return public_state(self.store.read())
+        if lease is None: return self._view(self.store.read(),busy=True)
         handed_off = False
         try:
             state, now = self.store.read(), self.clock()
@@ -394,26 +447,36 @@ class RefreshCoordinator:
                 state['source_versions']=versions
             if state['status'] == 'running':
                 self._interrupted(now)
-                return public_state(self.store.read())
+                return self._view(self.store.read())
             interval, retry = self.intervals()
             earliest = state.get('next_check_at')
             if state.get('completed_at'):
                 configured = state['completed_at'] + timedelta(seconds=retry if state['status']=='error' else interval)
                 earliest = max(earliest, configured) if earliest else configured
-            if earliest and now < earliest:
-                return public_state({**state, 'next_check_at':earliest})
+            context=self.store.release_context() if hasattr(self.store,'release_context') else None
+            mode='standard'
+            if context is not None:
+                from app.analytics import bea_release_refresh as policy
+                earliest=policy.standard_deadline(state,interval,retry,now)
+                due=policy.plan(context,state.get('source_versions',{}).get(policy.KEY,{}),now)['due']
+                if due:mode='bea_release_aware'
+                elif now<earliest:return self._view(state,context)
+            elif earliest and now < earliest:
+                return self._view({**state,'next_check_at':earliest})
             if self.store.publication() is None:
                 initialize_publication(self.store)
             interval, retry = self.intervals()
+            if context is not None:
+                state['source_versions']=policy.claim(state.get('source_versions',{}),context,now,earliest,mode)
+                self.store.update({'source_versions':state['source_versions']})
             self.store.start(str(uuid4()), now, now+timedelta(seconds=interval))
-            started = public_state(self.store.read())
+            started = self._view(self.store.read(),context)
             def work():
-                try: self.runner(self.store, state, now, interval, retry)
+                try: (self.release_runner if mode=='bea_release_aware' else self.runner)(self.store,state,now,interval,retry)
                 except Exception:
                     # Keep the previous publication after an atomic failure.
-                    self.store.update({'status':'error','completed_at':self.clock(),
-                        'next_check_at':self.clock()+timedelta(seconds=retry),
-                        'results':[{'resource':'overview','status':'error','error_code':'refresh_failed'}]})
+                    self._interrupted(self.clock())
+                    self.store.update({'results':[{'resource':'overview','status':'error','error_code':'refresh_failed'}]})
                 finally: self.store.release(lease)
             self.launch(work)
             handed_off = True

@@ -47,6 +47,12 @@ def _record(run):
         logger.warning("Availability-check metadata was not recorded; apply the source-check schema migration and check database access.")
 
 
+def record_progress(run):
+    """Persist transport backoff without claiming a successful data commit."""
+    if run['status']!='running':raise ValueError('Only unfinished check progress may be recorded')
+    _record(run)
+
+
 @contextmanager
 def availability_check(resource, scope=None, connection=None):
     run = dict(id=str(uuid4()), resource=resource, attempted_at=utc_now(),

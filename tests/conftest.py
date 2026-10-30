@@ -13,7 +13,7 @@ _attempts = []
 
 @pytest.fixture(autouse=True)
 def isolate_unrelated_bea_source(request,monkeypatch):
-    if request.node.module.__name__.endswith('test_bea_direct'):
+    if request.node.module.__name__.endswith(('test_bea_direct','test_bea_release_refresh')):
         return
     from app.ingestion import sync_bea_reports
     from app.analytics import bea_direct

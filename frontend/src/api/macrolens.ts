@@ -456,6 +456,7 @@ export interface CalendarCheck {
  required_resources:string[];sources:Array<{resource:string;label:string;range_status:string;checked_at:string|null;error_code:string|null;last_attempt_at?:string|null;last_finished_at?:string|null;last_success_at?:string|null;scope_error?:string;missing_times?:string[];later_missing_times?:string[];scope?:{last_updated?:string;observation_end?:string;observation_fetch_status?:'fetched'|'metadata_unchanged';observations_received?:number;sources?:Array<{source_url:string;status:string;error_code?:string}>;latest_publication_discovered?:boolean;discovered_report_month?:string;report_month?:string;result_downloaded?:boolean;annual_schedule_status?:string;annual_error_code?:string}}>;
 }
 export interface CalendarEvent {
+  estimate_stage?:string|null;
   publisher?:string;usage_rights?:PublisherUsageRights;
   result_state?:{schedule:string;document:string;numeric:string;data_version:string;report_csv_difference?:boolean;report_exhibit_difference?:boolean;publication_time_observed:null;csv_update_time_observed:null};
   release_id: number | null;
@@ -815,6 +816,8 @@ export interface FedTargetRange {
   sources: Array<{ series_id: string; url: string; observation_date: string | null; retrieved_at: string | null }>;
 }
 export interface OverviewRefreshState {
+ refresh_mode?:'standard'|'bea_release_aware';standard_next_check_at?:string;publication_created_at?:string|null;
+ bea_release_checks?:Array<{id:string;release_id:number;reference_period:string;estimate_stage:string|null;release_date:string;scheduled_at:string;expires_at:string;attempts:number;max_attempts:number;status:string;next_check_at:string|null;confirmed_measures:number;expected_measures:number}>;
   status: "idle" | "running" | "complete" | "partial" | "error";
   job_id?: string | null;
   publication_id?: string | null;

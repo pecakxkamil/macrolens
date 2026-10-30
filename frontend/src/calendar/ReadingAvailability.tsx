@@ -13,6 +13,7 @@ export function ReadingAvailability({measure,check,refresh,revision,now}:{measur
  const outcome=refresh?.results.find(row=>row.resource===source.resource);
  const next=refresh?.status!=='running'&&refresh?.next_check_at&&Date.parse(refresh.next_check_at)>+now?refresh.next_check_at:null;
  const version=measure.actual_provenance?.vintage_date;
+ const published=refresh?.publication_created_at??(refresh?.refresh_mode?null:refresh?.completed_at);
  return <section aria-label={tLabel('Reading availability')}>
   <strong>{tText('Reading availability')}</strong>
   <p>{measure.series_id}: {tText(checkStatusLabel(source.range_status))}{finished?` · ${availabilityTime(finished)}`:''}</p>
@@ -27,7 +28,7 @@ export function ReadingAvailability({measure,check,refresh,revision,now}:{measur
   {documentCheck?.status==='error'?<p>{tText('The official result document could not be validated; a source check does not confirm its publication stage.')}</p>:report&&!measure.result_provenance?<p>{tText('No confirmed result document is stored.')}</p>:null}
   {measure.actual===null?<p>{tText('Actual has not been confirmed for this reading. See the missing-value reason below.')}</p>:<>
    <p>{tText('Actual is available in the displayed data; a source check time is not its first publication time.')}</p>
-   {revision?<p>{tText('Displayed data generation')}: <span title={revision}>{revision.slice(0,8)}</span>{refresh?.publication_id===revision&&refresh.completed_at&&(refresh.status==='complete'||refresh.status==='partial')?` · ${tText('Generation published')}: ${availabilityTime(refresh.completed_at)}`:''}</p>:null}
+   {revision?<p>{tText('Displayed data generation')}: <span title={revision}>{revision.slice(0,8)}</span>{refresh?.publication_id===revision&&published&&(refresh.status==='complete'||refresh.status==='partial')?` · ${tText('Generation published')}: ${availabilityTime(published)}`:''}</p>:null}
   </>}
   {measure.data_version==='current_vintage'?<p>{tText('Current-vintage value')}{typeof version==='string'?` · ${tText('Vintage date')}: ${version}`:''}</p>:null}
   {next?<p>{tText('Next permitted source check')}: {availabilityTime(next)}</p>:null}

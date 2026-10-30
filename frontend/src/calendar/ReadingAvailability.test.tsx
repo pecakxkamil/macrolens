@@ -38,6 +38,13 @@ test('absent per-series metadata never borrows another series or global checked_
  expect(screen.queryByRole('region')).not.toBeInTheDocument();
 });
 
+test('unchanged narrow BEA job does not become a new generation publication time',()=>{
+ const current={...measure,actual:3.4};
+ render(<ReadingAvailability measure={current} check={check} refresh={{...refresh,refresh_mode:'bea_release_aware',completed_at:'2026-10-29T13:09:56Z',publication_created_at:'2026-10-29T12:30:00Z'}} revision='new-generation' now={new Date('2026-10-29T13:10:00Z')}/>);
+ expect(screen.getByText(/Generation published/)).toHaveTextContent('13:30');
+ expect(screen.getByText(/Generation published/)).not.toHaveTextContent('14:09');
+});
+
 test.each(['error','skipped','cached'])('latest %s refresh outcome is distinct from an earlier successful source check',status=>{
  render(<ReadingAvailability measure={measure} check={check} refresh={{...refresh,results:[{resource:'fred:GDPC1',status}]}} now={new Date('2026-10-29T13:00:00Z')}/>);
  expect(document.body).toHaveTextContent(status==='error'?'source check failed':status==='skipped'?'skipped the source':'reused a stored source check');

@@ -2,8 +2,10 @@
 import calendar
 import json
 import re
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, timedelta
 from decimal import Decimal
+from email.utils import parsedate_to_datetime
+import httpx
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
@@ -12,7 +14,7 @@ from app.ingestion.sync_fomc_calendar import Tree
 from app.ingestion.sync_calendar_periods import parse_bea_result, parse_bea_clock, parse_schedule, parsed_date, cells
 from app.ingestion.sync_empire_state import capture
 from app.ingestion.request_budget import before_request
-from app.source_checks import availability_check
+from app.source_checks import availability_check,record_progress
 
 SOURCE='bea_official'
 RESOURCE='bea:reports'
@@ -74,10 +76,24 @@ def discover(html,stamp):
             if len(matches)==1:p['report_url']=matches.pop()
         clocks=set()
         for row in tree.root.find(lambda n:n.tag=='tr'):
-            if not any(urljoin(SCHEDULE,a.attrs['href'])==p.get('report_url') for a in row.find(lambda n:n.tag=='a' and n.attrs.get('href'))):continue
-            c=cells(row);clock=re.search(r'\b(\d{1,2}:\d{2})\s*(AM|PM)\b',c[0],re.I) if c else None
+            c=cells(row)
+            if len(c)<3:continue
+            # Future rows have their own clock before the report is linked.
+            # Bind by explicit date, period and stage, never by a guessed URL.
+            try:day=parsed_date(re.sub(r'\s+\d{1,2}:\d{2}.*$','',c[0])+', '+p['release_date'][:4])
+            except ValueError:continue
+            if day!=p['release_date']:continue
+            if p['release_id']==54:
+                if not c[2].startswith('Personal Income and Outlays, '):continue
+                try:period=parsed_date(c[2].split(', ',1)[1])
+                except ValueError:continue
+                if period!=p['reference_period']:continue
+            else:
+                q=re.search(r'([1-4](?:st|nd|rd|th) Quarter \d{4})',c[2]);stage=re.search(r'(Advance|Second|Third|Updated) Estimate',c[2])
+                if not q or not stage or parsed_date(q[1])!=p['reference_period'] or stage[1].lower()!=p['estimate_stage']:continue
+            clock=re.search(r'\b(\d{1,2}:\d{2})\s*(AM|PM)\b',c[0],re.I)
             if clock:clocks.add(datetime.strptime(clock[1]+' '+clock[2].upper(),'%I:%M %p').strftime('%H:%M:%S'))
-        if p.get('report_url') and len(clocks)!=1:raise ValueError('BEA schedule publication clock absent/ambiguous')
+        if len(clocks)>1 or (p.get('report_url') and len(clocks)!=1):raise ValueError('BEA schedule publication clock absent/ambiguous')
         if clocks:p.update(release_time=clocks.pop(),source_timezone='America/New_York')
     return [p for p in proofs if p['release_id'] in (53,54)]
 
@@ -190,23 +206,52 @@ def store_report(connection,proof,metadata,now):
     return proof['id'],len(metadata['readings'])
 
 
-def sync_source(client,connection,now=None,raw_root=None,selected=None):
+def backoff_from_error(error,now):
+    if not isinstance(error,httpx.HTTPStatusError):return None
+    response=error.response;header=response.headers.get('Retry-After')
+    if response.status_code not in (429,503):return None
+    if header:
+        try:
+            seconds=int(header)
+            if seconds<0:raise ValueError('Negative Retry-After')
+            return (now+timedelta(seconds=seconds)).isoformat()
+        except (ValueError,OverflowError):
+            try:return max(now,parsedate_to_datetime(header).astimezone(timezone.utc)).isoformat()
+            except (TypeError,ValueError):pass
+    return (now+timedelta(seconds=900)).isoformat() if response.status_code==429 else None
+
+
+def sync_source(client,connection,now=None,raw_root=None,selected=None,release_aware=False,check_mode='standard'):
     now=now or datetime.now(timezone.utc);captures=[];errors=[];changed=0
     def fetch(url):
         if url!=SCHEDULE and not official(url):raise ValueError('Nonofficial BEA URL')
         before_request('BEA');r=client.get(url)
         if not official(str(r.url)) and str(r.url)!=SCHEDULE:raise ValueError('Nonofficial BEA redirect')
-        proof={**capture(r,url,datetime.now(timezone.utc),raw_root or RAW_ROOT),'source':SOURCE};captures.append(proof);r.raise_for_status()
+        proof={**capture(r,url,datetime.now(timezone.utc),raw_root or RAW_ROOT),'source':SOURCE};captures.append(proof)
+        check['scope']['captures']=captures
+        try:r.raise_for_status()
+        except httpx.HTTPStatusError as error:
+            backoff=backoff_from_error(error,datetime.now(timezone.utc))
+            if backoff:
+                check['scope']['backoff_until']=backoff
+                record_progress(check)
+            raise
         return r.text,proof
-    with availability_check(RESOURCE,{'provider':ATTRIBUTION},connection=connection) as check:
+    scope={'provider':ATTRIBUTION,'check_mode':check_mode,'requested_events':[key(p) for p in selected] if selected is not None else []}
+    with availability_check(RESOURCE,scope,connection=connection) as check:
         with connection.transaction():
             html,schedule_proof=fetch(SCHEDULE);proofs=discover(html,schedule_proof['retrieved_at'])
+            check['scope']['validated_schedule']=proofs
             due=[p for p in proofs if p['release_date']<=str(now.date()) and p.get('report_url')]
             wanted=selected if selected is not None else [max((p for p in due if p['release_id']==rid),key=lambda p:p['release_date'],default=None) for rid in (53,54)]
             for item in wanted:
                 if item is None:errors.append({'reason':'No due BEA document'});continue
                 proof=next((p for p in due if key(p)==key(item)),None)
-                if not proof:raise ValueError('Selected BEA event absent from official schedule')
+                if not proof:
+                    if release_aware:errors.append({'event':key(item),'reason':'Own BEA report not linked for this scheduled event'});continue
+                    raise ValueError('Selected BEA event absent from official schedule')
+                if release_aware and proof.get('release_time')!=item.get('release_time'):
+                    errors.append({'event':key(item),'reason':'Official BEA clock changed'});continue
                 try:
                     body,receipt=fetch(proof['report_url']);meta=parse_report(body,proof,proof['report_url'],receipt['retrieved_at'])
                     if datetime.fromisoformat(meta['announced_at'])>now:raise ValueError('BEA embargo is in future')
@@ -214,7 +259,10 @@ def sync_source(client,connection,now=None,raw_root=None,selected=None):
                         _,count=store_report(connection,receipt,{**meta,'schedule_provenance':schedule_proof},now);changed+=count
                     if meta['missing_measures']:errors.append({'source_url':proof['report_url'],'missing_measures':meta['missing_measures']})
                 except psycopg.Error:raise
-                except Exception as err:errors.append({'source_url':proof['report_url'],'reason':str(err)})
+                except Exception as err:
+                    errors.append({'source_url':proof['report_url'],'reason':str(err)})
+                    backoff=backoff_from_error(err,datetime.now(timezone.utc))
+                    if backoff:check['scope']['backoff_until']=backoff;break
             check['scope'].update(captures=captures,errors=errors,changed_observations=changed,report_identities=[key(p) for p in wanted if p])
             check.update(status='partial' if errors else 'success',error_code='bea_report_unconfirmed' if errors else None)
         return dict(status=check['status'],**check['scope'])
