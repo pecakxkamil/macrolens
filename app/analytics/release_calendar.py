@@ -8,6 +8,7 @@ from app.database.connection import get_connection
 from app.database.sync_series import load_series_config
 from app.analytics.release_times import release_time_metadata
 from app.analytics.fomc_calendar import read_schedule
+from app.analytics.calendar_market_impact import classify_event
 
 
 CALENDAR_SQL = """
@@ -160,6 +161,7 @@ def list_calendar_events(
     if category in (None, "financial_conditions"):
         selected.extend({**event, "release_date": date.fromisoformat(event["release_date"])}
                         for event in policy["events"] if str(start) <= event["release_date"] <= str(end))
+    selected = [classify_event(event) for event in selected]
     selected.sort(key=lambda event: (
         event["release_date"], IMPORTANCE_ORDER[event["importance"]],
         event["release_name"], str(event.get("event_id") or event["release_id"]),

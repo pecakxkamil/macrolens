@@ -3,9 +3,12 @@ import type { CalendarEvent, EconomyBriefResponse } from "../api/macrolens";
 import { eventImportanceStars, eventIdentity, eventDay, eventPriority, eventRelativeDay, overviewEventPriorities, overviewUpcomingEvents, upcomingEventReport } from "./upcomingEvents";
 import { setLanguage } from "../i18n/language";
 
+import policyCases from "./__fixtures__/marketImpact.json";
+
 const now = new Date("2026-10-18T12:00:00Z");
 function event(name: string, date = "2026-10-20", extra: Partial<CalendarEvent> = {}): CalendarEvent {
-  return { release_id: 1, release_name: name, release_date: date, release_datetime_utc: null, release_time: null, source_timezone: null, source_link: null, importance: "medium", date_precision: "date", series: [], ...extra };
+  const known = policyCases.find(row => row.event.release_name === name || row.event.event_type === extra.event_type && extra.event_type !== undefined)?.event as CalendarEvent | undefined;
+  return { ...known, release_id: known?.release_id ?? null, release_name: name, release_date: date, release_datetime_utc: null, release_time: null, source_timezone: null, source_link: null, importance: "medium", date_precision: "date", series: known?.series ?? [], ...extra };
 }
 function data(events: CalendarEvent[], next: CalendarEvent | null = null): EconomyBriefResponse {
   return { calendar_start_date: "2026-10-18", calendar_end_date: "2026-10-24", calendar: {status: "ready", data: {events}}, policy: {status: "ready", data: {next_decision: next}} } as EconomyBriefResponse;
@@ -23,7 +26,7 @@ test("unknown, PMI, noncanonical FOMC minutes and partial source names are not p
 test('Fed event types have shared stars, separate identities and the four-event Overview limit',()=>{
  const decision=event('FOMC policy decision','2026-10-21',{event_type:'fomc_decision',release_id:null});
  const related:CalendarEvent[]=(['fomc_press_conference','fomc_sep','fomc_minutes'] as const).map((kind,i)=>event(kind,'2026-10-21',{event_id:`meeting:${kind}`,event_type:kind,release_id:null,expects_numeric_result:false,release_datetime_utc:i===1?null:`2026-10-21T${i===0?'18:30':'19:00'}:00Z`}));
- expect(related.map(eventImportanceStars)).toEqual([3,3,2]);
+ expect(related.map(eventImportanceStars)).toEqual([3,3,3]);
  const selected=overviewUpcomingEvents(data([decision,...related,related[0],event('Consumer Price Index')]),now);
  expect(selected.selected).toHaveLength(4);
  expect(selected.selected.filter(e=>e.event_type==='fomc_press_conference')).toHaveLength(1);
@@ -119,9 +122,9 @@ test("Warsaw dates, weekday, Today/Tomorrow and DST use timezone APIs", () => {
   setLanguage("pl"); expect(upcomingEventReport(e)).toContain("13:30 PL");
 });
 
-test.each(overviewEventPriorities)("$key star presentation follows the editorial tier without mutating its source class", rule => {
+test.each(overviewEventPriorities)("$key star presentation follows API metadata independently of the editorial tier", rule => {
   const e = event(rule.aliases[0], "2026-10-20", {importance: "high"});
-  expect(eventImportanceStars(e)).toBe(rule.priority === "Key event" ? 3 : 2);
+  expect(eventImportanceStars(e)).toBe(policyCases.find(row => row.event.release_name === rule.aliases[0])!.expected);
   expect(e.importance).toBe("high");
 });
 test.each([["high",3], ["medium",2], ["low",1], ["unknown",null], [undefined,null]] as const)("source class %s maps explicitly to %s for unconfigured events", (importance, stars) => {

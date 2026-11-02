@@ -3,7 +3,7 @@ import { getLocale } from "../i18n/language";
 import { warsawDate } from "../datePeriods";
 import { formatPolandTime, shiftDate } from "../calendar/calendarDates";
 
-// Editorial selection order only; the calendar's importance metadata is unchanged.
+// Overview eligibility/order only. Key/Tracked labels never determine stars.
 export const overviewEventPriorities = [
   { key: "fomc", aliases: ["FOMC policy decision"], priority: "Key event" },
   { key: "fomc_press_conference", aliases: ["FOMC Press Conference"], priority: "Key event" },
@@ -39,7 +39,15 @@ export function eventIdentity(event: CalendarEvent): string {
   if(event.event_type==='empire_state'&&event.event_id)return event.event_id;
   if((event.event_type?.startsWith('michigan_')||event.event_type==='adp_monthly')&&event.event_id)return event.event_id;
   if(event.event_type?.startsWith('fomc_')&&event.event_type!=='fomc_decision'&&event.event_id)return event.event_id;
-  return `${eventPriority(event)?.key ?? event.release_id ?? event.event_id ?? event.release_name}|${eventDay(event)}`;
+  // Preserve established UI namespaces independently of ranking and ratings.
+  const releaseNamespace: Record<number, string> = {9:"retail",10:"cpi",50:"employment",53:"gdp",54:"pce",180:"claims"};
+  const ismSeries = event.series.map(series => series.series_id);
+  const ismNamespace = ismSeries.includes("ISM_MANUFACTURING_PMI") ? "ism_manufacturing"
+    : ismSeries.includes("ISM_SERVICES_PMI") ? "ism_services" : undefined;
+  const namespace = event.event_type === "fomc_decision" ? "fomc"
+    : event.event_type === "ism_report" ? ismNamespace
+    : event.event_type ?? (event.release_id === null ? undefined : releaseNamespace[event.release_id]);
+  return `${namespace ?? event.release_id ?? event.event_id ?? event.release_name}|${eventDay(event)}`;
 }
 export function eventDateLabel(event: CalendarEvent): string {
   return new Intl.DateTimeFormat(getLocale(), { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${eventDay(event)}T00:00:00Z`));
@@ -73,20 +81,27 @@ export function overviewUpcomingEvents(data: EconomyBriefResponse, now: Date = n
   return { available, selected, remaining: inWindow.filter(event => !selectedIds.has(eventIdentity(event))).sort(chronological),
     nextFomc: nextFomc && !selectedIds.has(eventIdentity(nextFomc)) ? nextFomc : null };
 }
-export function upcomingEventReport(event: CalendarEvent): string {
+function eventReport(event: CalendarEvent): string {
   if((event.event_type==='empire_state'||event.event_type==='ft900'))return `${event.release_name} (${event.reference_period}) - ${eventDateLabel(event)} - ${formatPolandTime(event.release_datetime_utc)}. ${event.usage_rights?.copyright} ${event.usage_rights?.original_url} ${event.usage_rights?.terms_url}. ${event.usage_rights?.modifications}`;
   if(event.event_type?.startsWith('michigan_')||event.event_type==='adp_monthly')return `${event.release_name} (${event.reference_period??"Reference period unconfirmed"}) - ${eventDateLabel(event)} [${eventDay(event)}] - ${formatPolandTime(event.release_datetime_utc)}. ${eventPriority(event)?.priority}. Numerical results are not integrated. Official reports: ${event.publisher_reports_url}.`;
   return `${event.release_name} - ${eventDateLabel(event)} [${eventDay(event)}] - ${formatPolandTime(event.release_datetime_utc)}. ${eventPriority(event)?.priority ?? "Other event"}.`;
 }
 
-// Overview editorial tiers take precedence; source importance is never mutated.
-const overviewStars = { "Key event": 3, "Tracked event": 2 } as const;
-const sourceStars: Record<string, number> = { high: 3, medium: 2, low: 1 };
-export function eventImportanceStars(event: CalendarEvent): number | null {
-  const priority = eventPriority(event);
-  return priority ? overviewStars[priority.priority] : sourceStars[event.importance] ?? null;
+export function upcomingEventReport(event: CalendarEvent): string {
+  const stars = eventImportanceStars(event);
+  return `${eventReport(event)} Market impact: ${stars ?? "unknown"}; scope: event; policy: ${event.market_impact_policy_version ?? "legacy importance"}.`;
 }
-export const eventImportanceNote = "MacroLens Overview stars: key editorial events, including both ISM PMI reports and Michigan Preliminary, = 3; tracked editorial events (including Retail Sales, weekly Claims and Michigan Final) = 2. Otherwise source importance maps high = 3, medium = 2, low = 1; unknown importance is unavailable. Editorial tiers take precedence without changing source classes. This is not an Investing.com rating or a forecast of market impact.";
+
+// Compatibility only for responses predating market-impact metadata. Explicit
+// null is authoritative; no name, ranking or Key/Tracked override is permitted.
+export function eventImportanceStars(event: CalendarEvent): number | null {
+  if (Object.prototype.hasOwnProperty.call(event, "market_impact_stars")) {
+    const stars = event.market_impact_stars;
+    return stars === 1 || stars === 2 || stars === 3 ? stars : null;
+  }
+  return event.importance === "high" ? 3 : event.importance === "medium" ? 2 : event.importance === "low" ? 1 : null;
+}
+export const eventImportanceNote = "MacroLens market-impact stars use the current versioned backend editorial policy for whole reports, including historical dates; measures inherit their report rating. Unknown ratings are unavailable. Key/Tracked labels describe Overview selection only and never override stars. Legacy responses without rating metadata map high = 3, medium = 2, low = 1. This is not an Investing.com rating or a forecast of price direction or market reaction.";
 export function eventShortDateLabel(event: CalendarEvent): string {
   return new Intl.DateTimeFormat(getLocale(), { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${eventDay(event)}T00:00:00Z`));
 }

@@ -142,7 +142,7 @@ test.each(['en','pl'] as const)('Fed nonnumeric events retain separate rows, det
  expect(screen.getByRole('button',{name:tText(names[1])})).toBeInTheDocument();
  expect(screen.getByRole('button',{name:tText(names[2])})).toBeInTheDocument();
  expect(nextInstant([fed[2]],new Date(NOW))).toBe(Infinity);
- expect(filterEvents(fed,new Set([3]),false,new Set(['financial']))).toHaveLength(2);
+ expect(filterEvents(fed,new Set([3]),false,new Set(['financial']))).toHaveLength(3);
  fireEvent.click(button);
  expect(screen.getByText(tText('Actual, Previous, Forecast and numerical comparisons do not apply to this event.'))).toBeInTheDocument();
  expect(screen.getByText(tText('No official document is linked yet. Document availability does not determine whether the event took place.'))).toBeInTheDocument();
@@ -151,7 +151,7 @@ test.each(['en','pl'] as const)('Fed nonnumeric events retain separate rows, det
  fireEvent.keyDown(document.querySelector('.agenda-detail')!,{key:'Escape'});
  expect(button).toHaveFocus();
  fireEvent.click(screen.getByLabelText(/Only|Tylko/));
- expect(screen.queryByRole('button',{name:tText(names[1])})).not.toBeInTheDocument();
+ expect(screen.getByRole('button',{name:tText(names[1])})).toBeInTheDocument();
  expect(screen.getByRole('button',{name:tText(names[2])})).toBeInTheDocument();
 });
 
@@ -166,7 +166,7 @@ test('main Calendar and old route keep the Monday-Sunday range with one shared c
 test('default importance, quick filter, categories and clear remain local',async()=>{
  const fetch=mockApi();render(<CalendarPage/>);await screen.findByRole('button',{name:'CPI MoM (Sep)'});
  expect(screen.queryByRole('button',{name:'Effective Fed Funds Rate'})).not.toBeInTheDocument();expect(screen.queryByRole('button',{name:'Unclassified indicator'})).not.toBeInTheDocument();
- fireEvent.click(screen.getByLabelText(/Only/));expect(screen.queryByRole('button',{name:'Initial jobless claims'})).not.toBeInTheDocument();
+ fireEvent.click(screen.getByLabelText(/Only/));expect(screen.getByRole('button',{name:'Initial jobless claims'})).toBeInTheDocument();
  fireEvent.click(screen.getByRole('button',{name:'Clear filters'}));expect(screen.getByRole('button',{name:'Effective Fed Funds Rate'})).toBeInTheDocument();expect(screen.getByRole('button',{name:'Unclassified indicator'})).toBeInTheDocument();
  fireEvent.click(screen.getByRole('button',{name:'Filters'}));fireEvent.click(screen.getByLabelText('Housing'));expect(screen.getByText('No events match the selected filters.')).toBeInTheDocument();expect(fetch).toHaveBeenCalledTimes(1);
 });
@@ -255,7 +255,7 @@ test.each(['en','pl'] as const)('ISM historical differences stay neutral and det
 
 test.each(['en','pl'] as const)('Michigan has two numeric report stages with restricted results and independent timing in %s',async language=>{
  setLanguage(language);vi.setSystemTime(new Date('2026-11-06T12:00:00Z'));
- const items:CalendarEvent[]=(['preliminary','final'] as const).map((stage,i)=>({...events()[0],release_id:null,event_id:`michigan:2026-11:${stage}`,event_type:i?'michigan_final':'michigan_preliminary',release_name:`Michigan Consumer Sentiment — ${i?'Final':'Preliminary'}`,release_date:i?'2026-11-20':'2026-11-06',release_datetime_utc:i?null:'2026-11-06T15:00:00Z',reference_period:'2026-11-01',publication_stage:stage,expects_numeric_result:true,series:[],measures:[],result_integration_status:'publisher_permission_required',publisher_reports_url:'https://data.sca.isr.umich.edu/reports.php?year=2026',license_source_url:'https://data.sca.isr.umich.edu/agreement.php',document_status:'unconfirmed'}));
+ const items:CalendarEvent[]=(['preliminary','final'] as const).map((stage,i)=>({...events()[0],release_id:null,event_id:`michigan:2026-11:${stage}`,event_type:i?'michigan_final':'michigan_preliminary',importance:i?'medium':'high',release_name:`Michigan Consumer Sentiment — ${i?'Final':'Preliminary'}`,release_date:i?'2026-11-20':'2026-11-06',release_datetime_utc:i?null:'2026-11-06T15:00:00Z',reference_period:'2026-11-01',publication_stage:stage,expects_numeric_result:true,series:[],measures:[],result_integration_status:'publisher_permission_required',publisher_reports_url:'https://data.sca.isr.umich.edu/reports.php?year=2026',license_source_url:'https://data.sca.isr.umich.edu/agreement.php',document_status:'unconfirmed'}));
  vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>({events:items,start_date:'2026-11-02',end_date:'2026-11-08'})})));
  render(<CalendarPage/>);
  const preliminary=await screen.findByRole('button',{name:tText(items[0].release_name)+(language==='en'?' (Nov)':' (lis)')});
@@ -353,7 +353,7 @@ test('Warsaw dates, calendar weeks and DST keep their existing behavior',()=>{
 
 test('chronological ordering, deduplication, editorial stars and elapsed-time logic are unchanged',()=>{
  const source=events();expect(groupAgenda([source[3],source[1],source[0],{...source[0]}])[0].events.map(e=>e.release_id)).toEqual([10,50,18]);
- expect(filterEvents(source,new Set([3]),false,new Set())).toHaveLength(2);expect(filterEvents(source,new Set(),true,new Set())).toHaveLength(1);
+ expect(filterEvents(source,new Set([3]),false,new Set())).toHaveLength(3);expect(filterEvents(source,new Set(),true,new Set())).toHaveLength(1);
  expect(resultPending(source[0],{...measure(),actual:null},new Date('2026-10-26T13:00:00Z'))).toBe(true);expect(countdown(nextInstant([source[0]],new Date(NOW)),new Date('2026-10-26T12:30:00Z'))).toBeNull();
 });
 

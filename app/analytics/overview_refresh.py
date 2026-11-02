@@ -14,6 +14,7 @@ from app.analytics.source_checks import FRED_SERIES
 from app.analytics.overview_readings import READINGS
 from app.analytics import economy_brief, history
 from app.analytics.overview_check_scope import scope_overview_checks
+from app.analytics.calendar_market_impact import classify_brief
 from app.source_checks import availability_check
 from app.ingestion.request_budget import request_budget, before_request
 
@@ -507,7 +508,7 @@ def read_brief():
     try:
         cached = store.publication()
     except Exception:
-        return scope_overview_checks({**economy_brief.build_brief(), 'automatic_refresh_supported':False})
+        return classify_brief(scope_overview_checks({**economy_brief.build_brief(), 'automatic_refresh_supported':False}))
     if cached is None:
         lease = store.acquire()
         if lease is None:
@@ -519,7 +520,7 @@ def read_brief():
                 cached = store.publication()
                 if cached: break
             if cached is None:
-                return scope_overview_checks({**economy_brief.build_brief(), 'automatic_refresh_supported':False})
+                return classify_brief(scope_overview_checks({**economy_brief.build_brief(), 'automatic_refresh_supported':False}))
         else:
             try:
                 cached = store.publication() or initialize_publication(store)
@@ -527,7 +528,7 @@ def read_brief():
                 store.release(lease)
     result = copy.deepcopy(cached[1])
     result['refresh'] = coordinator.status()
-    return scope_overview_checks(result)
+    return classify_brief(scope_overview_checks(result))
 
 
 def read_chart(publication_id, key, start=None, end=None):

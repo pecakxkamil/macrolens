@@ -1,0 +1,1057 @@
+[
+  {
+    "before": 2,
+    "expected": 3,
+    "overview_key": "retail",
+    "identity": "retail|2026-10-20",
+    "event": {
+      "release_id": 9,
+      "release_name": "Advance Monthly Sales for Retail and Food Services",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "high",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "RSAFS",
+          "name": "RSAFS",
+          "short_name": "RSAFS",
+          "category": "consumer",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "RSBMGESD",
+          "name": "RSBMGESD",
+          "short_name": "RSBMGESD",
+          "category": "consumer",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "RSFSDP",
+          "name": "RSFSDP",
+          "short_name": "RSFSDP",
+          "category": "consumer",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "RSFSXMV",
+          "name": "RSFSXMV",
+          "short_name": "RSFSXMV",
+          "category": "consumer",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "RSGASS",
+          "name": "RSGASS",
+          "short_name": "RSGASS",
+          "category": "consumer",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "market_impact_stars": 3,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:9",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 3,
+    "expected": 3,
+    "overview_key": "cpi",
+    "identity": "cpi|2026-10-20",
+    "event": {
+      "release_id": 10,
+      "release_name": "Consumer Price Index",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "high",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "CPIAUCSL",
+          "name": "CPIAUCSL",
+          "short_name": "CPIAUCSL",
+          "category": "inflation",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "CPILFESL",
+          "name": "CPILFESL",
+          "short_name": "CPILFESL",
+          "category": "inflation",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "market_impact_stars": 3,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:10",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 2,
+    "expected": 2,
+    "overview_key": null,
+    "identity": "11|2026-10-20",
+    "event": {
+      "release_id": 11,
+      "release_name": "Employment Cost Index",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "medium",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "ECIALLCIV",
+          "name": "ECIALLCIV",
+          "short_name": "ECIALLCIV",
+          "category": "inflation",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "market_impact_stars": 2,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:11",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 2,
+    "expected": 2,
+    "overview_key": null,
+    "identity": "13|2026-10-20",
+    "event": {
+      "release_id": 13,
+      "release_name": "G.17 Industrial Production and Capacity Utilization",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "medium",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "INDPRO",
+          "name": "INDPRO",
+          "short_name": "INDPRO",
+          "category": "growth",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "TCU",
+          "name": "TCU",
+          "short_name": "TCU",
+          "category": "growth",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "market_impact_stars": 2,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:13",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 1,
+    "expected": 1,
+    "overview_key": null,
+    "identity": "18|2026-10-20",
+    "event": {
+      "release_id": 18,
+      "release_name": "H.15 Selected Interest Rates",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "low",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "DFF",
+          "name": "DFF",
+          "short_name": "DFF",
+          "category": "financial_conditions",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "DFII10",
+          "name": "DFII10",
+          "short_name": "DFII10",
+          "category": "financial_conditions",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "DGS10",
+          "name": "DGS10",
+          "short_name": "DGS10",
+          "category": "financial_conditions",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "DGS2",
+          "name": "DGS2",
+          "short_name": "DGS2",
+          "category": "financial_conditions",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "market_impact_stars": 1,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:18",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 2,
+    "expected": 2,
+    "overview_key": null,
+    "identity": "27|2026-10-20",
+    "event": {
+      "release_id": 27,
+      "release_name": "New Residential Construction",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "medium",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "HOUST",
+          "name": "HOUST",
+          "short_name": "HOUST",
+          "category": "housing",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "PERMIT",
+          "name": "PERMIT",
+          "short_name": "PERMIT",
+          "category": "housing",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "market_impact_stars": 2,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:27",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 2,
+    "expected": 3,
+    "overview_key": null,
+    "identity": "46|2026-10-20",
+    "event": {
+      "release_id": 46,
+      "release_name": "Producer Price Index",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "high",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "PPICOR",
+          "name": "PPICOR",
+          "short_name": "PPICOR",
+          "category": "inflation",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "PPIFES",
+          "name": "PPIFES",
+          "short_name": "PPIFES",
+          "category": "inflation",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "PPIFID",
+          "name": "PPIFID",
+          "short_name": "PPIFID",
+          "category": "inflation",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "PPIFIS",
+          "name": "PPIFIS",
+          "short_name": "PPIFIS",
+          "category": "inflation",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "WPSFD49116",
+          "name": "WPSFD49116",
+          "short_name": "WPSFD49116",
+          "category": "inflation",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "WPUFD49116",
+          "name": "WPUFD49116",
+          "short_name": "WPUFD49116",
+          "category": "inflation",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "market_impact_stars": 3,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:46",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 3,
+    "expected": 3,
+    "overview_key": "employment",
+    "identity": "employment|2026-10-20",
+    "event": {
+      "release_id": 50,
+      "release_name": "Employment Situation",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "high",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "AWHAETP",
+          "name": "AWHAETP",
+          "short_name": "AWHAETP",
+          "category": "labor",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "CES0500000003",
+          "name": "CES0500000003",
+          "short_name": "CES0500000003",
+          "category": "labor",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "CIVPART",
+          "name": "CIVPART",
+          "short_name": "CIVPART",
+          "category": "labor",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "PAYEMS",
+          "name": "PAYEMS",
+          "short_name": "PAYEMS",
+          "category": "labor",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "U6RATE",
+          "name": "U6RATE",
+          "short_name": "U6RATE",
+          "category": "labor",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "UNEMPLOY",
+          "name": "UNEMPLOY",
+          "short_name": "UNEMPLOY",
+          "category": "labor",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "UNRATE",
+          "name": "UNRATE",
+          "short_name": "UNRATE",
+          "category": "labor",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "market_impact_stars": 3,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:50",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 3,
+    "expected": 3,
+    "overview_key": "gdp",
+    "identity": "gdp|2026-10-20",
+    "event": {
+      "release_id": 53,
+      "release_name": "Gross Domestic Product",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "high",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "GDPC1",
+          "name": "GDPC1",
+          "short_name": "GDPC1",
+          "category": "growth",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "market_impact_stars": 3,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:53",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 3,
+    "expected": 3,
+    "overview_key": "pce",
+    "identity": "pce|2026-10-20",
+    "event": {
+      "release_id": 54,
+      "release_name": "Personal Income and Outlays",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "high",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "DSPIC96",
+          "name": "DSPIC96",
+          "short_name": "DSPIC96",
+          "category": "consumer",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "PCEC96",
+          "name": "PCEC96",
+          "short_name": "PCEC96",
+          "category": "consumer",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "PCEPI",
+          "name": "PCEPI",
+          "short_name": "PCEPI",
+          "category": "consumer",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "PCEPILFE",
+          "name": "PCEPILFE",
+          "short_name": "PCEPILFE",
+          "category": "consumer",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "PSAVERT",
+          "name": "PSAVERT",
+          "short_name": "PSAVERT",
+          "category": "consumer",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "market_impact_stars": 3,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:54",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 2,
+    "expected": 2,
+    "overview_key": null,
+    "identity": "95|2026-10-20",
+    "event": {
+      "release_id": 95,
+      "release_name": "Manufacturer's Shipments, Inventories, and Orders (M3) Survey",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "medium",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "DGORDER",
+          "name": "DGORDER",
+          "short_name": "DGORDER",
+          "category": "growth",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "market_impact_stars": 2,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:95",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 2,
+    "expected": 3,
+    "overview_key": null,
+    "identity": "97|2026-10-20",
+    "event": {
+      "release_id": 97,
+      "release_name": "New Residential Sales",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "high",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "HSN1F",
+          "name": "HSN1F",
+          "short_name": "HSN1F",
+          "category": "housing",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "market_impact_stars": 3,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:97",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 2,
+    "expected": 3,
+    "overview_key": "claims",
+    "identity": "claims|2026-10-20",
+    "event": {
+      "release_id": 180,
+      "release_name": "Unemployment Insurance Weekly Claims Report",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "high",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "CCSA",
+          "name": "CCSA",
+          "short_name": "CCSA",
+          "category": "labor",
+          "frequency": "monthly",
+          "unit": "index"
+        },
+        {
+          "series_id": "ICSA",
+          "name": "ICSA",
+          "short_name": "ICSA",
+          "category": "labor",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "market_impact_stars": 3,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:180",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 2,
+    "expected": 2,
+    "overview_key": null,
+    "identity": "190|2026-10-20",
+    "event": {
+      "release_id": 190,
+      "release_name": "Primary Mortgage Market Survey",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "medium",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "MORTGAGE30US",
+          "name": "MORTGAGE30US",
+          "short_name": "MORTGAGE30US",
+          "category": "housing",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "market_impact_stars": 2,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:190",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 2,
+    "expected": 3,
+    "overview_key": null,
+    "identity": "192|2026-10-20",
+    "event": {
+      "release_id": 192,
+      "release_name": "Job Openings and Labor Turnover Survey",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "high",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "JTSJOL",
+          "name": "JTSJOL",
+          "short_name": "JTSJOL",
+          "category": "labor",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "market_impact_stars": 3,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:192",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 2,
+    "expected": 2,
+    "overview_key": null,
+    "identity": "219|2026-10-20",
+    "event": {
+      "release_id": 219,
+      "release_name": "Chicago Fed National Activity Index",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "medium",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "CFNAI",
+          "name": "CFNAI",
+          "short_name": "CFNAI",
+          "category": "growth",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "market_impact_stars": 2,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:219",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 2,
+    "expected": 2,
+    "overview_key": null,
+    "identity": "221|2026-10-20",
+    "event": {
+      "release_id": 221,
+      "release_name": "Chicago Fed National Financial Conditions Index",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "medium",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "NFCI",
+          "name": "NFCI",
+          "short_name": "NFCI",
+          "category": "financial_conditions",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "market_impact_stars": 2,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:221",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 3,
+    "expected": 3,
+    "overview_key": "fomc",
+    "identity": "fomc|2026-10-20",
+    "event": {
+      "release_id": null,
+      "release_name": "FOMC policy decision",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "high",
+      "date_precision": "date",
+      "series": [],
+      "event_type": "fomc_decision",
+      "market_impact_stars": 3,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "fomc_decision",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 3,
+    "expected": 3,
+    "overview_key": "fomc_press_conference",
+    "identity": "fomc_press_conference:2026-10",
+    "event": {
+      "release_id": null,
+      "release_name": "FOMC Press Conference",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "high",
+      "date_precision": "date",
+      "series": [],
+      "event_type": "fomc_press_conference",
+      "event_id": "fomc_press_conference:2026-10",
+      "market_impact_stars": 3,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "fomc_press_conference",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 3,
+    "expected": 3,
+    "overview_key": "fomc_sep",
+    "identity": "fomc_sep:2026-10",
+    "event": {
+      "release_id": null,
+      "release_name": "Fed Economic Projections (SEP)",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "high",
+      "date_precision": "date",
+      "series": [],
+      "event_type": "fomc_sep",
+      "event_id": "fomc_sep:2026-10",
+      "market_impact_stars": 3,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "fomc_sep",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 2,
+    "expected": 3,
+    "overview_key": "fomc_minutes",
+    "identity": "fomc_minutes:2026-10",
+    "event": {
+      "release_id": null,
+      "release_name": "FOMC Meeting Minutes",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "high",
+      "date_precision": "date",
+      "series": [],
+      "event_type": "fomc_minutes",
+      "event_id": "fomc_minutes:2026-10",
+      "market_impact_stars": 3,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "fomc_minutes",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 3,
+    "expected": 3,
+    "overview_key": "ism_manufacturing",
+    "identity": "ism_manufacturing|2026-10-20",
+    "event": {
+      "release_id": null,
+      "release_name": "ISM Manufacturing PMI",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "high",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "ISM_MANUFACTURING_PMI",
+          "name": "ISM_MANUFACTURING_PMI",
+          "short_name": "ISM_MANUFACTURING_PMI",
+          "category": "growth",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "event_type": "ism_report",
+      "market_impact_stars": 3,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "ism_manufacturing",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 3,
+    "expected": 3,
+    "overview_key": "ism_services",
+    "identity": "ism_services|2026-10-20",
+    "event": {
+      "release_id": null,
+      "release_name": "ISM Services PMI",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "high",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "ISM_SERVICES_PMI",
+          "name": "ISM_SERVICES_PMI",
+          "short_name": "ISM_SERVICES_PMI",
+          "category": "growth",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "event_type": "ism_report",
+      "market_impact_stars": 3,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "ism_services",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 3,
+    "expected": 3,
+    "overview_key": "michigan_preliminary",
+    "identity": "michigan_preliminary:2026-10",
+    "event": {
+      "release_id": null,
+      "release_name": "Michigan Consumer Sentiment — Preliminary",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "high",
+      "date_precision": "date",
+      "series": [],
+      "event_type": "michigan_preliminary",
+      "event_id": "michigan_preliminary:2026-10",
+      "market_impact_stars": 3,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "michigan_preliminary",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 2,
+    "expected": 2,
+    "overview_key": "michigan_final",
+    "identity": "michigan_final:2026-10",
+    "event": {
+      "release_id": null,
+      "release_name": "Michigan Consumer Sentiment — Final",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "medium",
+      "date_precision": "date",
+      "series": [],
+      "event_type": "michigan_final",
+      "event_id": "michigan_final:2026-10",
+      "market_impact_stars": 2,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "michigan_final",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 3,
+    "expected": 3,
+    "overview_key": "adp_monthly",
+    "identity": "adp_monthly:2026-10",
+    "event": {
+      "release_id": null,
+      "release_name": "ADP National Employment Report",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "high",
+      "date_precision": "date",
+      "series": [],
+      "event_type": "adp_monthly",
+      "event_id": "adp_monthly:2026-10",
+      "market_impact_stars": 3,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "adp_monthly",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 2,
+    "expected": 2,
+    "overview_key": "empire_state",
+    "identity": "empire_state:2026-10",
+    "event": {
+      "release_id": null,
+      "release_name": "Empire State Manufacturing Survey",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "medium",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "NYFED_EMPIRE_GACDISA",
+          "name": "NYFED_EMPIRE_GACDISA",
+          "short_name": "NYFED_EMPIRE_GACDISA",
+          "category": "growth",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "event_type": "empire_state",
+      "event_id": "empire_state:2026-10",
+      "market_impact_stars": 2,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "empire_state",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 2,
+    "expected": 2,
+    "overview_key": "ft900",
+    "identity": "ft900:2026-10",
+    "event": {
+      "release_id": null,
+      "release_name": "U.S. Trade Balance — Goods and Services",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "medium",
+      "date_precision": "date",
+      "series": [
+        {
+          "series_id": "CENSUS_FT900_TOTAL",
+          "name": "CENSUS_FT900_TOTAL",
+          "short_name": "CENSUS_FT900_TOTAL",
+          "category": "growth",
+          "frequency": "monthly",
+          "unit": "index"
+        }
+      ],
+      "event_type": "ft900",
+      "event_id": "ft900:2026-10",
+      "market_impact_stars": 2,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "ft900",
+      "market_impact_scope": "event"
+    }
+  },
+  {
+    "before": 2,
+    "expected": 2,
+    "overview_key": null,
+    "identity": "13|2026-10-20",
+    "event": {
+      "release_id": 13,
+      "release_name": "G.17 annual revision",
+      "release_date": "2026-10-20",
+      "release_datetime_utc": null,
+      "release_time": null,
+      "source_timezone": null,
+      "source_link": null,
+      "importance": "medium",
+      "date_precision": "date",
+      "series": [],
+      "estimate_stage": "annual_revision",
+      "market_impact_stars": 2,
+      "market_impact_policy_version": "2026-11-k2-v1",
+      "market_impact_rule_id": "release:13:annual_revision",
+      "market_impact_scope": "event"
+    }
+  }
+]

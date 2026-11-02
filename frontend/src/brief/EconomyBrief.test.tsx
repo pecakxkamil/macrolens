@@ -509,7 +509,7 @@ test("compact event rows expose stars and retain provenance in the report rather
   expect(panel.querySelector(".overview-other-events")).toBeNull();
   expect(panel.querySelector("details")).toBeNull();
   const data = fixture(), report = briefMarkdown(briefModel(data), data, data.assembled_at);
-  expect(report).toContain("Editorial tiers take precedence without changing source classes.");
+  expect(report).toContain("Key/Tracked labels describe Overview selection only and never override stars.");
   expect(report).toContain("https://www.cmegroup.com/fedwatch");
   expect(panel.lastElementChild).toHaveAttribute("href", "#/calendar");
   fireEvent.click(screen.getByRole("button", {name: "Polski"}));
