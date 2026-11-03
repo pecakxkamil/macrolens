@@ -857,3 +857,42 @@ commitów, zwykły push i rzeczywiście zakończone wyniki trzech jobów Actions
 będą w końcowej odpowiedzi po ich uzyskaniu. Nie tworzy się dodatkowego
 commita wyłącznie dla metadanych po pushu. Nie przypisuje się przyszłemu
 CI wyników lokalnych. Historyczne „bez commita” opisuje wcześniejsze etapy.
+
+## 18. Wynik GitHub Actions i przygotowana poprawka CI
+
+Oba commity wypchnięto zwykłym pushem: Activation
+`565a0fa126a0e2a09f5b858ed61074feebe9dc96` oraz E2C
+`a3627bdddbf88eb179771a48d7dce3d523e9048e`.
+[Uruchomienie Actions](https://github.com/pecakxkamil/macrolens/actions/runs/41733244851)
+zakończyło backend i frontend sukcesem: **1294 / 662 passed**.
+PostgreSQL przeszedł kroki 1–7, lecz krok 8 Activation zakończył się
+`KeyError: 'port'`; krok 9 E2C został pominięty. Nie deklaruje się zielonego CI.
+
+Przyczyna jest w skrypcie walidacyjnym: na runnerze Linux
+`ConnectionInfo.get_parameters()` pomija domyślny port 5432.
+Przygotowana lokalna poprawka w dwóch miejscach pobiera host, port i rolę
+z jawnych właściwości `ConnectionInfo`. Nie zmienia aktywatora, danych,
+workflow lub zabezpieczeń. Po poprawce na osobnym PostgreSQL 17 przeszły
+Activation fresh/upgrade z prawdziwym backup/restore oraz walidacja E2C.
+Użyto pełnego ID kontenera i bramki GITHUB_ACTIONS; testowy kontener
+i jego wolumen usunięto po sprawdzeniu tożsamości oraz cleanup baz.
+Normalnej bazy i aplikacji nie zmieniano.
+
+Użytkownik następnie wyraźnie zatwierdził osobny trzeci commit naprawczy
+`Fix earnings financial activation CI validation` i zwykły push, bez amend
+i force push. Zakres obejmuje tylko dwie linie skryptu oraz ten raport;
+workflow nie wymaga zmiany. Potwierdzono w kodzie zainstalowanego psycopg,
+że `get_parameters()` celowo zwraca wyłącznie parametry różne od wartości
+domyślnych; właściwość `info.port` zachowuje rzeczywisty port połączenia.
+Nie dodano zastępczej wartości portu i nie pominięto kontroli restore.
+
+Końcowa walidacja dokładnego indeksu naprawy: **335 blob IDs zgodnych**,
+Activation fresh/upgrade i rzeczywisty backup/restore **passed, 6,42 s**,
+E2C **passed, 4,16 s**. Actionlint oraz oba `git diff --check` przeszły.
+Staging zawiera dokładnie dwa zatwierdzone pliki; żaden z 13 chronionych
+plików ani data/raw nie wchodzi do commita. Chronione bajty są identyczne.
+Własny PostgreSQL 17 na 55463 usunięto po sprawdzeniu pełnego ID, etykiety
+i braku pozostawionych baz prób. Nie użyto normalnej bazy do zapisów.
+Po tych kontrolach zmieniono wyłącznie ten dopisek dokumentacji.
+Wynik nowego uruchomienia Actions i pełny SHA trzeciego commita zostaną
+podane w odpowiedzi końcowej po pushu; nie zakłada się sukcesu CI.

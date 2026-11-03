@@ -55,7 +55,7 @@ def make_backup(factory,admin,name,container,directory):
         with path.open('rb') as stream:
             p=subprocess.run(['docker','exec','-i',container,'pg_restore','-U',target['user'],'-d',restore_name,'--exit-on-error','--single-transaction','--no-owner','--no-acl'],stdin=stream,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
         assert p.returncode==0,p.stderr
-        params=admin.info.get_parameters()
+        params=dict(host=admin.info.host,port=admin.info.port,user=admin.info.user)
         with psycopg.connect(host=params['host'],port=params['port'],user=params['user'],password=os.environ['DB_PASSWORD'],dbname=restore_name) as c:
             c.read_only=True
             with c.transaction():
@@ -93,7 +93,7 @@ def verify(factory,admin,name,container,reference,upgrade):
         token=b.digest(plan);label=plan['target_label']
         other=own_create(admin)
         try:
-            params=admin.info.get_parameters()
+            params=dict(host=admin.info.host,port=admin.info.port,user=admin.info.user)
             with psycopg.connect(host=params['host'],port=params['port'],user=params['user'],password=os.environ['DB_PASSWORD'],dbname=other) as wrong:
                 rejected(wrong,lambda:a.apply(wrong,plan,label,token))
                 assert not b.inspect(wrong)['existing_objects']
