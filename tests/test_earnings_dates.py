@@ -81,6 +81,7 @@ def test_invalid_manual_metadata(mutation):
 
 def test_api_read_only_union(monkeypatch):
     seen=[]
+    monkeypatch.setattr(e,'companies',lambda:[{'ticker':v[1]} for v in e.PILOTS.values()])
     monkeypatch.setattr(e,'calendar_events',lambda start,end,symbols:(seen.append(symbols) or {'events':[{'domain':'earnings','event_id':'earnings:one'}],'undated':[],'earnings_data_revision':'e1'}))
     monkeypatch.setattr(api,'calendar_agenda',lambda *a:{'events':[{'event_id':'macro:one'}],'data_revision':'m1'})
     with TestClient(app) as client:
@@ -92,6 +93,6 @@ def test_api_read_only_union(monkeypatch):
         assert len(client.get('/api/v1/earnings/companies').json())==3
 
 
-@pytest.mark.parametrize('query',['domains=other','domains=earnings&tickers=TSLA','start_date=2026-11-20&end_date=2026-11-01','start_date=2026-01-01&end_date=2028-01-01'])
+@pytest.mark.parametrize('query',['domains=other','domains=earnings&tickers=BAD%27','start_date=2026-11-20&end_date=2026-11-01','start_date=2026-01-01&end_date=2028-01-01'])
 def test_api_validation_no_db(query):
     with TestClient(app) as client:assert client.get('/api/v1/calendar/events?'+query).status_code==422

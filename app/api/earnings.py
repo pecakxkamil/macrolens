@@ -1,6 +1,7 @@
 """Read-only earnings endpoints; no provider clients or refresh operations."""
 from datetime import date, datetime, timedelta, timezone
 from typing import Optional
+import re
 from zoneinfo import ZoneInfo
 from fastapi import APIRouter, HTTPException
 from app import earnings
@@ -14,7 +15,7 @@ def events(start_date: Optional[date]=None,end_date: Optional[date]=None,domains
     start=start_date or datetime.now(ZoneInfo('Europe/Warsaw')).date()
     end=end_date or start+timedelta(days=6)
     selected=set(domains.split(',')); symbols=set(tickers.split(',')) if tickers else None
-    if not selected or not selected <= {'macro','earnings'} or (symbols and not symbols <= {v[1] for v in earnings.PILOTS.values()}):
+    if not selected or not selected <= {'macro','earnings'} or (symbols and (len(symbols)>100 or any(not re.fullmatch(r'[A-Z0-9][A-Z0-9.\-]{0,14}',s) for s in symbols))):
         raise HTTPException(422,'Unsupported domain or ticker')
     try: validate_range(start,end)
     except ValueError as error: raise HTTPException(422,str(error)) from error
@@ -31,7 +32,8 @@ def events(start_date: Optional[date]=None,end_date: Optional[date]=None,domains
 
 @router.get('/api/v1/earnings/companies')
 def companies():
-    return [{'company_id':earnings.identity(cik),'cik':cik,'name':v[0],'ticker':v[1]} for cik,v in earnings.PILOTS.items()]
+    try: return earnings.companies()
+    except Exception as error: raise HTTPException(503,'Earnings store unavailable') from error
 
 
 @router.get('/api/v1/earnings/events/{event_id}')

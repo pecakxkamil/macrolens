@@ -1,4 +1,4 @@
-"""Local manual earnings metadata. No HTTP, financial observations or scheduler."""
+"""Local manual earnings dates and read-only financial projection; no HTTP or scheduler."""
 import argparse
 import hashlib
 import json
@@ -136,8 +136,15 @@ def load_events(connection):
     for e in events:
         history=[temporal(c) for c in confirmations if c['event_id']==e['event_id']]
         components={k:next((c for c in reversed(history) if c['component']==k),None) for k in ('release','call')}
+        unknown={'date_status':'unknown','precision':'unknown','sequence':0,'source_local_date':None,
+                 'source_local_time':None,'source_timezone':None,'timezone_label_raw':None,
+                 'scheduled_at_utc':None,'expected_time_utc':None,'poland_date':None,
+                 'session_boundary_utc':None,'session_boundary_source':None,'source_url':None,
+                 'verified_on':None,'facts':None,'verification_method':None}
+        components={k:v or {**unknown,'component':k} for k,v in components.items()}
         result.append({**e,'domain':'earnings','event_id':'earnings:'+str(e['event_id']),'company_id':str(e['company_id']),**components,'history':history})
-    return result
+    from app.earnings_financials import attach
+    return attach(connection,result)
 
 
 def calendar_events(start,end,tickers=None):
@@ -149,12 +156,28 @@ def calendar_events(start,end,tickers=None):
         if tickers and e['ticker'] not in tickers: continue
         release=e['release']; call=e['call']
         anchor=release if release and release['date_status']!='unknown' else call
-        if not anchor or anchor['date_status']=='unknown': undated.append(e);continue
+        if not anchor or anchor['date_status']=='unknown':
+            if e.get('financial_release_date'):
+                if str(start)<=e['financial_release_date']<=str(end): selected.append(e)
+            else: undated.append(e)
+            continue
         # Source-date bucketing is explicit when no Polish day is established.
         day=anchor['poland_date'] or anchor['source_local_date']
         if str(start)<=day<=str(end): selected.append(e)
     revision=hashlib.sha256(json.dumps(events,default=str,sort_keys=True).encode()).hexdigest()
-    return {'events':selected,'undated':undated,'earnings_data_revision':revision}
+    def order(e):
+        a=e['release'] if e['release']['date_status']!='unknown' else e['call']
+        return (a['poland_date'] or a['source_local_date'] or e.get('financial_release_date') or '~',
+                a['scheduled_at_utc'] or a['expected_time_utc'] or a['session_boundary_utc'] or '~',e['ticker'],e['event_id'])
+    return {'events':sorted(selected,key=order),'undated':sorted(undated,key=order),'earnings_data_revision':revision}
+
+
+def companies():
+    with get_independent_connection() as connection:
+        connection.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
+        with connection.cursor(row_factory=dict_row) as cursor:
+            cursor.execute('SELECT company_id,cik,name,ticker FROM earnings_companies ORDER BY ticker,company_id')
+            return [{**r,'company_id':str(r['company_id'])} for r in cursor.fetchall()]
 
 
 def main():

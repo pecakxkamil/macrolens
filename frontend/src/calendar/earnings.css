@@ -1,7 +1,15 @@
 .earnings-calendar { margin-block: 1rem; min-width: 0; }
-.earnings-calendar fieldset { display: flex; flex-wrap: wrap; gap: 1rem; }
-.earnings-calendar label { display: inline-flex; align-items: center; gap: .4rem; }
-.earnings-row { display: grid; gap: .45rem; border-bottom: 1px solid #30404e; padding-block: .9rem; min-width: 0; }
-.earnings-row > button { text-align: left; white-space: normal; overflow-wrap: anywhere; max-width: 100%; }
+.earnings-table-scroll { max-width: 100%; overflow-x: auto; border: 1px solid #30404e; border-radius: 8px; }
+.earnings-table { border-collapse: collapse; width: 100%; min-width: 820px; }
+.earnings-table th, .earnings-table td { padding: .75rem; text-align: left; vertical-align: middle; border-bottom: 1px solid #30404e; }
+.earnings-table .earnings-number { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.earnings-table small, .earnings-company-name { display: block; color: #a8b8c8; font-weight: normal; margin-top: .3rem; }
+.earnings-date h3 { margin: 0; font-size: .95rem; }
+.earnings-date { background: #15202b; }
+.earnings-table button { white-space: normal; }
+.earnings-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.earnings-scroll-hint { font-size: .85rem; color: #a8b8c8; }
 .earnings-details { min-width: 0; overflow-wrap: anywhere; }
+.earnings-details section { border-top: 1px solid #30404e; padding-block: .6rem; }
+@media (min-width: 1000px) { .earnings-scroll-hint { display: none; } }
 .calendar-domains { display: flex; flex-wrap: wrap; gap: 1rem; margin-block: 1rem; }

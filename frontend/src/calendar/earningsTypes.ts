@@ -11,6 +11,20 @@ export interface EarningsItem {
  domain:'earnings';event_id:string;company_id:string;cik:string;name:string;ticker:string;
  fiscal_year:number;fiscal_quarter:number;period_label:string;period_end:string|null;publication_status:'unconfirmed';
  release:EarningsTime;call:EarningsTime;history:EarningsTime[];
+ financial_store_status?:'available'|'not_activated';
+ financial_data_status?:'complete'|'partial'|'unavailable';
+ financial_publication_status?:'published'|'unconfirmed';
+ financial_release_date?:string|null;
+ revenue_actual?:FinancialObservation|null;gaap_diluted_eps_actual?:FinancialObservation|null;
+ revenue_consensus?:null;eps_consensus?:null;financial_history?:FinancialObservation[];
+}
+export interface FinancialObservation {
+ metric:'revenue'|'gaap_diluted_eps';actual:string;currency:'USD';unit:string;
+ source_value:string;source_unit:string;decimal_places:string;methodology:string;
+ source_url:string;document_type:string;verified_on:string;captured_at:string;
+ source_version:string;version:string;observation_id:string;supersedes_id:string|null;
+ correction_reason:string|null;release_date:string;period_end:string;sec_accession:string|null;
+ evidence_method:string;availability_status:string;
 }
 export type MacroItem={domain:'macro';event:CalendarEvent};
 export type CalendarItem=MacroItem|EarningsItem;

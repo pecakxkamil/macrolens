@@ -139,3 +139,5 @@ jobs:
         run: python tests/postgres_earnings_validation.py
       - name: PostgreSQL Earnings activation and recovery
         run: python tests/postgres_earnings_activation_validation.py
+      - name: PostgreSQL Earnings financial actuals and revisions
+        run: python tests/postgres_earnings_financial_validation.py

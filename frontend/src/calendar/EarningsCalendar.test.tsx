@@ -45,8 +45,8 @@ it.each(['en','pl'] as const)('renders metadata, source, unknown and Escape/focu
  fireEvent.keyDown(button,{key:'Escape'});expect(button).toHaveFocus();expect(button).toHaveAttribute('aria-expanded','false');
  expect(screen.getByRole('heading',{name:language==='pl'?'Termin nieogłoszony':'Date not announced'})).toBeInTheDocument();
  expect(screen.queryByText('EPS')).not.toBeInTheDocument();expect(screen.queryByText('00:00')).not.toBeInTheDocument();
- fireEvent.click(screen.getByRole('checkbox',{name:'NVDA'}));await waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(2));
- expect(String(fetcher.mock.calls[1][0])).toContain('tickers=NVDA');expect(fetcher.mock.calls.every(call=>!call[1]?.method)).toBe(true);
+ expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();await waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(1));
+ expect(String(fetcher.mock.calls[0][0])).not.toContain('tickers=');expect(fetcher.mock.calls.every(call=>!call[1]?.method)).toBe(true);
 });
 
 it('shows retry after an API error without starting a refresh',async()=>{
