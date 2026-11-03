@@ -1,0 +1,7 @@
+.earnings-calendar { margin-block: 1rem; min-width: 0; }
+.earnings-calendar fieldset { display: flex; flex-wrap: wrap; gap: 1rem; }
+.earnings-calendar label { display: inline-flex; align-items: center; gap: .4rem; }
+.earnings-row { display: grid; gap: .45rem; border-bottom: 1px solid #30404e; padding-block: .9rem; min-width: 0; }
+.earnings-row > button { text-align: left; white-space: normal; overflow-wrap: anywhere; max-width: 100%; }
+.earnings-details { min-width: 0; overflow-wrap: anywhere; }
+.calendar-domains { display: flex; flex-wrap: wrap; gap: 1rem; margin-block: 1rem; }

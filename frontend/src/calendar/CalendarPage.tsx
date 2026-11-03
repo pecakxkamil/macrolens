@@ -10,6 +10,8 @@ import {calendarComparison,comparableForecast} from './calendarComparisons';
 import {ComparisonTooltip} from './ComparisonTooltip';
 import {ReadingAvailability} from './ReadingAvailability';
 import {BeaEvidence} from './BeaEvidence';
+import {EarningsCalendar} from './EarningsCalendar';
+import {et} from './earningsPresentation';
 import {compactMeasureName,compactPeriod,compactMeasureValue,calendarReadingValue} from './calendarPresentation';
 import {calendarCategories,countdownText,countdownDelay,filterEvents,groupAgenda,nextInstant,presetRange,rangeError,resultPending,type DatePreset} from './calendarAgenda';
 
@@ -146,6 +148,7 @@ function AgendaRow({event,measure,now,next,showCountdown,expanded,toggle,check,r
  {expanded?<EventDetails event={event} measure={measure} now={now} check={check} refresh={refresh} revision={revision} id={detailId} onClose={close}/>:null}</Fragment>;
 }
 export function CalendarPage(){
+ const [domain,setDomain]=useState<'macro'|'earnings'|'all'>('macro');
  const [now,setNow]=useState(()=>new Date());
  const [preset,setPreset]=useState<DatePreset>('week'),[range,setRange]=useState(()=>presetRange('week'));
  const [custom,setCustom]=useState(range),[validation,setValidation]=useState<string|null>(null),[showFilters,setShowFilters]=useState(false);
@@ -171,9 +174,12 @@ export function CalendarPage(){
  const choose=(value:DatePreset)=>{setPreset(value);setSelected(undefined);setValidation(null);if(value==='custom')setCustom(range);else setRange(presetRange(value));};
  const toggleStar=(star:number)=>setStars(old=>{const next=new Set(old);next.has(star)?next.delete(star):next.add(star);return next;});
  return <main className="calendar-page calendar-agenda"><header className="calendar-header"><h1>{tText('Calendar')}</h1><p className="calendar-time-note">{tText('USA')} · {tText('Times shown in Poland local time (Europe/Warsaw).')}</p></header>
+ <fieldset className="calendar-domains"><legend>{et('Calendar domain','Domena kalendarza')}</legend>{([['macro',et('Macro','Makro')],['earnings',et('Company earnings','Wyniki spółek')],['all',et('All','Wszystkie')]] as const).map(([key,label])=><label key={key}><input type="radio" name="calendar-domain" checked={domain===key} onChange={()=>setDomain(key)}/>{label}</label>)}</fieldset>
  <div className="agenda-date-presets" role="group" aria-label={tLabel('Calendar date range')}>{presets.map(([value,label])=><button key={value} type="button" aria-pressed={preset===value} onClick={()=>choose(value)}>{tText(label)}</button>)}</div>
  {preset==='custom'?<form className="agenda-range-form" onSubmit={e=>{e.preventDefault();const error=rangeError(custom.startDate,custom.endDate);setValidation(error);if(!error){setRange(custom);setSelected(undefined);}}}>
  <label>{tText('Start date')}<input type="date" value={custom.startDate} onChange={e=>setCustom({...custom,startDate:e.target.value})} required/></label><label>{tText('End date')}<input type="date" value={custom.endDate} onChange={e=>setCustom({...custom,endDate:e.target.value})} required/></label><button type="submit">{tText('Apply range')}</button>{validation?<p role="alert">{tText(validation)}</p>:null}</form>:null}
+ {domain!=='macro'?<EarningsCalendar startDate={range.startDate} endDate={range.endDate}/>:null}
+ <div hidden={domain==='earnings'}>
  <div className="agenda-toolbar"><span>{formatCalendarDate(range.startDate)} – {formatCalendarDate(range.endDate)}</span><label><input type="checkbox" checked={stars.size===1&&stars.has(3)&&!unknown} onChange={e=>{setStars(new Set(e.target.checked?[3]:[2,3]));setUnknown(false);}}/>{tText('Only')} ★★★</label><button type="button" aria-expanded={showFilters} onClick={()=>setShowFilters(v=>!v)}>{tText('Filters')}</button><button type="button" onClick={()=>{setStars(new Set([1,2,3]));setUnknown(true);setCategories(new Set());}}>{tText('Clear filters')}</button></div>
  {showFilters?<div className="agenda-filters"><fieldset><legend>{tText('Importance')}</legend>{[1,2,3].map(star=><label key={star}><input type="checkbox" checked={stars.has(star)} onChange={()=>toggleStar(star)}/>{'★'.repeat(star)}</label>)}<label><input type="checkbox" checked={unknown} onChange={e=>setUnknown(e.target.checked)}/>{tText('Importance unavailable')}</label></fieldset><fieldset><legend>{tText('Categories')}</legend>{calendarCategories.map(c=><label key={c.id}><input type="checkbox" checked={categories.has(c.id)} onChange={()=>setCategories(old=>{const next=new Set(old);next.has(c.id)?next.delete(c.id):next.add(c.id);return next;})}/>{tText(c.label)}</label>)}</fieldset></div>:null}
  {data?<CalendarCheckStatus data={data} refresh={refresh??data.refresh}/>:null}
@@ -191,6 +197,7 @@ export function CalendarPage(){
    return <AgendaRow key={key} event={event} measure={measure} now={now} next={next} showCountdown={index===0&&firstNext!==undefined&&identity(firstNext)===identity(event)} expanded={selected===key} toggle={()=>setSelected(v=>v===key?undefined:key)} check={data?.check} refresh={refresh??data?.refresh} revision={data?.data_revision} rowId={encodeURIComponent(key)}/>;
   });
  })}</tbody>)}</table>:null}
- <p className="agenda-comparison-legend">{tText("Difference color: typical interpretation for the economic area, not market direction.")}</p>
+ </div>
+ <p hidden={domain==='earnings'} className="agenda-comparison-legend">{tText("Difference color: typical interpretation for the economic area, not market direction.")}</p>
  <p className="agenda-attribution">{tText('Sources')}: <a href="https://fred.stlouisfed.org/">FRED / ALFRED</a>, <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm">{tText('Federal Reserve')}</a>{data?.events.some(event=>event.event_type==='ism_report')?<>, <a href="https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/">ISM</a></>:null}{data?.events.some(event=>event.event_type==='adp_monthly')?<>, <a href="https://adpemploymentreport.com/">ADP Research</a></>:null}{data?.events.some(event=>event.event_type?.startsWith('michigan_'))?<>, <a href="https://data.sca.isr.umich.edu/survey-info.php">University of Michigan Surveys of Consumers</a></>:null}. {tText('Stars express MacroLens editorial importance, not market direction or an Investing.com rating.')}</p></main>;
 }

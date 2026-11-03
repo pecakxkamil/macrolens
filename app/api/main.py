@@ -40,6 +40,8 @@ DEVELOPMENT_CORS_ORIGINS = (
 )
 
 app = FastAPI(title="MacroLens API", version="0.1.0")
+from app.api.earnings import router as earnings_router
+app.include_router(earnings_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list(DEVELOPMENT_CORS_ORIGINS),

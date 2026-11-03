@@ -135,3 +135,7 @@ jobs:
         run: python tests/postgres_bea_validation.py
       - name: PostgreSQL BEA release-aware coordination and backoff
         run: python tests/postgres_bea_release_validation.py
+      - name: PostgreSQL Earnings dates and confirmation history
+        run: python tests/postgres_earnings_validation.py
+      - name: PostgreSQL Earnings activation and recovery
+        run: python tests/postgres_earnings_activation_validation.py

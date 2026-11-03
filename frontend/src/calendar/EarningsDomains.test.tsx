@@ -1,0 +1,20 @@
+import {afterEach,expect,it,vi} from 'vitest';
+import {cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
+import {CalendarPage} from './CalendarPage';
+import {fetchCalendarAgenda,requestOverviewRefresh} from '../api/macrolens';
+import {setLanguage} from '../i18n/language';
+vi.mock('../api/macrolens',async original=>({...await original<typeof import('../api/macrolens')>(),fetchCalendarAgenda:vi.fn(),requestOverviewRefresh:vi.fn()}));
+afterEach(()=>{cleanup();vi.unstubAllGlobals();vi.clearAllMocks();setLanguage('en');});
+it.each(['en','pl'] as const)('domain changes retain macro filters and do not add macro GET or POST in %s',async language=>{
+ setLanguage(language);
+ vi.mocked(fetchCalendarAgenda).mockImplementation(async(start_date,end_date)=>({start_date,end_date,events:[],timezone:'Europe/Warsaw',policy:{},refresh:{status:'complete',next_check_at:'2099-01-01T00:00:00Z',results:[]}} as unknown as Awaited<ReturnType<typeof fetchCalendarAgenda>>));
+ const fetcher=vi.fn().mockResolvedValue({ok:true,json:async()=>({events:[],undated:[]})});vi.stubGlobal('fetch',fetcher);
+ render(<CalendarPage/>);await waitFor(()=>expect(fetchCalendarAgenda).toHaveBeenCalledTimes(1));
+ const radio=(name:string)=>screen.getByRole('radio',{name});
+ expect(radio(language==='pl'?'Makro':'Macro')).toBeChecked();expect(fetcher).not.toHaveBeenCalled();
+ const stars=screen.getByRole('checkbox',{name:/★★★/});fireEvent.click(stars);expect(stars).toBeChecked();
+ fireEvent.click(radio(language==='pl'?'Wyniki spółek':'Company earnings'));await screen.findByText(language==='pl'?'Brak potwierdzonych wydarzeń w tym zakresie.':'No confirmed events in this range.');
+ fireEvent.click(radio(language==='pl'?'Wszystkie':'All'));expect(stars).toBeChecked();
+ fireEvent.click(radio(language==='pl'?'Makro':'Macro'));expect(stars).toBeChecked();
+ expect(fetchCalendarAgenda).toHaveBeenCalledTimes(1);expect(requestOverviewRefresh).not.toHaveBeenCalled();expect(fetcher).toHaveBeenCalledTimes(1);
+});
