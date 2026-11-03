@@ -13,7 +13,7 @@ function EarningsRow({event:e}:{event:EarningsItem}){
  const escape=(ev:React.KeyboardEvent)=>{if(ev.key==='Escape'&&open){ev.stopPropagation();setOpen(false);document.getElementById(`button-${e.event_id}`)?.focus();}};
  return <><tr className="earnings-row" onKeyDown={escape}>
  <th scope="row"><strong>{e.ticker} · {e.period_label}</strong><span className="earnings-company-name">{e.name}</span></th>
- <td>{summary}{anchor===e.call&&anchor.date_status!=='unknown'?<small>{et('Conference date','Data konferencji')}</small>:null}</td>
+ <td>{summary}{e.call.scheduled_at_utc&&e.call.date_status!=='cancelled'?<small>{et('Conference','Konferencja')}: {formatPolandTime(e.call.scheduled_at_utc)}</small>:null}{!anchor.poland_date?<small>{et('Issuer date; Polish release day/time not established','Data emitenta; dzień i godzina wyników w PL nieustalone')}</small>:null}</td>
  <td className="earnings-number">{financialValue(e.gaap_diluted_eps_actual)}<small>/ —</small></td>
  <td className="earnings-number">{financialValue(e.revenue_actual)}<small>/ —</small></td>
  <td>{financialStatus(e)}</td>
@@ -54,10 +54,14 @@ export function EarningsCalendar({startDate,endDate}:{startDate:string;endDate:s
  const [data,setData]=useState<CalendarItemsResponse>(),[error,setError]=useState(false),[retry,setRetry]=useState(0);
  useEffect(()=>{const abort=new AbortController();setData(undefined);setError(false);
  fetchEarnings(startDate,endDate,[],abort.signal).then(value=>{if(!abort.signal.aborted)setData(value);}).catch(()=>{if(!abort.signal.aborted)setError(true);});return()=>abort.abort();},[startDate,endDate,retry]);
- const events=(data?.events??[]).filter((e):e is EarningsItem=>e.domain==='earnings');
+ const events=(data?.events??[]).filter((e):e is EarningsItem=>{
+  if(e.domain!=='earnings')return false;
+  const day=earningsDate(e);
+  return day!==null&&day>=startDate&&day<=endDate;
+ });
  const groups=new Map<string,EarningsItem[]>();
  for(const e of events.sort(compareEarnings)){
-  const a=earningsAnchor(e);const key=a.poland_date?`pl:${a.poland_date}`:`source:${earningsDate(e)}`;
+  const key=earningsDate(e)!;
   groups.set(key,[...(groups.get(key)??[]),e]);
  }
  return <section className="earnings-calendar" aria-label={et('Company earnings','Wyniki spółek')}>
@@ -65,13 +69,13 @@ export function EarningsCalendar({startDate,endDate}:{startDate:string;endDate:s
  <p>{et('All companies · Actual / Forecast · USD','Wszystkie spółki · Actual / Prognoza · USD')}</p>
  {events.some(e=>e.financial_store_status==='not_activated')?<p role="status">{et('Financial data module not activated in this database. Earnings dates remain available.','Moduł danych finansowych nieaktywny w tej bazie. Terminy wyników pozostają dostępne.')}</p>:null}
  {error?<div role="alert">{et('Unable to load earnings dates. Stored macro data remain available.','Nie można wczytać terminów wyników spółek. Zapisane dane makro pozostają dostępne.')} <button onClick={()=>setRetry(v=>v+1)}>{et('Retry','Ponów')}</button></div>:!data?<p role="status">{et('Loading earnings dates…','Wczytywanie terminów wyników…')}</p>:null}
- {data&&!events.length?<p>{et('No confirmed events in this range.','Brak potwierdzonych wydarzeń w tym zakresie.')}</p>:null}
- {data&&(events.length>0||data.undated.length>0)?<>
+ {data&&!events.length?<p>{et('No earnings releases with a confirmed date in the selected range.','Brak publikacji wyników z potwierdzoną datą w wybranym zakresie.')}</p>:null}
+ {data&&events.length>0?<>
  <p className="earnings-scroll-hint">{et('On small screens, scroll the table horizontally for values and sources.','Na małym ekranie przewiń tabelę poziomo, aby zobaczyć wartości i źródła.')}</p>
  <div className="earnings-table-scroll" role="region" aria-label={et('Earnings table','Tabela wyników')} tabIndex={0}>
  <table className="earnings-table"><thead><tr><th scope="col">{et('Company','Spółka')}</th><th scope="col">{et('Results time · Poland','Czas wyników · Polska')}</th><th scope="col">EPS GAAP<small>Actual / {et('Forecast','Prognoza')}</small></th><th scope="col">{et('Revenue','Przychody')}<small>Actual / {et('Forecast','Prognoza')}</small></th><th scope="col">Status</th><th scope="col">{et('Details / Source','Szczegóły / Źródło')}</th></tr></thead>
- {[...groups].map(([key,rows])=><tbody key={key}><tr className="earnings-date"><th colSpan={6} scope="rowgroup"><h3>{formatAgendaDate(key.split(':')[1])}{key.startsWith('source:')?` · ${et('Issuer date; Polish publication day/time not established','Data emitenta; dzień i godzina publikacji w PL nieustalone')}`:''}</h3></th></tr>{rows.map(e=><EarningsRow key={e.event_id} event={e}/>)}</tbody>)}
- {data.undated.length?<tbody><tr className="earnings-date"><th colSpan={6} scope="rowgroup"><h3>{et('Date not announced','Termin nieogłoszony')}</h3></th></tr>{[...data.undated].sort(compareEarnings).map(e=><EarningsRow key={e.event_id} event={e}/>)}</tbody>:null}
+ {[...groups].map(([key,rows])=><tbody key={key}><tr className="earnings-date"><th colSpan={6} scope="rowgroup"><h3>{formatAgendaDate(key)}</h3></th></tr>{rows.map(e=><EarningsRow key={e.event_id} event={e}/>)}</tbody>)}
  </table></div></>:null}
+ <p className="earnings-attribution">{et('Earnings sources: official issuer / Investor Relations evidence in each row’s details.','Źródła wyników spółek: oficjalne dowody emitentów / Investor Relations w szczegółach każdego wiersza.')}</p>
  </section>;
 }

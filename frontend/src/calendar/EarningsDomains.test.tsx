@@ -13,7 +13,7 @@ it.each(['en','pl'] as const)('domain changes retain macro filters and do not ad
  const radio=(name:string)=>screen.getByRole('radio',{name});
  expect(radio(language==='pl'?'Makro':'Macro')).toBeChecked();expect(fetcher).not.toHaveBeenCalled();
  const stars=screen.getByRole('checkbox',{name:/★★★/});fireEvent.click(stars);expect(stars).toBeChecked();
- fireEvent.click(radio(language==='pl'?'Wyniki spółek':'Company earnings'));await screen.findByText(language==='pl'?'Brak potwierdzonych wydarzeń w tym zakresie.':'No confirmed events in this range.');
+ fireEvent.click(radio(language==='pl'?'Wyniki spółek':'Company earnings'));await screen.findByText(language==='pl'?'Brak publikacji wyników z potwierdzoną datą w wybranym zakresie.':'No earnings releases with a confirmed date in the selected range.');
  fireEvent.click(radio(language==='pl'?'Wszystkie':'All'));expect(stars).toBeChecked();
  fireEvent.click(radio(language==='pl'?'Makro':'Macro'));expect(stars).toBeChecked();
  expect(fetchCalendarAgenda).toHaveBeenCalledTimes(1);expect(requestOverviewRefresh).not.toHaveBeenCalled();expect(fetcher).toHaveBeenCalledTimes(1);

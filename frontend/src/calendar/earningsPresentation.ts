@@ -17,5 +17,5 @@ export function earningsDay(e:EarningsItem){const a=earningsAnchor(e);return a.p
 export function earningsSummary(e:EarningsItem){
  if(e.release.date_status==='unknown'&&e.call.date_status==='unknown')return et('Date not announced','Termin nieogłoszony');
  if(e.release.date_status!=='unknown')return earningsTime(e.release);
- return et('Results time not announced','Godzina wyników nieogłoszona');
+ return et('Results: time unknown','Wyniki: godzina nieznana');
 }

@@ -1,0 +1,34 @@
+import {afterEach,expect,it,vi} from 'vitest';
+import {cleanup,render,screen,within} from '@testing-library/react';
+import {EarningsCalendar} from './EarningsCalendar';
+import {setLanguage} from '../i18n/language';
+import type {EarningsItem,EarningsTime} from './earningsTypes';
+const unknown:EarningsTime={component:'release',date_status:'unknown',precision:'unknown',source_local_date:null,source_local_time:null,source_timezone:null,timezone_label_raw:null,scheduled_at_utc:null,expected_time_utc:null,poland_date:null,session_boundary_utc:null,session_boundary_source:null,source_url:null,verified_on:null,facts:null,verification_method:null,sequence:0};
+const base:EarningsItem={domain:'earnings',event_id:'earnings:intc',company_id:'intel',name:'Intel',ticker:'INTC',cik:'0000050863',fiscal_year:2026,fiscal_quarter:3,period_label:'Q3 2026',period_end:null,publication_status:'unconfirmed',release:{...unknown,date_status:'confirmed',precision:'after_close',source_local_date:'2026-10-29',session_boundary_utc:'2026-10-29T20:00:00Z'},call:unknown,history:[]};
+const amazon:EarningsItem={...base,event_id:'earnings:amzn',ticker:'AMZN',name:'Amazon',release:unknown,call:{...unknown,component:'call',date_status:'confirmed',precision:'exact',source_local_date:'2026-10-29',poland_date:'2026-10-29',scheduled_at_utc:'2026-10-29T21:00:00Z'}};
+const placeholder:EarningsItem={...base,event_id:'earnings:q4',period_label:'Q4 2026',release:unknown,call:unknown};
+afterEach(()=>{cleanup();vi.unstubAllGlobals();setLanguage('en');});
+it.each(['en','pl'] as const)('hides undated, filters dates and groups issuer/Polish date once in %s',async language=>{
+ setLanguage(language);
+ const later={...base,event_id:'earnings:later',ticker:'AMD',release:{...base.release,source_local_date:'2026-11-03'}};
+ vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:true,json:async()=>({events:[base,amazon,later,placeholder],undated:[placeholder]})}));
+ const view=render(<EarningsCalendar startDate="2026-10-26" endDate="2026-11-01"/>);
+ await screen.findByRole('table');
+ expect(view.container.querySelectorAll('.earnings-row')).toHaveLength(2);
+ expect(view.container.querySelectorAll('.earnings-date')).toHaveLength(1);
+ expect(screen.queryByText(/Q4 2026/)).not.toBeInTheDocument();expect(screen.queryByText(/AMD/)).not.toBeInTheDocument();
+ expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+ const row=screen.getByRole('button',{name:/AMZN/}).closest('tr')!;
+ expect(row).toHaveTextContent(language==='pl'?'Wyniki: godzina nieznana':'Results: time unknown');
+ expect(row).toHaveTextContent(language==='pl'?'Konferencja: 22:00':'Conference: 22:00');
+ const intel=screen.getByRole('button',{name:/INTC/}).closest('tr')!;
+ expect(intel).toHaveTextContent(language==='pl'?'Data emitenta':'Issuer date');expect(intel).toHaveTextContent('21:00+');
+ expect(within(row).getAllByText('/ —')).toHaveLength(2);
+ expect(screen.getByText(language==='pl'?/Źródła wyników spółek/:/Earnings sources/)).toBeInTheDocument();
+});
+it.each([['2026-10-26','2026-11-01'],['2026-11-02','2026-11-08']])('shows a real empty range without an unknown table: %s',async(startDate,endDate)=>{
+ setLanguage('pl');vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:true,json:async()=>({events:[],undated:[placeholder]})}));
+ render(<EarningsCalendar startDate={startDate} endDate={endDate}/>);
+ expect(await screen.findByText('Brak publikacji wyników z potwierdzoną datą w wybranym zakresie.')).toBeInTheDocument();
+ expect(screen.queryByRole('table')).not.toBeInTheDocument();expect(screen.queryByText(/Q4/)).not.toBeInTheDocument();
+});

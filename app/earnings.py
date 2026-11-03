@@ -151,9 +151,12 @@ def calendar_events(start,end,tickers=None):
     with get_independent_connection() as connection:
         connection.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
         events=load_events(connection)
+        issuer_ids=None
+        if tickers:
+            issuer_ids={str(row[0]) for row in connection.execute('SELECT company_id FROM earnings_company_aliases WHERE ticker=ANY(%s)',(list(tickers),)).fetchall()}
     selected=[];undated=[]
     for e in events:
-        if tickers and e['ticker'] not in tickers: continue
+        if tickers and e['ticker'] not in tickers and e['company_id'] not in issuer_ids: continue
         release=e['release']; call=e['call']
         anchor=release if release and release['date_status']!='unknown' else call
         if not anchor or anchor['date_status']=='unknown':

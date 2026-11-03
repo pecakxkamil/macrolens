@@ -145,3 +145,5 @@ jobs:
         env:
           FINANCIAL_TEST_CONTAINER: ${{ job.services.postgres.id }}
         run: python tests/postgres_earnings_financial_activation_validation.py
+      - name: PostgreSQL Earnings coverage and issuer aliases
+        run: python tests/postgres_earnings_coverage_validation.py

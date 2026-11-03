@@ -29,7 +29,7 @@ describe('time certainty',()=>{
   expect(earningsTime({...release,precision:'after_close',expected_time_utc:null,session_boundary_utc:'2026-11-27T18:00:00Z'})).toBe('19:00+ — after US close');
  });
  it('does not promote a call to release time or fabricate date-only Polish day',()=>{
-  expect(earningsSummary({...event,release:unknown})).toBe('Results time not announced');
+  expect(earningsSummary({...event,release:unknown})).toBe('Results: time unknown');
   expect(earningsSummary({...event,release:unknown,call:unknown})).toBe('Date not announced');
   expect(earningsDay({...event,release:{...release,precision:'date_only',poland_date:null,expected_time_utc:null}})).toBe('2026-11-17');
   expect(earningsDay({...event,release:{...release,precision:'exact',scheduled_at_utc:'2026-11-18T00:30:00Z',poland_date:'2026-11-18'}})).toBe('2026-11-18');
@@ -40,10 +40,11 @@ it.each(['en','pl'] as const)('renders metadata, source, unknown and Escape/focu
  setLanguage(language);const fetcher=vi.fn().mockResolvedValue({ok:true,json:async()=>({events:[event],undated:[{...event,event_id:'earnings:next',period_label:'Q4 FY2027',release:unknown,call:unknown}],earnings_data_revision:'e1'})});vi.stubGlobal('fetch',fetcher);
  render(<EarningsCalendar startDate="2026-11-01" endDate="2026-11-30"/>);
  const button=await screen.findByRole('button',{name:/NVDA · Q3 FY2027/});expect(button).toHaveTextContent('22:20');expect(button).not.toHaveTextContent('23:00');
- fireEvent.click(button);expect(screen.getByText(new RegExp(language==='pl'?'Konferencja: 23:00':'Conference: 23:00'))).toBeInTheDocument();
+ fireEvent.click(button);expect(screen.getAllByText(new RegExp(language==='pl'?'Konferencja: 23:00':'Conference: 23:00'))).toHaveLength(2);
  expect(screen.getAllByRole('link',{name:/NVIDIA Investor Relations/})).toHaveLength(2);
  fireEvent.keyDown(button,{key:'Escape'});expect(button).toHaveFocus();expect(button).toHaveAttribute('aria-expanded','false');
- expect(screen.getByRole('heading',{name:language==='pl'?'Termin nieogłoszony':'Date not announced'})).toBeInTheDocument();
+ expect(screen.queryByRole('heading',{name:language==='pl'?'Termin nieogłoszony':'Date not announced'})).not.toBeInTheDocument();
+ expect(screen.queryByText(/Q4 FY2027/)).not.toBeInTheDocument();
  expect(screen.queryByText('EPS')).not.toBeInTheDocument();expect(screen.queryByText('00:00')).not.toBeInTheDocument();
  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();await waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(1));
  expect(String(fetcher.mock.calls[0][0])).not.toContain('tickers=');expect(fetcher.mock.calls.every(call=>!call[1]?.method)).toBe(true);
@@ -53,5 +54,5 @@ it('shows retry after an API error without starting a refresh',async()=>{
  const fetcher=vi.fn().mockResolvedValueOnce({ok:false}).mockResolvedValue({ok:true,json:async()=>({events:[],undated:[]})});vi.stubGlobal('fetch',fetcher);
  render(<EarningsCalendar startDate="2026-11-01" endDate="2026-11-30"/>);
  expect(await screen.findByRole('alert')).toBeInTheDocument();fireEvent.click(screen.getByRole('button',{name:'Retry'}));
- expect(await screen.findByText('No confirmed events in this range.')).toBeInTheDocument();expect(fetcher).toHaveBeenCalledTimes(2);
+ expect(await screen.findByText('No earnings releases with a confirmed date in the selected range.')).toBeInTheDocument();expect(fetcher).toHaveBeenCalledTimes(2);
 });

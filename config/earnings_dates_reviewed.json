@@ -1,0 +1,1029 @@
+[
+  {
+    "cik": "0000320193",
+    "ticker": "AAPL",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 4,
+    "period_label": "Q4 FY2026",
+    "period_end": "2026-09-26",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-11-02",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0000320193",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 4,
+        "period_label": "Q4 FY2026",
+        "period_end": "2026-09-26",
+        "source_url": "https://www.apple.com/newsroom/2026/11/apple-reports-fourth-quarter-results/",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "AAPL Q4 FY2026: official release identifies 2026-11-02; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "confirmed",
+      "precision": "exact",
+      "source_local_date": "2026-11-02",
+      "source_local_time": "14:00",
+      "source_timezone": "America/Los_Angeles",
+      "timezone_label_raw": "PT",
+      "evidence": {
+        "cik": "0000320193",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 4,
+        "period_label": "Q4 FY2026",
+        "period_end": "2026-09-26",
+        "source_url": "https://www.apple.com/newsroom/2026/11/apple-reports-fourth-quarter-results/",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "AAPL Q4 FY2026: conference 14:00 PT on 2026-11-02, separate from release."
+      }
+    }
+  },
+  {
+    "cik": "0000789019",
+    "ticker": "MSFT",
+    "fiscal_year": 2027,
+    "fiscal_quarter": 1,
+    "period_label": "Q1 FY2027",
+    "period_end": "2026-09-30",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "after_close",
+      "source_local_date": "2026-10-28",
+      "source_local_time": null,
+      "source_timezone": "America/New_York",
+      "timezone_label_raw": "ET",
+      "evidence": {
+        "cik": "0000789019",
+        "fiscal_year": 2027,
+        "fiscal_quarter": 1,
+        "period_label": "Q1 FY2027",
+        "period_end": "2026-09-30",
+        "source_url": "https://news.microsoft.com/source/2026/10/07/microsoft-announces-quarterly-earnings-release-date-69",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_date_announcement",
+        "facts": "MSFT Q1 FY2027: official announcement identifies 2026-10-28; no new financial Actual imported. Issuer reference timezone: America/New_York."
+      }
+    },
+    "call": {
+      "date_status": "confirmed",
+      "precision": "exact",
+      "source_local_date": "2026-10-28",
+      "source_local_time": "14:30",
+      "source_timezone": "America/Los_Angeles",
+      "timezone_label_raw": "PT",
+      "evidence": {
+        "cik": "0000789019",
+        "fiscal_year": 2027,
+        "fiscal_quarter": 1,
+        "period_label": "Q1 FY2027",
+        "period_end": "2026-09-30",
+        "source_url": "https://news.microsoft.com/source/2026/10/07/microsoft-announces-quarterly-earnings-release-date-69",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_date_announcement",
+        "facts": "MSFT Q1 FY2027: conference 14:30 PT on 2026-10-28, separate from release."
+      }
+    }
+  },
+  {
+    "cik": "0001652044",
+    "ticker": "GOOGL",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 2026",
+    "period_end": "2026-09-30",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-10-28",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0001652044",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 2026",
+        "period_end": "2026-09-30",
+        "source_url": "https://abc.xyz/investor/news/news-details/2026/Alphabet-Announces-Third-Quarter-2026-Results-2026-FCcqxfIfmh/default.aspx",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "GOOGL Q3 2026: official release identifies 2026-10-28; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0001326801",
+    "ticker": "META",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 2026",
+    "period_end": "2026-09-30",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-10-21",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0001326801",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 2026",
+        "period_end": "2026-09-30",
+        "source_url": "https://investor.atmeta.com/investor-news/press-release-details/2026/Meta-Reports-Third-Quarter-2026-Results/",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "META Q3 2026: official release identifies 2026-10-21; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0001318605",
+    "ticker": "TSLA",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 2026",
+    "period_end": "2026-09-30",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-10-21",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0001318605",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 2026",
+        "period_end": "2026-09-30",
+        "source_url": "https://ir.tesla.com/press-release/tesla-releases-third-quarter-2026-financial-results",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "TSLA Q3 2026: official release identifies 2026-10-21; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0001730168",
+    "ticker": "AVGO",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 FY2026",
+    "period_end": "2026-08-02",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-09-02",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0001730168",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 FY2026",
+        "period_end": "2026-08-02",
+        "source_url": "https://investors.broadcom.com/news-releases/news-release-details/broadcom-inc-announces-third-quarter-fiscal-year-2026-financial",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "AVGO Q3 FY2026: official release identifies 2026-09-02; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0000002488",
+    "ticker": "AMD",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 2026",
+    "period_end": null,
+    "release": {
+      "date_status": "confirmed",
+      "precision": "after_close",
+      "source_local_date": "2026-11-03",
+      "source_local_time": null,
+      "source_timezone": "America/New_York",
+      "timezone_label_raw": "ET",
+      "evidence": {
+        "cik": "0000002488",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 2026",
+        "period_end": null,
+        "source_url": "https://ir.amd.com/news-events/press-releases/detail/1300/amd-to-report-fiscal-third-quarter-2026-financial-results",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_date_announcement",
+        "facts": "AMD Q3 2026: official announcement identifies 2026-11-03; no new financial Actual imported. Issuer reference timezone: America/New_York."
+      }
+    },
+    "call": {
+      "date_status": "confirmed",
+      "precision": "exact",
+      "source_local_date": "2026-11-03",
+      "source_local_time": "17:00",
+      "source_timezone": "America/New_York",
+      "timezone_label_raw": "ET",
+      "evidence": {
+        "cik": "0000002488",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 2026",
+        "period_end": null,
+        "source_url": "https://ir.amd.com/news-events/press-releases/detail/1300/amd-to-report-fiscal-third-quarter-2026-financial-results",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_date_announcement",
+        "facts": "AMD Q3 2026: conference 17:00 ET on 2026-11-03, separate from release."
+      }
+    }
+  },
+  {
+    "cik": "0001341439",
+    "ticker": "ORCL",
+    "fiscal_year": 2027,
+    "fiscal_quarter": 1,
+    "period_label": "Q1 FY2027",
+    "period_end": null,
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-09-10",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0001341439",
+        "fiscal_year": 2027,
+        "fiscal_quarter": 1,
+        "period_label": "Q1 FY2027",
+        "period_end": null,
+        "source_url": "https://investor.oracle.com/investor-news/news-details/2026/Oracle-Announces-Q1-Results-Driven-by-Triple-Digit-Growth-in-Cloud-Infrastructure-Revenues/default.aspx",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "ORCL Q1 FY2027: official release identifies 2026-09-10; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0001065280",
+    "ticker": "NFLX",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 2026",
+    "period_end": "2026-09-30",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-10-20",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0001065280",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 2026",
+        "period_end": "2026-09-30",
+        "source_url": "https://ir.netflix.net/files/doc_financials/2026/q3/FINAL-Q3-26-Shareholder-Letter.pdf",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "NFLX Q3 2026: official release identifies 2026-10-20; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0000723125",
+    "ticker": "MU",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 4,
+    "period_label": "Q4 FY2026",
+    "period_end": "2026-09-03",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-09-30",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0000723125",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 4,
+        "period_label": "Q4 FY2026",
+        "period_end": "2026-09-03",
+        "source_url": "https://investors.micron.com/news/press-release/2026/Micron-Technology-Inc--Reports-Record-Fiscal-Fourth-Quarter-and-Full-Year-2026-Results/default.aspx",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "MU Q4 FY2026: official release identifies 2026-09-30; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "confirmed",
+      "precision": "exact",
+      "source_local_date": "2026-09-30",
+      "source_local_time": "14:30",
+      "source_timezone": "America/Denver",
+      "timezone_label_raw": "MT",
+      "evidence": {
+        "cik": "0000723125",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 4,
+        "period_label": "Q4 FY2026",
+        "period_end": "2026-09-03",
+        "source_url": "https://investors.micron.com/news/press-release/2026/Micron-Technology-Inc--Reports-Record-Fiscal-Fourth-Quarter-and-Full-Year-2026-Results/default.aspx",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "Micron fiscal Q4 2026: conference September 30 at 14:30 Mountain Time, separate from release date."
+      }
+    }
+  },
+  {
+    "cik": "0000804328",
+    "ticker": "QCOM",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 4,
+    "period_label": "Q4 FY2026",
+    "period_end": null,
+    "release": {
+      "date_status": "confirmed",
+      "precision": "after_close",
+      "source_local_date": "2026-11-04",
+      "source_local_time": null,
+      "source_timezone": "America/New_York",
+      "timezone_label_raw": "ET",
+      "evidence": {
+        "cik": "0000804328",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 4,
+        "period_label": "Q4 FY2026",
+        "period_end": null,
+        "source_url": "https://investor.qualcomm.com/news-events/press-releases/news-details/2026/Qualcomm-Schedules-Fourth-Quarter-and-Fiscal-2026-Earnings-Release-and-Conference-Call/default.aspx",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_date_announcement",
+        "facts": "QCOM Q4 FY2026: official announcement identifies 2026-11-04; no new financial Actual imported. Issuer reference timezone: America/New_York."
+      }
+    },
+    "call": {
+      "date_status": "confirmed",
+      "precision": "exact",
+      "source_local_date": "2026-11-04",
+      "source_local_time": "13:45",
+      "source_timezone": "America/Los_Angeles",
+      "timezone_label_raw": "PT",
+      "evidence": {
+        "cik": "0000804328",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 4,
+        "period_label": "Q4 FY2026",
+        "period_end": null,
+        "source_url": "https://investor.qualcomm.com/news-events/press-releases/news-details/2026/Qualcomm-Schedules-Fourth-Quarter-and-Fiscal-2026-Earnings-Release-and-Conference-Call/default.aspx",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_date_announcement",
+        "facts": "QCOM Q4 FY2026: conference 13:45 PT on 2026-11-04, separate from release."
+      }
+    }
+  },
+  {
+    "cik": "0001046179",
+    "ticker": "TSM",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 2026",
+    "period_end": "2026-09-30",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-10-15",
+      "source_local_time": null,
+      "source_timezone": "Asia/Taipei",
+      "timezone_label_raw": "Asia/Taipei (date only)",
+      "evidence": {
+        "cik": "0001046179",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 2026",
+        "period_end": "2026-09-30",
+        "source_url": "https://pr.tsmc.com/english/news/3346",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "TSM Q3 2026: official release identifies 2026-10-15; no new financial Actual imported. Issuer reference timezone: Asia/Taipei."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0000937966",
+    "ticker": "ASML",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 2026",
+    "period_end": null,
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-10-14",
+      "source_local_time": null,
+      "source_timezone": "Europe/Amsterdam",
+      "timezone_label_raw": "Europe/Amsterdam (date only)",
+      "evidence": {
+        "cik": "0000937966",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 2026",
+        "period_end": null,
+        "source_url": "https://investor.asml.com/news-releases/news-release-details/asml-reports-eu11.7-billion-total-net-sales-and-eu5.0-billion-net-income-q3-2026",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "ASML Q3 2026: official release identifies 2026-10-14; no new financial Actual imported. Issuer reference timezone: Europe/Amsterdam."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0001973239",
+    "ticker": "ARM",
+    "fiscal_year": 2027,
+    "fiscal_quarter": 2,
+    "period_label": "Q2 FY2027",
+    "period_end": null,
+    "release": {
+      "date_status": "confirmed",
+      "precision": "after_close",
+      "source_local_date": "2026-11-04",
+      "source_local_time": null,
+      "source_timezone": "America/New_York",
+      "timezone_label_raw": "ET",
+      "evidence": {
+        "cik": "0001973239",
+        "fiscal_year": 2027,
+        "fiscal_quarter": 2,
+        "period_label": "Q2 FY2027",
+        "period_end": null,
+        "source_url": "https://newsroom.arm.com/news/arm-announces-earnings-release-date-for-second-quarter-fiscal-year-ending-2027",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_date_announcement",
+        "facts": "ARM Q2 FY2027: official announcement identifies 2026-11-04; no new financial Actual imported. Issuer reference timezone: Europe/London."
+      }
+    },
+    "call": {
+      "date_status": "confirmed",
+      "precision": "exact",
+      "source_local_date": "2026-11-04",
+      "source_local_time": "14:00",
+      "source_timezone": "America/Los_Angeles",
+      "timezone_label_raw": "PT",
+      "evidence": {
+        "cik": "0001973239",
+        "fiscal_year": 2027,
+        "fiscal_quarter": 2,
+        "period_label": "Q2 FY2027",
+        "period_end": null,
+        "source_url": "https://newsroom.arm.com/news/arm-announces-earnings-release-date-for-second-quarter-fiscal-year-ending-2027",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_date_announcement",
+        "facts": "ARM Q2 FY2027: conference 14:00 PT on 2026-11-04, separate from release."
+      }
+    }
+  },
+  {
+    "cik": "0000006951",
+    "ticker": "AMAT",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 FY2026",
+    "period_end": "2026-07-26",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-08-13",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0000006951",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 FY2026",
+        "period_end": "2026-07-26",
+        "source_url": "https://ir.appliedmaterials.com/news-releases/news-release-details/applied-materials-announces-third-quarter-2026-results",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "AMAT Q3 FY2026: official release identifies 2026-08-13; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0000707549",
+    "ticker": "LRCX",
+    "fiscal_year": 2027,
+    "fiscal_quarter": 1,
+    "period_label": "Q1 FY2027",
+    "period_end": "2026-09-27",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-10-21",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0000707549",
+        "fiscal_year": 2027,
+        "fiscal_quarter": 1,
+        "period_label": "Q1 FY2027",
+        "period_end": "2026-09-27",
+        "source_url": "https://investor.lamresearch.com/2026-10-21-Lam-Research-Corporation-Reports-Financial-Results-for-the-Quarter-Ended-September-27%2C-2026",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "LRCX Q1 FY2027: official release identifies 2026-10-21; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0000319201",
+    "ticker": "KLAC",
+    "fiscal_year": 2027,
+    "fiscal_quarter": 1,
+    "period_label": "Q1 FY2027",
+    "period_end": "2026-09-30",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-10-28",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0000319201",
+        "fiscal_year": 2027,
+        "fiscal_quarter": 1,
+        "period_label": "Q1 FY2027",
+        "period_end": "2026-09-30",
+        "source_url": "https://ir.kla.com/news-events/press-releases/detail/523/kla-corporation-reports-fiscal-2027-first-quarter-results",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "KLAC Q1 FY2027: official release identifies 2026-10-28; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0000097476",
+    "ticker": "TXN",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 2026",
+    "period_end": "2026-09-30",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-10-21",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0000097476",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 2026",
+        "period_end": "2026-09-30",
+        "source_url": "https://www.ti.com/about-ti/newsroom/news-releases/2026/2026-10-21-ti-reports-third-quarter-2026-financial-results-and-shareholder-returns.html",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "TXN Q3 2026: official release identifies 2026-10-21; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0000796343",
+    "ticker": "ADBE",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 FY2026",
+    "period_end": null,
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-09-10",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0000796343",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 FY2026",
+        "period_end": null,
+        "source_url": "https://news.adobe.com/news/2026/09/adobe-q3fy26-financial-results",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "ADBE Q3 FY2026: official release identifies 2026-09-10; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0001108524",
+    "ticker": "CRM",
+    "fiscal_year": 2027,
+    "fiscal_quarter": 2,
+    "period_label": "Q2 FY2027",
+    "period_end": "2026-07-31",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-08-26",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0001108524",
+        "fiscal_year": 2027,
+        "fiscal_quarter": 2,
+        "period_label": "Q2 FY2027",
+        "period_end": "2026-07-31",
+        "source_url": "https://investor.salesforce.com/news/news-details/2026/Salesforce-Delivers-Record-Second-Quarter-Fiscal-2027-Results/default.aspx",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "CRM Q2 FY2027: official release identifies 2026-08-26; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0001373715",
+    "ticker": "NOW",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 2026",
+    "period_end": "2026-09-30",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "after_close",
+      "source_local_date": "2026-10-28",
+      "source_local_time": null,
+      "source_timezone": "America/New_York",
+      "timezone_label_raw": "ET",
+      "evidence": {
+        "cik": "0001373715",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 2026",
+        "period_end": "2026-09-30",
+        "source_url": "https://newsroom.servicenow.com/press-releases/details/2026/ServiceNow-to-Announce-Third-Quarter-2026-Financial-Results-on-October-28/default.aspx",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_date_announcement",
+        "facts": "NOW Q3 2026: official announcement identifies 2026-10-28; no new financial Actual imported. Issuer reference timezone: America/New_York."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0001321655",
+    "ticker": "PLTR",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 2026",
+    "period_end": "2026-09-30",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-11-02",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0001321655",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 2026",
+        "period_end": "2026-09-30",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/1321655/000132165526000045/a2026q3ex991pressrelease.htm",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "PLTR Q3 2026: official release identifies 2026-11-02; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "confirmed",
+      "precision": "exact",
+      "source_local_date": "2026-11-02",
+      "source_local_time": "17:00",
+      "source_timezone": "America/New_York",
+      "timezone_label_raw": "ET",
+      "evidence": {
+        "cik": "0001321655",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 2026",
+        "period_end": "2026-09-30",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/1321655/000132165526000045/a2026q3ex991pressrelease.htm",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "PLTR Q3 2026: conference 17:00 ET on 2026-11-02, separate from release."
+      }
+    }
+  },
+  {
+    "cik": "0001535527",
+    "ticker": "CRWD",
+    "fiscal_year": 2027,
+    "fiscal_quarter": 2,
+    "period_label": "Q2 FY2027",
+    "period_end": "2026-07-31",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-08-26",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0001535527",
+        "fiscal_year": 2027,
+        "fiscal_quarter": 2,
+        "period_label": "Q2 FY2027",
+        "period_end": "2026-07-31",
+        "source_url": "https://ir.crowdstrike.com/news-releases/news-release-details/crowdstrike-reports-second-quarter-fiscal-year-2027-financial",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "CRWD Q2 FY2027: official release identifies 2026-08-26; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0001327567",
+    "ticker": "PANW",
+    "fiscal_year": 2027,
+    "fiscal_quarter": 1,
+    "period_label": "Q1 FY2027",
+    "period_end": "2026-10-31",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "after_close",
+      "source_local_date": "2026-11-18",
+      "source_local_time": null,
+      "source_timezone": "America/New_York",
+      "timezone_label_raw": "ET",
+      "evidence": {
+        "cik": "0001327567",
+        "fiscal_year": 2027,
+        "fiscal_quarter": 1,
+        "period_label": "Q1 FY2027",
+        "period_end": "2026-10-31",
+        "source_url": "https://investors.paloaltonetworks.com/node/20971/pdf",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_date_announcement",
+        "facts": "PANW Q1 FY2027: official announcement identifies 2026-11-18; no new financial Actual imported. Issuer reference timezone: America/New_York."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0001640147",
+    "ticker": "SNOW",
+    "fiscal_year": 2027,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 FY2027",
+    "period_end": "2026-10-31",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "after_close",
+      "source_local_date": "2026-12-02",
+      "source_local_time": null,
+      "source_timezone": "America/New_York",
+      "timezone_label_raw": "ET",
+      "evidence": {
+        "cik": "0001640147",
+        "fiscal_year": 2027,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 FY2027",
+        "period_end": "2026-10-31",
+        "source_url": "https://www.snowflake.com/en/news/press-releases/fy27-q3-earnings-date-announcement/",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_date_announcement",
+        "facts": "SNOW Q3 FY2027: official announcement identifies 2026-12-02; no new financial Actual imported. Issuer reference timezone: America/New_York."
+      }
+    },
+    "call": {
+      "date_status": "confirmed",
+      "precision": "exact",
+      "source_local_date": "2026-12-02",
+      "source_local_time": "14:00",
+      "source_timezone": "America/Los_Angeles",
+      "timezone_label_raw": "PT",
+      "evidence": {
+        "cik": "0001640147",
+        "fiscal_year": 2027,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 FY2027",
+        "period_end": "2026-10-31",
+        "source_url": "https://www.snowflake.com/en/news/press-releases/fy27-q3-earnings-date-announcement/",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_date_announcement",
+        "facts": "SNOW Q3 FY2027: conference 14:00 PT on 2026-12-02, separate from release."
+      }
+    }
+  },
+  {
+    "cik": "0000051143",
+    "ticker": "IBM",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 2026",
+    "period_end": "2026-09-30",
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-10-21",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0000051143",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 3,
+        "period_label": "Q3 2026",
+        "period_end": "2026-09-30",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/51143/000005114326000093/ibm-20261021xex991.htm",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "IBM Q3 2026: official release identifies 2026-10-21; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  },
+  {
+    "cik": "0000858877",
+    "ticker": "CSCO",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 4,
+    "period_label": "Q4 FY2026",
+    "period_end": null,
+    "release": {
+      "date_status": "confirmed",
+      "precision": "date_only",
+      "source_local_date": "2026-08-12",
+      "source_local_time": null,
+      "source_timezone": null,
+      "timezone_label_raw": "Issuer date; timezone not specified",
+      "evidence": {
+        "cik": "0000858877",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 4,
+        "period_label": "Q4 FY2026",
+        "period_end": null,
+        "source_url": "https://investor.cisco.com/news/news-details/2026/CISCO-REPORTS-FOURTH-QUARTER-AND-FISCAL-YEAR-2026-EARNINGS/default.aspx",
+        "source_kind": "official_announcement",
+        "verification_method": "manually_verified_official_source",
+        "verified_on": "2026-11-03",
+        "document_type": "earnings_release",
+        "facts": "CSCO Q4 FY2026: official release identifies 2026-08-12; no new financial Actual imported."
+      }
+    },
+    "call": {
+      "date_status": "unknown",
+      "precision": "unknown"
+    }
+  }
+]
