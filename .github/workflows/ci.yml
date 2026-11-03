@@ -141,3 +141,7 @@ jobs:
         run: python tests/postgres_earnings_activation_validation.py
       - name: PostgreSQL Earnings financial actuals and revisions
         run: python tests/postgres_earnings_financial_validation.py
+      - name: PostgreSQL Earnings financial activation and recovery
+        env:
+          FINANCIAL_TEST_CONTAINER: ${{ job.services.postgres.id }}
+        run: python tests/postgres_earnings_financial_activation_validation.py
