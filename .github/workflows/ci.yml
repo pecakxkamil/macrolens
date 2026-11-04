@@ -151,3 +151,7 @@ jobs:
         env:
           COVERAGE_TEST_CONTAINER: ${{ job.services.postgres.id }}
         run: python tests/postgres_earnings_coverage_activation_validation.py
+      - name: PostgreSQL Earnings reported actuals and publication statuses
+        env:
+          DB_NAME: macrolens_e2d_control
+        run: python tests/postgres_earnings_report_validation.py

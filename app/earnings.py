@@ -144,7 +144,8 @@ def load_events(connection):
         components={k:v or {**unknown,'component':k} for k,v in components.items()}
         result.append({**e,'domain':'earnings','event_id':'earnings:'+str(e['event_id']),'company_id':str(e['company_id']),**components,'history':history})
     from app.earnings_financials import attach
-    return attach(connection,result)
+    from app.earnings_reports import attach as attach_reports
+    return attach_reports(connection,attach(connection,result))
 
 
 def calendar_events(start,end,tickers=None):

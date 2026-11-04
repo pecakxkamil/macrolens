@@ -1,7 +1,7 @@
 import {useEffect,useState} from 'react';
 import {fetchEarnings,type CalendarItemsResponse,type EarningsItem} from './earningsTypes';
 import {earningsAnchor,earningsSummary,earningsTime,et} from './earningsPresentation';
-import {compareEarnings,earningsDate,financialStatus,financialValue} from './earningsFinancialPresentation';
+import {compareEarnings,earningsDate,financialStatus,financialValue,epsBasis} from './earningsFinancialPresentation';
 import {formatAgendaDate,formatPolandTime} from './calendarDates';
 import './earnings.css';
 
@@ -14,7 +14,7 @@ function EarningsRow({event:e}:{event:EarningsItem}){
  return <><tr className="earnings-row" onKeyDown={escape}>
  <th scope="row"><strong>{e.ticker} · {e.period_label}</strong><span className="earnings-company-name">{e.name}</span></th>
  <td>{summary}{e.call.scheduled_at_utc&&e.call.date_status!=='cancelled'?<small>{et('Conference','Konferencja')}: {formatPolandTime(e.call.scheduled_at_utc)}</small>:null}{!anchor.poland_date?<small>{et('Issuer date; Polish release day/time not established','Data emitenta; dzień i godzina wyników w PL nieustalone')}</small>:null}</td>
- <td className="earnings-number">{financialValue(e.gaap_diluted_eps_actual)}<small>/ —</small></td>
+ <td className="earnings-number">{financialValue(e.reported_eps_actual??e.gaap_diluted_eps_actual)}<small>/ —</small></td>
  <td className="earnings-number">{financialValue(e.revenue_actual)}<small>/ —</small></td>
  <td>{financialStatus(e)}</td>
  <td><button id={`button-${e.event_id}`} aria-expanded={open} aria-controls={id} onClick={()=>setOpen(v=>!v)}><span className="earnings-sr">{e.ticker} · {e.period_label} · {summary} · </span>{et('Details / Source','Szczegóły / Źródło')}</button></td>
@@ -22,18 +22,28 @@ function EarningsRow({event:e}:{event:EarningsItem}){
  {open?<tr onKeyDown={escape}><td colSpan={6}><div id={id} className="earnings-details">
  <p>{et('Results','Wyniki')}: {summary}</p>
  <p>{et('Conference','Konferencja')}: {e.call.scheduled_at_utc&&e.call.date_status!=='cancelled'?formatPolandTime(e.call.scheduled_at_utc):earningsTime(e.call)}</p>
- <p>{financialStatus(e)}. {et('A scheduled date alone does not prove publication.','Sama zaplanowana data nie potwierdza publikacji.')}</p>
+ <p>{financialStatus(e)}. {e.publication_state?.reason==='verified_official_release'?et('Publication verified in an official earnings release. Financial completeness is shown separately.','Publikację potwierdza oficjalny raport wynikowy. Kompletność danych pokazano osobno.'):et('A scheduled date alone does not prove publication.','Sama zaplanowana data nie potwierdza publikacji.')}</p>
  <p>{et('Company','Spółka')}: {e.name}</p>
- <p>EPS GAAP: {financialValue(e.gaap_diluted_eps_actual)} · {et('Revenue','Przychody')}: {financialValue(e.revenue_actual)}</p>
+ <p>{et('Reported EPS','EPS raportowany')}: {financialValue(e.reported_eps_actual??e.gaap_diluted_eps_actual)} · {et('Revenue','Przychody')}: {financialValue(e.revenue_actual)}</p>
+ {e.reported_eps_actual||e.gaap_diluted_eps_actual?<p>{epsBasis(e.reported_eps_actual??e.gaap_diluted_eps_actual)}</p>:null}
  <p>{et('Analyst consensus unavailable; forecasts are empty.','Konsensus analityków niedostępny; prognozy pozostają puste.')}</p>
  {(e.financial_history??[]).map(o=><section key={o.observation_id}>
- <p>{o.metric==='revenue'?et('Consolidated revenue','Przychody skonsolidowane'):'GAAP diluted EPS'}: {financialValue(o)} · {o.methodology}</p>
+ <p>{o.metric==='revenue'?et('Consolidated revenue','Przychody skonsolidowane'):epsBasis(o)}: {financialValue(o)}</p>
  <p>{et('Source units','Jednostki źródłowe')}: {o.source_value} {o.source_unit} · {et('Period end','Koniec okresu')}: {o.period_end}</p>
  <p>{et('Earnings release date (issuer)','Data komunikatu wyników (emitenta)')}: {o.release_date}</p>
  <a href={o.source_url} target="_blank" rel="noreferrer">{e.name} · {et('Official earnings release','Oficjalny komunikat wyników')}</a>
  <p>{et('Manually verified','Zweryfikowano ręcznie')}: {o.verified_on} · {et('Version','Wersja')}: {o.version} / {o.source_version}</p>
  <p>{et('Captured locally','Zapisano lokalnie')}: {o.captured_at}{o.sec_accession?` · SEC: ${o.sec_accession}`:''}</p>
  {o.correction_reason?<p>{et('Correction','Korekta')}: {o.correction_reason}</p>:null}
+ </section>)}
+ {(e.report_documents??[]).map((d,i)=><section key={i}>
+ <p>{d.document_type==='earnings_release'?et('Official earnings release','Oficjalny raport wynikowy'):et('Official date announcement','Oficjalna zapowiedź terminu')} · {et('Version','Wersja')}: {d.version} / {d.source_version}</p>
+ <a href={d.source_url} target="_blank" rel="noreferrer">{e.name} · {et('Official report / evidence','Oficjalny raport / dowód')}</a>
+ {d.linked_from?<p><a href={d.linked_from} target="_blank" rel="noreferrer">{et('Issuer document page','Strona dokumentu emitenta')}</a></p>:null}
+ {d.release_date?<p>{et('Release date (issuer) · date only','Data publikacji (emitenta) · tylko data')}: {d.release_date}</p>:null}
+ <p>{et('Period end','Koniec okresu')}: {d.period_end??et('Not established','Nieustalony')} · {d.reporting_standard} · {d.reporting_currency}</p>
+ <p>{et('Verified','Zweryfikowano')}: {d.verified_on} · {et('Manual official-source review','Ręczna weryfikacja oficjalnego źródła')}</p>
+ <p>{d.facts}</p>{d.correction_reason?<p>{et('Correction','Korekta')}: {d.correction_reason}</p>:null}
  </section>)}
  <p>{et('Approximate times and session windows do not guarantee publication time.','Godziny orientacyjne i okna sesji nie gwarantują godziny publikacji.')}</p>
  <p>CIK: {e.cik} · {e.period_label}{e.period_end?` · ${e.period_end}`:''}</p>
@@ -66,14 +76,14 @@ export function EarningsCalendar({startDate,endDate}:{startDate:string;endDate:s
  }
  return <section className="earnings-calendar" aria-label={et('Company earnings','Wyniki spółek')}>
  <h2>{et('Company earnings','Wyniki spółek')}</h2>
- <p>{et('All companies · Actual / Forecast · USD','Wszystkie spółki · Actual / Prognoza · USD')}</p>
+ <p>{et('All companies · Issuer-reported data','Wszystkie spółki · Dane raportowane przez emitentów')}</p>
  {events.some(e=>e.financial_store_status==='not_activated')?<p role="status">{et('Financial data module not activated in this database. Earnings dates remain available.','Moduł danych finansowych nieaktywny w tej bazie. Terminy wyników pozostają dostępne.')}</p>:null}
  {error?<div role="alert">{et('Unable to load earnings dates. Stored macro data remain available.','Nie można wczytać terminów wyników spółek. Zapisane dane makro pozostają dostępne.')} <button onClick={()=>setRetry(v=>v+1)}>{et('Retry','Ponów')}</button></div>:!data?<p role="status">{et('Loading earnings dates…','Wczytywanie terminów wyników…')}</p>:null}
  {data&&!events.length?<p>{et('No earnings releases with a confirmed date in the selected range.','Brak publikacji wyników z potwierdzoną datą w wybranym zakresie.')}</p>:null}
  {data&&events.length>0?<>
  <p className="earnings-scroll-hint">{et('On small screens, scroll the table horizontally for values and sources.','Na małym ekranie przewiń tabelę poziomo, aby zobaczyć wartości i źródła.')}</p>
  <div className="earnings-table-scroll" role="region" aria-label={et('Earnings table','Tabela wyników')} tabIndex={0}>
- <table className="earnings-table"><thead><tr><th scope="col">{et('Company','Spółka')}</th><th scope="col">{et('Results time · Poland','Czas wyników · Polska')}</th><th scope="col">EPS GAAP<small>Actual / {et('Forecast','Prognoza')}</small></th><th scope="col">{et('Revenue','Przychody')}<small>Actual / {et('Forecast','Prognoza')}</small></th><th scope="col">Status</th><th scope="col">{et('Details / Source','Szczegóły / Źródło')}</th></tr></thead>
+ <table className="earnings-table"><thead><tr><th scope="col">{et('Company','Spółka')}</th><th scope="col">{et('Results time · Poland','Czas wyników · Polska')}</th><th scope="col">{et('Reported EPS','EPS raportowany')}<small>Actual / {et('Forecast','Prognoza')}</small></th><th scope="col">{et('Revenue','Przychody')}<small>Actual / {et('Forecast','Prognoza')}</small></th><th scope="col">Status</th><th scope="col">{et('Details / Source','Szczegóły / Źródło')}</th></tr></thead>
  {[...groups].map(([key,rows])=><tbody key={key}><tr className="earnings-date"><th colSpan={6} scope="rowgroup"><h3>{formatAgendaDate(key)}</h3></th></tr>{rows.map(e=><EarningsRow key={e.event_id} event={e}/>)}</tbody>)}
  </table></div></>:null}
  <p className="earnings-attribution">{et('Earnings sources: official issuer / Investor Relations evidence in each row’s details.','Źródła wyników spółek: oficjalne dowody emitentów / Investor Relations w szczegółach każdego wiersza.')}</p>

@@ -16,16 +16,21 @@ export interface EarningsItem {
  financial_publication_status?:'published'|'unconfirmed';
  financial_release_date?:string|null;
  revenue_actual?:FinancialObservation|null;gaap_diluted_eps_actual?:FinancialObservation|null;
+ reported_eps_actual?:FinancialObservation|null;
+ report_store_status?:'available'|'not_activated';report_documents?:ReportDocument[];
+ publication_state?:{code:'scheduled'|'published_pending'|'published_complete'|'published_partial'|'date_passed_unconfirmed'|'unconfirmed';reason:string;missing_metrics:string[];evidence:ReportDocument[]};
  revenue_consensus?:null;eps_consensus?:null;financial_history?:FinancialObservation[];
 }
 export interface FinancialObservation {
- metric:'revenue'|'gaap_diluted_eps';actual:string;currency:'USD';unit:string;
+ metric:'revenue'|'gaap_diluted_eps'|'reported_diluted_eps';actual:string;currency:'USD'|'EUR'|'TWD';unit:string;
  source_value:string;source_unit:string;decimal_places:string;methodology:string;
  source_url:string;document_type:string;verified_on:string;captured_at:string;
  source_version:string;version:string;observation_id:string;supersedes_id:string|null;
- correction_reason:string|null;release_date:string;period_end:string;sec_accession:string|null;
- evidence_method:string;availability_status:string;
+ correction_reason:string|null;release_date:string;period_end:string|null;sec_accession?:string|null;
+ evidence_method:string;availability_status?:string;
+ reporting_standard?:'US_GAAP'|'IFRS';share_basis?:'not_applicable'|'common_share'|'ordinary_share'|'ADR';
 }
+export interface ReportDocument {document_type:'earnings_release'|'earnings_date_announcement';source_url:string;linked_from:string|null;release_date:string|null;period_end:string|null;verified_on:string;verification_method:string;source_version:string;facts:string;version:string;correction_reason:string|null;reporting_standard:'US_GAAP'|'IFRS'|null;reporting_currency:'USD'|'EUR'|'TWD'|null;eps_share_basis:string|null;captured_at:string;}
 export type MacroItem={domain:'macro';event:CalendarEvent};
 export type CalendarItem=MacroItem|EarningsItem;
 export interface CalendarItemsResponse {events:CalendarItem[];undated:EarningsItem[];macro_data_revision:string|null;earnings_data_revision:string|null;assembled_at:string;snapshot_scope:string}
