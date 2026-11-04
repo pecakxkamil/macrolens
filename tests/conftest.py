@@ -12,6 +12,12 @@ _attempts = []
 
 
 @pytest.fixture(autouse=True)
+def isolate_public_market_cap_cache(monkeypatch, tmp_path):
+    from app import earnings_market_cap_cache
+    monkeypatch.setattr(earnings_market_cap_cache, 'CACHE', tmp_path / 'uninitialized-cap-cache.json')
+
+
+@pytest.fixture(autouse=True)
 def isolate_unrelated_bea_source(request,monkeypatch):
     if request.node.module.__name__.endswith(('test_bea_direct','test_bea_release_refresh')):
         return

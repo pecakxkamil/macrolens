@@ -14,20 +14,17 @@ afterEach(()=>{cleanup();vi.unstubAllGlobals();setLanguage('en');vi.useRealTimer
 it.each(['en','pl'] as const)('renders original currency and reporting basis with neutral headers in %s',async language=>{
  setLanguage(language);vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:true,json:async()=>({events:[event],undated:[{...event,event_id:'unknown',ticker:'UNDATED'}]})}));
  render(<EarningsCalendar startDate="2026-10-01" endDate="2026-10-31"/>);
- const button=await screen.findByRole('button',{name:/TSM/});
- expect(screen.getByRole('columnheader',{name:new RegExp(language==='pl'?'EPS aktualny':'Current EPS')})).toBeInTheDocument();
- expect(screen.queryByText(/All companies.*USD|Wszystkie spółki.*USD|EPS GAAP/)).not.toBeInTheDocument();
- expect(screen.queryByText(/Wszystkie spółki · Dane raportowane|All companies · Issuer-reported|Źródła wyników spółek:|Earnings sources:/)).not.toBeInTheDocument();
- expect(button.closest('tr')).toHaveTextContent(language==='pl'?'29,43 TWD':'29.43 TWD');
- expect(screen.getAllByRole('columnheader')).toHaveLength(7);expect(screen.queryByRole('columnheader',{name:'Status'})).not.toBeInTheDocument();
- expect(button.closest('tr')).not.toHaveTextContent(/dane zweryfikowane|actuals verified|Data emitenta; dzień i godzina|Issuer date; Polish release day/);
+ const link=await screen.findByRole('link',{name:/TSM/});
+ expect(link.closest('tr')).toHaveTextContent(language==='pl'?'29,43 TWD':'29.43 TWD');
+ expect(link).toHaveAttribute('href',metric.source_url);link.focus();expect(link).toHaveFocus();
+ expect(screen.getAllByRole('columnheader')).toHaveLength(7);
+ expect(screen.getByRole('columnheader',{name:'Market Cap'})).toBeInTheDocument();
+ expect(screen.queryByRole('columnheader',{name:'Status'})).not.toBeInTheDocument();
+ expect(screen.queryByRole('button')).not.toBeInTheDocument();
  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();expect(screen.queryByText('UNDATED')).not.toBeInTheDocument();
- fireEvent.click(button);expect(screen.getByText(/EPS: IFRS diluted EPS/)).toBeInTheDocument();
- expect(screen.getByText(language==='pl'?'Status: Opublikowano':'Status: Published')).toBeInTheDocument();
- expect(screen.getByRole('link',{name:/Financial report|Raport finansowy/})).toHaveAttribute('href',metric.source_url);
- expect(screen.queryByText(/TIFRS; TWD per ordinary share/)).not.toBeInTheDocument();expect(screen.queryByText(/Captured locally|Zapisano lokalnie|Version:|Wersja:/)).not.toBeInTheDocument();
- fireEvent.keyDown(screen.getByRole('link',{name:/Financial report|Raport finansowy/}),{key:'Escape'});
- expect(button).toHaveFocus();
+ expect(document.querySelector('.earnings-details')).toBeNull();
+ expect(link.closest('tr')!.lastElementChild).toHaveTextContent(/^—$/);
+
 });
 
 it.each([
@@ -65,20 +62,17 @@ it.each(['en','pl'] as const)('separates four financial columns and keeps concis
  const row={...event,current_eps_actual:metric,previous_eps_actual:previous,current_revenue_actual:currentRevenue,previous_revenue_actual:priorRevenue,previous_period:{fiscal_year:2026,fiscal_quarter:2,period_label:'Q2 2026',period_end:'2026-06-30'},current_eps_forecast:null,previous_eps_forecast:null,current_revenue_forecast:null,previous_revenue_forecast:null};
  vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:true,json:async()=>({events:[row],undated:[]})}));
  const view=render(<EarningsCalendar startDate="2026-10-01" endDate="2026-10-31"/>);
- const button=await screen.findByRole('button',{name:/TSM/});
+ const button=await screen.findByRole('link',{name:/TSM/});
  const headers=screen.getAllByRole('columnheader');expect(headers).toHaveLength(7);
- expect(headers.map(h=>h.firstChild?.textContent)).toEqual(language==='pl'?['Spółka','Czas wyników · Polska','EPS aktualny','EPS poprzednio','Przychody aktualne','Przychody poprzednio','Szczegóły']:['Company','Results time · Poland','Current EPS','Previous EPS','Current revenue','Previous revenue','Details']);
+ expect(headers.map(h=>h.firstChild?.textContent)).toEqual(language==='pl'?['Spółka','Czas wyników · Polska','EPS aktualny','EPS poprzednio','Przychody aktualne','Przychody poprzednio','Market Cap']:['Company','Results time · Poland','Current EPS','Previous EPS','Current revenue','Previous revenue','Market Cap']);
  expect(headers.filter(h=>h.querySelector('small')?.textContent===(language==='pl'?'Actual / Prognoza':'Actual / Forecast'))).toHaveLength(4);
  const cells=button.closest('tr')!.querySelectorAll('td.earnings-number');
  for(const [i,value] of [metric,previous,currentRevenue,priorRevenue].entries()){
   expect(cells[i].firstChild?.textContent).toBe(financialValue(value));expect(cells[i].querySelector('small')).toHaveTextContent(/^—$/);
   expect(cells[i].classList.contains('earnings-previous')).toBe(i%2===1);
  }
- fireEvent.click(button);
- const details=view.container.querySelector('.earnings-details')!;
- expect(details).toHaveTextContent('Q2 2026');expect(details).not.toHaveTextContent('29.43');
- expect(details).not.toHaveTextContent(/CIK|captured_at|source_value|review-1|per_share|billions/);
- const links=details.querySelectorAll('a');expect(links).toHaveLength(2);expect(new Set([...links].map(a=>a.href)).size).toBe(2);
- expect(screen.getByRole('link',{name:language==='pl'?'Poprzedni raport':'Previous report'})).toHaveAttribute('href',previous.source_url);
- fireEvent.keyDown(button,{key:'Escape'});expect(button).toHaveFocus();expect(button).toHaveAttribute('aria-expanded','false');
+ expect(screen.queryByRole('button')).not.toBeInTheDocument();expect(view.container.querySelector('.earnings-details')).toBeNull();
+ expect(button).toHaveAttribute('href',metric.source_url);
+ expect(screen.queryByRole('link',{name:/Previous report|Poprzedni raport/})).not.toBeInTheDocument();
+
 });

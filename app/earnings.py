@@ -146,7 +146,8 @@ def load_events(connection):
     from app.earnings_financials import attach
     from app.earnings_reports import attach as attach_reports
     from app.earnings_previous import attach as attach_previous
-    return attach_previous(connection,attach_reports(connection,attach(connection,result)))
+    from app.earnings_market_cap import attach as attach_market_cap
+    return attach_market_cap(connection,attach_previous(connection,attach_reports(connection,attach(connection,result))))
 
 
 def calendar_events(start,end,tickers=None):

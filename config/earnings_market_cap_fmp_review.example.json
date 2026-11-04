@@ -1,0 +1,333 @@
+{
+  "access": {
+    "api_access": false,
+    "local_storage": false,
+    "private_display": false,
+    "usage": "private_local",
+    "reference": "",
+    "verified_on": null,
+    "valid_until": null
+  },
+  "candidate_sha256": null,
+  "verified_on": null,
+  "issuers": {
+    "0001045810": {
+      "symbol": "NVDA",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001018724": {
+      "symbol": "AMZN",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000050863": {
+      "symbol": "INTC",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000320193": {
+      "symbol": "AAPL",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000789019": {
+      "symbol": "MSFT",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001652044": {
+      "symbol": "GOOGL",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001326801": {
+      "symbol": "META",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001318605": {
+      "symbol": "TSLA",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001730168": {
+      "symbol": "AVGO",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000002488": {
+      "symbol": "AMD",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001341439": {
+      "symbol": "ORCL",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001065280": {
+      "symbol": "NFLX",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000723125": {
+      "symbol": "MU",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000804328": {
+      "symbol": "QCOM",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001046179": {
+      "symbol": "TSM",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000937966": {
+      "symbol": "ASML",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001973239": {
+      "symbol": "ARM",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000006951": {
+      "symbol": "AMAT",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000707549": {
+      "symbol": "LRCX",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000319201": {
+      "symbol": "KLAC",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000097476": {
+      "symbol": "TXN",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000796343": {
+      "symbol": "ADBE",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001108524": {
+      "symbol": "CRM",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001373715": {
+      "symbol": "NOW",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001321655": {
+      "symbol": "PLTR",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001535527": {
+      "symbol": "CRWD",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001327567": {
+      "symbol": "PANW",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001640147": {
+      "symbol": "SNOW",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000051143": {
+      "symbol": "IBM",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000858877": {
+      "symbol": "CSCO",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001543151": {
+      "symbol": "UBER",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001559720": {
+      "symbol": "ABNB",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001594805": {
+      "symbol": "SHOP",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001075531": {
+      "symbol": "BKNG",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001633917": {
+      "symbol": "PYPL",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001679788": {
+      "symbol": "COIN",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000019617": {
+      "symbol": "JPM",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000070858": {
+      "symbol": "BAC",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000886982": {
+      "symbol": "GS",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001403161": {
+      "symbol": "V",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001141391": {
+      "symbol": "MA",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000104169": {
+      "symbol": "WMT",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000909832": {
+      "symbol": "COST",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000354950": {
+      "symbol": "HD",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000059478": {
+      "symbol": "LLY",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000731766": {
+      "symbol": "UNH",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000200406": {
+      "symbol": "JNJ",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0002115436": {
+      "symbol": "XOM",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000093410": {
+      "symbol": "CVX",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000018230": {
+      "symbol": "CAT",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0000012927": {
+      "symbol": "BA",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001744489": {
+      "symbol": "DIS",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    },
+    "0001067983": {
+      "symbol": "BRK-B",
+      "whole_issuer_all_classes": false,
+      "basis_evidence": "",
+      "independent_check": null
+    }
+  }
+}

@@ -18,10 +18,10 @@ it.each(['en','pl'] as const)('hides undated, filters dates and groups issuer/Po
  expect(view.container.querySelectorAll('.earnings-date')).toHaveLength(1);
  expect(screen.queryByText(/Q4 2026/)).not.toBeInTheDocument();expect(screen.queryByText(/AMD/)).not.toBeInTheDocument();
  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
- const row=screen.getByRole('button',{name:/AMZN/}).closest('tr')!;
+ const row=screen.getByText(/^AMZN ·/).closest('tr')!;
  expect(row).toHaveTextContent(language==='pl'?'Wyniki: godzina nieznana':'Results: time unknown');
  expect(row).toHaveTextContent(language==='pl'?'Konferencja: 22:00':'Conference: 22:00');
- const intel=screen.getByRole('button',{name:/INTC/}).closest('tr')!;
+ const intel=screen.getByText(/^INTC ·/).closest('tr')!;
  expect(intel).not.toHaveTextContent(/Data emitenta; dzień i godzina|Issuer date; Polish release day/);expect(intel).toHaveTextContent('21:00+');
  expect(row.querySelectorAll('td.earnings-number small')).toHaveLength(4);expect([...row.querySelectorAll('td.earnings-number small')].every(x=>x.textContent==='—')).toBe(true);
  expect(screen.getByRole('heading',{name:language==='pl'?'Wyniki spółek':'Company earnings'})).toBeInTheDocument();

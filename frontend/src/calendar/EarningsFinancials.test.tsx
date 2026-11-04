@@ -13,7 +13,7 @@ it.each(['en','pl'] as const)('shows every company, financial values, null forec
  const fourth={...event,event_id:'earnings:four',ticker:'FOUR',name:'Synthetic fourth company',financial_data_status:'partial' as const,gaap_diluted_eps_actual:null};
  const fetcher=vi.fn().mockResolvedValue({ok:true,json:async()=>({events:[event,fourth],undated:[]})});vi.stubGlobal('fetch',fetcher);
  const view=render(<EarningsCalendar startDate="2026-10-01" endDate="2026-10-31"/>);
- const button=await screen.findByRole('button',{name:/INTC · Q3 2026/});
+ const button=await screen.findByRole('link',{name:/INTC · Q3 2026/});
  expect(screen.getByRole('table')).toBeInTheDocument();expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
  expect(screen.getByText('Synthetic fourth company')).toBeInTheDocument();
  const row=button.closest('tr')!;
@@ -22,9 +22,8 @@ it.each(['en','pl'] as const)('shows every company, financial values, null forec
  expect(row.querySelectorAll('td.earnings-number small')).toHaveLength(4);expect([...row.querySelectorAll('td.earnings-number small')].every(x=>x.textContent==='—')).toBe(true);
  expect(row.children).toHaveLength(7);
  expect(screen.queryByText(/beat|miss|surprise/i)).not.toBeInTheDocument();
- fireEvent.click(button);expect(screen.getByRole('link',{name:/Financial report|Raport finansowy/})).toHaveAttribute('href',observation.source_url);
- expect(screen.queryByText(/manual-v1/)).not.toBeInTheDocument();expect(screen.getByText(language==='pl'?'Status: Opublikowano':'Status: Published')).toBeInTheDocument();
- fireEvent.keyDown(screen.getByRole('link'),{key:'Escape'});expect(button).toHaveFocus();expect(button).toHaveAttribute('aria-expanded','false');
+ expect(button).toHaveAttribute('href',observation.source_url);button.focus();expect(button).toHaveFocus();
+ expect(screen.queryByText(/manual-v1/)).not.toBeInTheDocument();expect(view.container.querySelector('.earnings-details')).toBeNull();
  view.rerender(<EarningsCalendar startDate="2026-10-01" endDate="2026-10-31"/>);
  expect(fetcher).toHaveBeenCalledTimes(1);expect(String(fetcher.mock.calls[0][0])).not.toContain('tickers');
 });

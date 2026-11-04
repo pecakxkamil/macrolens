@@ -164,3 +164,15 @@ jobs:
         env:
           DB_NAME: macrolens_e2e_control
         run: python tests/postgres_earnings_history_validation.py
+      - name: PostgreSQL Earnings market capitalization snapshots
+        env:
+          DB_NAME: macrolens_cap_control
+        run: python tests/postgres_earnings_market_cap_validation.py
+      - name: PostgreSQL FMP offline adapter and reviewed import
+        env:
+          DB_NAME: macrolens_fmp_control
+        run: python tests/postgres_earnings_market_cap_fmp_validation.py
+      - name: PostgreSQL public market capitalization local cache
+        env:
+          DB_NAME: macrolens_public_cap_control
+        run: python tests/postgres_earnings_public_cap_validation.py

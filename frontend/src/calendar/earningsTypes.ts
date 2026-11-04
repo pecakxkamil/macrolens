@@ -17,6 +17,9 @@ export interface EarningsItem {
  financial_release_date?:string|null;
  revenue_actual?:FinancialObservation|null;gaap_diluted_eps_actual?:FinancialObservation|null;
  reported_eps_actual?:FinancialObservation|null;
+ market_cap_usd?:string|null;market_cap_as_of?:string|null;market_cap_source?:string|null;
+ market_cap_provider?:'TGMCharts'|'DeltaScreener';
+ market_cap_status?:'verified_snapshot'|'unavailable'|'not_activated'|'stale';market_cap_snapshot?:Record<string,string|null>|null;
  current_eps_actual?:FinancialObservation|null;current_eps_forecast?:FinancialObservation|null;
  previous_eps_actual?:FinancialObservation|null;previous_eps_forecast?:FinancialObservation|null;
  current_revenue_actual?:FinancialObservation|null;current_revenue_forecast?:FinancialObservation|null;
