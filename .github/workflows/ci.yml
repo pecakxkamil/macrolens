@@ -176,3 +176,8 @@ jobs:
         env:
           DB_NAME: macrolens_public_cap_control
         run: python tests/postgres_earnings_public_cap_validation.py
+      - name: PostgreSQL Earnings previous history activation and recovery
+        env:
+          DB_NAME: macrolens_history_activation_control
+          REPORT_TEST_CONTAINER: ${{ job.services.postgres.id }}
+        run: python tests/postgres_earnings_history_activation_validation.py
