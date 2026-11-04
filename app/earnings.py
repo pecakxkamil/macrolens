@@ -145,7 +145,8 @@ def load_events(connection):
         result.append({**e,'domain':'earnings','event_id':'earnings:'+str(e['event_id']),'company_id':str(e['company_id']),**components,'history':history})
     from app.earnings_financials import attach
     from app.earnings_reports import attach as attach_reports
-    return attach_reports(connection,attach(connection,result))
+    from app.earnings_previous import attach as attach_previous
+    return attach_previous(connection,attach_reports(connection,attach(connection,result)))
 
 
 def calendar_events(start,end,tickers=None):

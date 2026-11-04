@@ -160,3 +160,7 @@ jobs:
           DB_NAME: macrolens_reports_activation_control
           REPORT_TEST_CONTAINER: ${{ job.services.postgres.id }}
         run: python tests/postgres_earnings_report_activation_validation.py
+      - name: PostgreSQL Earnings previous history and fiscal comparisons
+        env:
+          DB_NAME: macrolens_e2e_control
+        run: python tests/postgres_earnings_history_validation.py

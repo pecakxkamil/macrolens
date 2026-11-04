@@ -1,15 +1,24 @@
 .earnings-calendar { margin-block: 1rem; min-width: 0; }
 .earnings-table-scroll { max-width: 100%; overflow-x: auto; border: 1px solid #30404e; border-radius: 8px; }
-.earnings-table { border-collapse: collapse; width: 100%; min-width: 820px; }
+.earnings-table { border-collapse: collapse; table-layout: fixed; width: 100%; min-width: 1180px; }
+.earnings-table .earnings-company-column { width: 22%; }
+.earnings-table .earnings-time-column { width: 18%; }
+.earnings-table .earnings-eps-column { width: 10%; }
+.earnings-table .earnings-revenue-column { width: 14%; }
+.earnings-table .earnings-details-column { width: 12%; }
 .earnings-table th, .earnings-table td { padding: .75rem; text-align: left; vertical-align: middle; border-bottom: 1px solid #30404e; }
-.earnings-table .earnings-number { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.earnings-table .earnings-center, .earnings-table .earnings-number { text-align: center; }
+.earnings-table .earnings-number { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.earnings-row > th, .earnings-row > td { overflow-wrap: anywhere; }
 .earnings-table small, .earnings-company-name { display: block; color: #a8b8c8; font-weight: normal; margin-top: .3rem; }
 .earnings-date h3 { margin: 0; font-size: .95rem; }
 .earnings-date { background: #15202b; }
-.earnings-table button { white-space: normal; }
+.earnings-table button { max-width: 100%; box-sizing: border-box; white-space: normal; }
 .earnings-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .earnings-scroll-hint { font-size: .85rem; color: #a8b8c8; }
 .earnings-details { min-width: 0; overflow-wrap: anywhere; }
 .earnings-details section { border-top: 1px solid #30404e; padding-block: .6rem; }
 @media (min-width: 1000px) { .earnings-scroll-hint { display: none; } }
 .calendar-domains { display: flex; flex-wrap: wrap; gap: 1rem; margin-block: 1rem; }
+
+.earnings-table .earnings-previous { font-size: .9em; color: #b9c8d6; }

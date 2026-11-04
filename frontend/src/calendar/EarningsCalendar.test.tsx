@@ -41,7 +41,7 @@ it.each(['en','pl'] as const)('renders metadata, source, unknown and Escape/focu
  render(<EarningsCalendar startDate="2026-11-01" endDate="2026-11-30"/>);
  const button=await screen.findByRole('button',{name:/NVDA · Q3 FY2027/});expect(button).toHaveTextContent('22:20');expect(button).not.toHaveTextContent('23:00');
  fireEvent.click(button);expect(screen.getAllByText(new RegExp(language==='pl'?'Konferencja: 23:00':'Conference: 23:00'))).toHaveLength(2);
- expect(screen.getAllByRole('link',{name:/NVIDIA Investor Relations/})).toHaveLength(2);
+ expect(screen.getAllByRole('link')).toHaveLength(1);expect(screen.getByRole('link')).toHaveAttribute('href',event.release.source_url);
  fireEvent.keyDown(button,{key:'Escape'});expect(button).toHaveFocus();expect(button).toHaveAttribute('aria-expanded','false');
  expect(screen.queryByRole('heading',{name:language==='pl'?'Termin nieogłoszony':'Date not announced'})).not.toBeInTheDocument();
  expect(screen.queryByText(/Q4 FY2027/)).not.toBeInTheDocument();

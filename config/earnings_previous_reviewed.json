@@ -1,0 +1,866 @@
+[
+  {
+    "ticker": "AAPL",
+    "cik": "0000320193",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 FY2026",
+    "period_end": "2026-06-27",
+    "release_date": "2026-07-30",
+    "source_url": "https://www.apple.com/newsroom/pdfs/fy2026q3/FY26_Q3_Consolidated_Financial_Statements.pdf",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "109417",
+        "source_unit": "millions",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "2.02",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "Current quarterly column, consolidated revenue and reported diluted total EPS; no guidance or YTD."
+  },
+  {
+    "ticker": "MSFT",
+    "cik": "0000789019",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 4,
+    "period_label": "Q4 FY2026",
+    "period_end": "2026-06-30",
+    "release_date": "2026-07-29",
+    "source_url": "https://www.microsoft.com/en-us/investor/earnings/fy-2026-q4/press-release-webcast",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "90007",
+        "source_unit": "millions",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "4.81",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "Current quarterly column, consolidated revenue and reported diluted total EPS; no guidance or YTD."
+  },
+  {
+    "ticker": "GOOGL",
+    "cik": "0001652044",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 2,
+    "period_label": "Q2 2026",
+    "period_end": "2026-06-30",
+    "release_date": "2026-07-22",
+    "source_url": "https://s206.q4cdn.com/479360582/files/doc_news/2026/Jul/22/attachments/2026q2-alphabet-earnings-release.pdf",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "119796",
+        "source_unit": "millions",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "9.11",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "2026 is second column. Total consolidated revenue, diluted common EPS; one GOOG/GOOGL issuer."
+  },
+  {
+    "ticker": "META",
+    "cik": "0001326801",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 2,
+    "period_label": "Q2 2026",
+    "period_end": "2026-06-30",
+    "release_date": "2026-07-29",
+    "source_url": "https://investor.atmeta.com/investor-news/press-release-details/2026/Meta-Reports-Second-Quarter-2026-Results/",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "60801",
+        "source_unit": "millions",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "6.18",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "Current quarterly column, consolidated revenue and reported diluted total EPS; no guidance or YTD."
+  },
+  {
+    "ticker": "AMD",
+    "cik": "0000002488",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 2,
+    "period_label": "Q2 2026",
+    "period_end": "2026-06-27",
+    "release_date": "2026-08-04",
+    "source_url": "https://ir.amd.com/news-events/press-releases/detail/1295/amd-reports-second-quarter-2026-financial-results",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "11536",
+        "source_unit": "millions",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "1.38",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "Current quarterly column, consolidated revenue and reported diluted total EPS; no guidance or YTD."
+  },
+  {
+    "ticker": "TSLA",
+    "cik": "0001318605",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 2,
+    "period_label": "Q2 2026",
+    "period_end": "2026-06-30",
+    "release_date": "2026-07-22",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828026049270/tsla-20260630.htm",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "28236",
+        "source_unit": "millions",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "0.32",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "10-Q quarterly statements; release date separately verified on issuer IR earnings table (July 22)."
+  },
+  {
+    "ticker": "AVGO",
+    "cik": "0001730168",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 2,
+    "period_label": "Q2 FY2026",
+    "period_end": "2026-05-03",
+    "release_date": "2026-06-03",
+    "source_url": "https://investors.broadcom.com/node/64371/pdf",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "22187",
+        "source_unit": "millions",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "1.91",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "Current quarterly column, consolidated revenue and reported diluted total EPS; no guidance or YTD."
+  },
+  {
+    "ticker": "NFLX",
+    "cik": "0001065280",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 2,
+    "period_label": "Q2 2026",
+    "period_end": "2026-06-30",
+    "release_date": "2026-07-16",
+    "source_url": "https://s22.q4cdn.com/959853165/files/doc_financials/2026/q2/FINAL-Q2-26-Shareholder-Letter.pdf",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "12559938",
+        "source_unit": "thousands",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "0.80",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "All share amounts already adjusted for November 14 2025 ten-for-one split."
+  },
+  {
+    "ticker": "ORCL",
+    "cik": "0001341439",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 4,
+    "period_label": "Q4 FY2026",
+    "period_end": "2026-05-31",
+    "release_date": "2026-06-10",
+    "source_url": "https://investor.oracle.com/investor-news/news-details/2026/Oracle-Announces-Record-Q4-and-FY-2026-Results-Driven-by-Cloud-Infrastructure--Cloud-Applications/",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "19184",
+        "source_unit": "millions",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "1.45",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "Current quarterly column, consolidated revenue and reported diluted total EPS; no guidance or YTD."
+  },
+  {
+    "ticker": "MU",
+    "cik": "0000723125",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 FY2026",
+    "period_end": "2026-05-28",
+    "release_date": "2026-06-24",
+    "source_url": "https://investors.micron.com/node/50671/pdf",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "41456",
+        "source_unit": "millions",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "24.67",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "Current quarterly column, consolidated revenue and reported diluted total EPS; no guidance or YTD."
+  },
+  {
+    "ticker": "TSM",
+    "cik": "0001046179",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 2,
+    "period_label": "Q2 2026",
+    "period_end": "2026-06-30",
+    "release_date": "2026-07-16",
+    "source_url": "https://investor.tsmc.com/english/encrypt/files/encrypt_file/reports/2026-07/a80d7933be643644081584087731f73b22ea5a2c/2Q26%20EarningsRelease.pdf",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "IFRS",
+    "currency": "TWD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "1270.38",
+        "source_unit": "billions",
+        "decimal_places": "2",
+        "currency": "TWD",
+        "reporting_standard": "IFRS",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "27.25",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "TWD",
+        "reporting_standard": "IFRS",
+        "share_basis": "ordinary_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "TIFRS/IFRS, TWD per ordinary share; USD ADR EPS is excluded."
+  },
+  {
+    "ticker": "ASML",
+    "cik": "0000937966",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 2,
+    "period_label": "Q2 2026",
+    "period_end": null,
+    "release_date": "2026-07-15",
+    "source_url": "https://ourbrand.asml.com/asset/9078cf4d-91fd-4dd9-a5d5-d1caab6dc046/2026_07_15_Presentation-Investor-Relations-Q2-2026.pdf",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "EUR",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "9326",
+        "source_unit": "millions",
+        "decimal_places": "0",
+        "currency": "EUR",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "7.58",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "EUR",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "ordinary_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "US GAAP, EUR per ordinary share, not basic 7.59. Exact period-end day not established; null."
+  },
+  {
+    "ticker": "AMAT",
+    "cik": "0000006951",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 2,
+    "period_label": "Q2 FY2026",
+    "period_end": "2026-04-26",
+    "release_date": "2026-05-14",
+    "source_url": "https://ir.appliedmaterials.com/node/29236/pdf",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "7910",
+        "source_unit": "millions",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "3.51",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "Current quarterly column, consolidated revenue and reported diluted total EPS; no guidance or YTD."
+  },
+  {
+    "ticker": "LRCX",
+    "cik": "0000707549",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 4,
+    "period_label": "Q4 FY2026",
+    "period_end": "2026-06-28",
+    "release_date": "2026-07-29",
+    "source_url": "https://investor.lamresearch.com/2026-07-29-Lam-Research-Corporation-Reports-Financial-Results-for-the-Quarter-Ended-June-28%2C-2026",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "6722238",
+        "source_unit": "thousands",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "1.81",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "Current quarterly column, consolidated revenue and reported diluted total EPS; no guidance or YTD."
+  },
+  {
+    "ticker": "KLAC",
+    "cik": "0000319201",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 4,
+    "period_label": "Q4 FY2026",
+    "period_end": "2026-06-30",
+    "release_date": "2026-07-28",
+    "source_url": "https://ir.kla.com/news-events/press-releases/detail/518/kla-corporation-reports-fiscal-2026-fourth-quarter-and-full",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "3657556",
+        "source_unit": "thousands",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "1.04",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "Q4 EPS is already adjusted for the June 11 ten-for-one split, as explicitly stated by issuer."
+  },
+  {
+    "ticker": "TXN",
+    "cik": "0000097476",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 2,
+    "period_label": "Q2 2026",
+    "period_end": "2026-06-30",
+    "release_date": "2026-07-22",
+    "source_url": "https://www.ti.com/about-ti/newsroom/news-releases/2026/2026-07-22-ti-reports-second-quarter-2026-financial-results-and-shareholder-returns.html",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "5463",
+        "source_unit": "millions",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "2.14",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "Current quarterly column, consolidated revenue and reported diluted total EPS; no guidance or YTD."
+  },
+  {
+    "ticker": "ADBE",
+    "cik": "0000796343",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 2,
+    "period_label": "Q2 FY2026",
+    "period_end": "2026-05-29",
+    "release_date": "2026-06-11",
+    "source_url": "https://www.adobe.com/cc-shared/assets/investor-relations/pdfs/11606202/a5543arefgt.pdf",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "6618",
+        "source_unit": "millions",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "4.25",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "Current quarterly column, consolidated revenue and reported diluted total EPS; no guidance or YTD."
+  },
+  {
+    "ticker": "CRM",
+    "cik": "0001108524",
+    "fiscal_year": 2027,
+    "fiscal_quarter": 1,
+    "period_label": "Q1 FY2027",
+    "period_end": "2026-04-30",
+    "release_date": "2026-05-27",
+    "source_url": "https://investor.salesforce.com/news/news-details/2026/Salesforce-Delivers-Record-First-Quarter-Fiscal-2027-Results/default.aspx",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "11133",
+        "source_unit": "millions",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "2.42",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "Current quarterly column, consolidated revenue and reported diluted total EPS; no guidance or YTD."
+  },
+  {
+    "ticker": "NOW",
+    "cik": "0001373715",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 2,
+    "period_label": "Q2 2026",
+    "period_end": "2026-06-30",
+    "release_date": "2026-07-22",
+    "source_url": "https://newsroom.servicenow.com/press-releases/details/2026/ServiceNow-Reports-Second-Quarter-2026-Financial-Results/default.aspx",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "3987",
+        "source_unit": "millions",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "0.29",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "Current quarterly column, consolidated revenue and reported diluted total EPS; no guidance or YTD."
+  },
+  {
+    "ticker": "PLTR",
+    "cik": "0001321655",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 2,
+    "period_label": "Q2 2026",
+    "period_end": "2026-06-30",
+    "release_date": "2026-08-03",
+    "source_url": "https://investors.palantir.com/files/2026%20Q2%20PLTR%2010-Q.pdf",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "1935464",
+        "source_unit": "thousands",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "0.41",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "Current quarterly column, consolidated revenue and reported diluted total EPS; no guidance or YTD."
+  },
+  {
+    "ticker": "CRWD",
+    "cik": "0001535527",
+    "fiscal_year": 2027,
+    "fiscal_quarter": 1,
+    "period_label": "Q1 FY2027",
+    "period_end": "2026-04-30",
+    "release_date": "2026-06-03",
+    "source_url": "https://ir.crowdstrike.com/node/16821/pdf",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "1385629",
+        "source_unit": "thousands",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      }
+    ],
+    "review_notes": "Original Q1 diluted EPS 0.11 predates the four-for-one split effective July 2. Excluded from comparison; no guessed conversion. Revenue unaffected."
+  },
+  {
+    "ticker": "IBM",
+    "cik": "0000051143",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 2,
+    "period_label": "Q2 2026",
+    "period_end": "2026-06-30",
+    "release_date": "2026-07-22",
+    "source_url": "https://newsroom.ibm.com/2026-07-22-IBM-RELEASES-SECOND-QUARTER-RESULTS",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "17162",
+        "source_unit": "millions",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "2.27",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "Total diluted EPS 2.27, not an operating non-GAAP figure."
+  },
+  {
+    "ticker": "CSCO",
+    "cik": "0000858877",
+    "fiscal_year": 2026,
+    "fiscal_quarter": 3,
+    "period_label": "Q3 FY2026",
+    "period_end": "2026-04-25",
+    "release_date": "2026-05-13",
+    "source_url": "https://s21.q4cdn.com/812015656/files/doc_news/CISCO-REPORTS-THIRD-QUARTER-EARNINGS-2026.pdf",
+    "document_type": "earnings_release",
+    "verified_on": "2026-11-04",
+    "verification_method": "manual_official_report_review",
+    "reporting_standard": "US_GAAP",
+    "currency": "USD",
+    "observations": [
+      {
+        "metric": "revenue",
+        "source_value": "15841",
+        "source_unit": "millions",
+        "decimal_places": "0",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_revenue"
+      },
+      {
+        "metric": "reported_diluted_eps",
+        "source_value": "0.85",
+        "source_unit": "per_share",
+        "decimal_places": "2",
+        "currency": "USD",
+        "reporting_standard": "US_GAAP",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_total_eps"
+      }
+    ],
+    "review_notes": "Current quarterly column, consolidated revenue and reported diluted total EPS; no guidance or YTD."
+  }
+]

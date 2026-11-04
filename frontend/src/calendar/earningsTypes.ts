@@ -17,6 +17,11 @@ export interface EarningsItem {
  financial_release_date?:string|null;
  revenue_actual?:FinancialObservation|null;gaap_diluted_eps_actual?:FinancialObservation|null;
  reported_eps_actual?:FinancialObservation|null;
+ current_eps_actual?:FinancialObservation|null;current_eps_forecast?:FinancialObservation|null;
+ previous_eps_actual?:FinancialObservation|null;previous_eps_forecast?:FinancialObservation|null;
+ current_revenue_actual?:FinancialObservation|null;current_revenue_forecast?:FinancialObservation|null;
+ previous_revenue_actual?:FinancialObservation|null;previous_revenue_forecast?:FinancialObservation|null;
+ previous_period?:{fiscal_year:number;fiscal_quarter:number;period_label:string;period_end:string|null}|null;
  report_store_status?:'available'|'not_activated';report_documents?:ReportDocument[];
  publication_state?:{code:'scheduled'|'published_pending'|'published_complete'|'published_partial'|'date_passed_unconfirmed'|'unconfirmed';reason:string;missing_metrics:string[];evidence:ReportDocument[]};
  revenue_consensus?:null;eps_consensus?:null;financial_history?:FinancialObservation[];

@@ -15,8 +15,12 @@ export function epsBasis(value:FinancialObservation|null|undefined):string {
  const shares=value?.share_basis==='ADR'?'ADR':et('ordinary/common share','akcja zwykła');
  return `${standard} diluted EPS · ${shares}${value?.methodology==='gaap_diluted_attributable_to_intel'?et(' · attributable to Intel',' · przypadający Intel'):''}`;
 }
-export function financialStatus(e:EarningsItem):string {
+export function financialStatus(e:EarningsItem,compact=false):string {
  const state=e.publication_state;
+ if(compact){
+  if(state)return ({scheduled:et('Scheduled','Zaplanowano'),published_pending:et('Published · pending','Opublikowano · weryfikacja'),published_complete:et('Published','Opublikowano'),published_partial:et('Published · partial','Opublikowano · częściowe'),date_passed_unconfirmed:et('Date passed','Termin minął'),unconfirmed:et('Date not announced','Termin nieogłoszony')})[state.code];
+  return e.financial_data_status==='complete'?et('Published','Opublikowano'):e.financial_data_status==='partial'?et('Published · partial','Opublikowano · częściowe'):et('Unconfirmed','Niepotwierdzono');
+ }
  if(state){
   const missing=state.missing_metrics.map(m=>m==='revenue'?et('revenue','przychody'):'EPS').join(', ');
   return ({scheduled:et('Scheduled','Zaplanowano'),published_pending:et('Published · financials pending','Opublikowano · dane w weryfikacji'),published_complete:et('Published · actuals verified','Opublikowano · dane zweryfikowane'),published_partial:et('Published · partial data','Opublikowano · dane częściowe')+et(' · missing: ',' · brak: ')+missing,date_passed_unconfirmed:et('Date passed · release unconfirmed','Termin minął · publikacja niepotwierdzona'),unconfirmed:et('Release unconfirmed','Publikacja niepotwierdzona')})[state.code];

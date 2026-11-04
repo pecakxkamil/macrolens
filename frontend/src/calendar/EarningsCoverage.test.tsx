@@ -22,9 +22,10 @@ it.each(['en','pl'] as const)('hides undated, filters dates and groups issuer/Po
  expect(row).toHaveTextContent(language==='pl'?'Wyniki: godzina nieznana':'Results: time unknown');
  expect(row).toHaveTextContent(language==='pl'?'Konferencja: 22:00':'Conference: 22:00');
  const intel=screen.getByRole('button',{name:/INTC/}).closest('tr')!;
- expect(intel).toHaveTextContent(language==='pl'?'Data emitenta':'Issuer date');expect(intel).toHaveTextContent('21:00+');
- expect(within(row).getAllByText('/ —')).toHaveLength(2);
- expect(screen.getByText(language==='pl'?/Źródła wyników spółek/:/Earnings sources/)).toBeInTheDocument();
+ expect(intel).not.toHaveTextContent(/Data emitenta; dzień i godzina|Issuer date; Polish release day/);expect(intel).toHaveTextContent('21:00+');
+ expect(row.querySelectorAll('td.earnings-number small')).toHaveLength(4);expect([...row.querySelectorAll('td.earnings-number small')].every(x=>x.textContent==='—')).toBe(true);
+ expect(screen.getByRole('heading',{name:language==='pl'?'Wyniki spółek':'Company earnings'})).toBeInTheDocument();
+ expect(screen.queryByText(/Wszystkie spółki · Dane raportowane|All companies · Issuer-reported|Źródła wyników spółek:|Earnings sources:/)).not.toBeInTheDocument();
 });
 it.each([['2026-10-26','2026-11-01'],['2026-11-02','2026-11-08']])('shows a real empty range without an unknown table: %s',async(startDate,endDate)=>{
  setLanguage('pl');vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:true,json:async()=>({events:[],undated:[placeholder]})}));

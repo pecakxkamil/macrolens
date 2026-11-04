@@ -19,11 +19,11 @@ it.each(['en','pl'] as const)('shows every company, financial values, null forec
  const row=button.closest('tr')!;
  expect(row).toHaveTextContent(language==='pl'?'16,51 mld USD':'16.51 bn USD');
  expect(row).toHaveTextContent(language==='pl'?'-2,16 USD':'-2.16 USD');
- expect(within(row).getAllByText('/ —')).toHaveLength(2);
- expect(row).toHaveTextContent(language==='pl'?'Opublikowano':'Published');
+ expect(row.querySelectorAll('td.earnings-number small')).toHaveLength(4);expect([...row.querySelectorAll('td.earnings-number small')].every(x=>x.textContent==='—')).toBe(true);
+ expect(row.children).toHaveLength(7);
  expect(screen.queryByText(/beat|miss|surprise/i)).not.toBeInTheDocument();
- fireEvent.click(button);expect(screen.getByRole('link',{name:/Intel.*(Official|Oficjalny)/})).toHaveAttribute('href',observation.source_url);
- expect(screen.getByText(/manual-v1/)).toBeInTheDocument();
+ fireEvent.click(button);expect(screen.getByRole('link',{name:/Financial report|Raport finansowy/})).toHaveAttribute('href',observation.source_url);
+ expect(screen.queryByText(/manual-v1/)).not.toBeInTheDocument();expect(screen.getByText(language==='pl'?'Status: Opublikowano':'Status: Published')).toBeInTheDocument();
  fireEvent.keyDown(screen.getByRole('link'),{key:'Escape'});expect(button).toHaveFocus();expect(button).toHaveAttribute('aria-expanded','false');
  view.rerender(<EarningsCalendar startDate="2026-10-01" endDate="2026-10-31"/>);
  expect(fetcher).toHaveBeenCalledTimes(1);expect(String(fetcher.mock.calls[0][0])).not.toContain('tickers');
