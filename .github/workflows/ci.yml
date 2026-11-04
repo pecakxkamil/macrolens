@@ -181,3 +181,8 @@ jobs:
           DB_NAME: macrolens_history_activation_control
           REPORT_TEST_CONTAINER: ${{ job.services.postgres.id }}
         run: python tests/postgres_earnings_history_activation_validation.py
+      - name: PostgreSQL Earnings scoped history activation V2 and concurrent macro writes
+        env:
+          DB_NAME: macrolens_history_v2_control
+          REPORT_TEST_CONTAINER: ${{ job.services.postgres.id }}
+        run: python tests/postgres_earnings_history_v2_validation.py
