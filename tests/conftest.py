@@ -83,6 +83,11 @@ def _install_guard(monkeypatch):
     # application helper. Tests may still override individual dummy settings.
     monkeypatch.setenv("PYTHON_DOTENV_DISABLED", "1")
     monkeypatch.setenv("FRED_API_KEY", "")
+    # Offline tests must never consume the developer's approved live token.
+    from tempfile import gettempdir
+    from pathlib import Path
+    from uuid import uuid4
+    monkeypatch.setenv("EARNINGS_MONITOR_TOKEN", str(Path(gettempdir()) / ("uninitialized-monitor-"+uuid4().hex) / "activation.json"))
     for key, value in dict(DB_HOST="invalid.test", DB_PORT="1",
                            DB_NAME="macrolens_test_unused", DB_USER="unused",
                            DB_PASSWORD="unused").items():

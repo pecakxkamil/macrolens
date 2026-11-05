@@ -8,6 +8,7 @@ export interface EarningsTime {
  source_url:string|null;verified_on:string|null;facts:string|null;verification_method:string|null;sequence:number;
 }
 export interface EarningsItem {
+ session_context?:{us_listed:boolean;release:UsEarningsSession|null;call:UsEarningsSession|null};
  domain:'earnings';event_id:string;company_id:string;cik:string;name:string;ticker:string;
  fiscal_year:number;fiscal_quarter:number;period_label:string;period_end:string|null;publication_status:'unconfirmed';
  release:EarningsTime;call:EarningsTime;history:EarningsTime[];
@@ -50,3 +51,5 @@ export async function fetchEarnings(start:string,end:string,tickers:string[],sig
  if(!response.ok)throw new Error('Earnings calendar unavailable');
  return response.json();
 }
+
+export interface UsEarningsSession {date:string;open_at_utc:string;close_at_utc:string;source:string;}

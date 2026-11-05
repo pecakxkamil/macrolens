@@ -118,6 +118,16 @@ def initialize_isolated(connection, expected_signature=None):
 
 def import_records(connection, records):
     prepared=[validate(r) for r in records]
+    return _append_prepared(connection, prepared)
+
+
+def _append_prepared(connection, prepared):
+    """Shared E2D append writer. Callers must perform their source validation.
+
+    Manual entry retains validate() above. The separately activated monitor
+    supplies only records produced by its reviewed parser and activation gate.
+    All SQL constraints/version/issuer guards remain in force.
+    """
     if len({(r['cik'],r['fiscal_year'],r['fiscal_quarter']) for r in prepared})!=len(prepared):
         raise ValueError('Duplicate issuer/period in batch')
     with connection.transaction():

@@ -5,7 +5,7 @@ import {setLanguage} from '../i18n/language';
 import type {EarningsItem,EarningsTime} from './earningsTypes';
 const unknown:EarningsTime={component:'release',date_status:'unknown',precision:'unknown',source_local_date:null,source_local_time:null,source_timezone:null,timezone_label_raw:null,scheduled_at_utc:null,expected_time_utc:null,poland_date:null,session_boundary_utc:null,session_boundary_source:null,source_url:null,verified_on:null,facts:null,verification_method:null,sequence:0};
 const base:EarningsItem={domain:'earnings',event_id:'earnings:intc',company_id:'intel',name:'Intel',ticker:'INTC',cik:'0000050863',fiscal_year:2026,fiscal_quarter:3,period_label:'Q3 2026',period_end:null,publication_status:'unconfirmed',release:{...unknown,date_status:'confirmed',precision:'after_close',source_local_date:'2026-10-29',session_boundary_utc:'2026-10-29T20:00:00Z'},call:unknown,history:[]};
-const amazon:EarningsItem={...base,event_id:'earnings:amzn',ticker:'AMZN',name:'Amazon',release:unknown,call:{...unknown,component:'call',date_status:'confirmed',precision:'exact',source_local_date:'2026-10-29',poland_date:'2026-10-29',scheduled_at_utc:'2026-10-29T21:00:00Z'}};
+const amazon:EarningsItem={...base,event_id:'earnings:amzn',ticker:'AMZN',name:'Amazon',release:unknown,call:{...unknown,component:'call',date_status:'confirmed',precision:'exact',source_local_date:'2026-10-29',poland_date:'2026-10-29',scheduled_at_utc:'2026-10-29T21:00:00Z',source_url:'https://ir.aboutamazon.com/test',verified_on:'2026-11-02',verification_method:'manually_verified_official_source'}};
 const placeholder:EarningsItem={...base,event_id:'earnings:q4',period_label:'Q4 2026',release:unknown,call:unknown};
 afterEach(()=>{cleanup();vi.unstubAllGlobals();setLanguage('en');});
 it.each(['en','pl'] as const)('hides undated, filters dates and groups issuer/Polish date once in %s',async language=>{
@@ -19,10 +19,10 @@ it.each(['en','pl'] as const)('hides undated, filters dates and groups issuer/Po
  expect(screen.queryByText(/Q4 2026/)).not.toBeInTheDocument();expect(screen.queryByText(/AMD/)).not.toBeInTheDocument();
  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
  const row=screen.getByText(/^AMZN ·/).closest('tr')!;
- expect(row).toHaveTextContent(language==='pl'?'Wyniki: godzina nieznana':'Results: time unknown');
- expect(row).toHaveTextContent(language==='pl'?'Konferencja: 22:00':'Conference: 22:00');
+ expect(row).toHaveTextContent(language==='pl'?'Godzina niepotwierdzona':'Time not confirmed');
+ expect(row).toHaveTextContent(language==='pl'?'Konferencja: 22:00 PL':'Call: 22:00 Warsaw');
  const intel=screen.getByText(/^INTC ·/).closest('tr')!;
- expect(intel).not.toHaveTextContent(/Data emitenta; dzień i godzina|Issuer date; Polish release day/);expect(intel).toHaveTextContent('21:00+');
+ expect(intel).not.toHaveTextContent(/Data emitenta; dzień i godzina|Issuer date; Polish release day/);expect(intel).not.toHaveTextContent('21:00+');
  expect(row.querySelectorAll('td.earnings-number small')).toHaveLength(4);expect([...row.querySelectorAll('td.earnings-number small')].every(x=>x.textContent==='—')).toBe(true);
  expect(screen.getByRole('heading',{name:language==='pl'?'Wyniki spółek':'Company earnings'})).toBeInTheDocument();
  expect(screen.queryByText(/Wszystkie spółki · Dane raportowane|All companies · Issuer-reported|Źródła wyników spółek:|Earnings sources:/)).not.toBeInTheDocument();

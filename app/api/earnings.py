@@ -10,6 +10,12 @@ from app.analytics.calendar_agenda import calendar_agenda, validate_range
 router=APIRouter()
 
 
+@router.get('/api/v1/earnings/monitor/status')
+def monitor_status():
+    from app.earnings_monitor_runtime import status
+    return status()
+
+
 @router.get('/api/v1/calendar/events')
 def events(start_date: Optional[date]=None,end_date: Optional[date]=None,domains: str='macro',tickers: Optional[str]=None):
     start=start_date or datetime.now(ZoneInfo('Europe/Warsaw')).date()

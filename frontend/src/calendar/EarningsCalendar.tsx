@@ -1,10 +1,12 @@
 import {useEffect,useState} from 'react';
 import {fetchEarnings,type CalendarItemsResponse,type EarningsItem} from './earningsTypes';
-import {earningsAnchor,earningsSummary,et} from './earningsPresentation';
+import {et} from './earningsPresentation';
 import {compareEarnings,earningsDate,financialValue} from './earningsFinancialPresentation';
-import {formatAgendaDate,formatPolandTime} from './calendarDates';
+import {formatAgendaDate} from './calendarDates';
 import './earnings.css';
 import {marketCap} from './earningsMarketCap';
+import {earningsSessionPresentation} from './earningsSessionPresentation';
+import {earningsTimeLabel} from './earningsTimeLabels';
 
 function reportSource(e:EarningsItem):string|null {
  const latest=e.report_documents?.[e.report_documents.length-1];
@@ -16,12 +18,11 @@ function reportSource(e:EarningsItem):string|null {
 }
 
 function EarningsRow({event:e}:{event:EarningsItem}){
- const anchor=earningsAnchor(e),source=reportSource(e),cap=marketCap(e);
- const summary=e.financial_release_date&&anchor.date_status==='unknown'?et('Time not announced','Godzina nieogłoszona'):earningsSummary(e);
+ const source=reportSource(e),cap=marketCap(e),timing=earningsSessionPresentation(e);
  const company=<><strong>{e.ticker} · {e.period_label}</strong><span className="earnings-company-name">{e.name}</span></>;
  return <tr className="earnings-row">
  <th scope="row">{source?<a className="earnings-company-link" href={source} target="_blank" rel="noreferrer" aria-label={`${e.ticker} · ${e.period_label} · ${et('Official financial report','Oficjalny raport finansowy')}`}>{company}</a>:company}</th>
- <td className="earnings-center">{summary}{e.call.scheduled_at_utc&&e.call.date_status!=='cancelled'?<small>{et('Conference','Konferencja')}: {formatPolandTime(e.call.scheduled_at_utc)}</small>:null}</td>
+ <td className="earnings-center">{earningsTimeLabel(timing.window)}{timing.call?<small>{timing.call}</small>:null}</td>
  {(['current_eps','previous_eps','current_revenue','previous_revenue'] as const).map(key=><td key={key} className={`earnings-number${key.startsWith('previous')?' earnings-previous':''}`}>{financialValue(key==='current_eps'?(e.current_eps_actual===undefined?e.reported_eps_actual??e.gaap_diluted_eps_actual:e.current_eps_actual):key==='current_revenue'?(e.current_revenue_actual===undefined?e.revenue_actual:e.current_revenue_actual):e[`${key}_actual`])}<small>{financialValue(e[`${key}_forecast`])}</small></td>)}
  <td className="earnings-number">{cap?cap.value:'—'}</td>
  </tr>;
@@ -29,8 +30,21 @@ function EarningsRow({event:e}:{event:EarningsItem}){
 
 export function EarningsCalendar({startDate,endDate}:{startDate:string;endDate:string}){
  const [data,setData]=useState<CalendarItemsResponse>(),[error,setError]=useState(false),[retry,setRetry]=useState(0);
- useEffect(()=>{const abort=new AbortController();setData(undefined);setError(false);
- fetchEarnings(startDate,endDate,[],abort.signal).then(value=>{if(!abort.signal.aborted)setData(value);}).catch(()=>{if(!abort.signal.aborted)setError(true);});return()=>abort.abort();},[startDate,endDate,retry]);
+ useEffect(()=>{
+ let active=true,inFlight=false;const abort=new AbortController();setData(undefined);setError(false);
+ const refresh=async(initial=false)=>{
+  if(inFlight||(!initial&&document.visibilityState==='hidden'))return;
+  inFlight=true;
+  try{const value=await fetchEarnings(startDate,endDate,[],abort.signal);if(active){setData(value);setError(false);}}
+  catch{if(active&&initial)setError(true);}
+  finally{inFlight=false;}
+ };
+ void refresh(true);
+ const timer=window.setInterval(()=>{void refresh();},60000);
+ const visible=()=>{if(document.visibilityState!=='hidden')void refresh();};
+ document.addEventListener('visibilitychange',visible);
+ return()=>{active=false;abort.abort();window.clearInterval(timer);document.removeEventListener('visibilitychange',visible);};
+ },[startDate,endDate,retry]);
  const events=(data?.events??[]).filter((e):e is EarningsItem=>{
   if(e.domain!=='earnings')return false;
   const day=earningsDate(e);
@@ -49,7 +63,7 @@ export function EarningsCalendar({startDate,endDate}:{startDate:string;endDate:s
  {data&&events.length>0?<>
  <p className="earnings-scroll-hint">{et('On small screens, scroll the table horizontally for values and sources.','Na małym ekranie przewiń tabelę poziomo, aby zobaczyć wartości i źródła.')}</p>
  <div className="earnings-table-scroll" role="region" aria-label={et('Earnings table','Tabela wyników')} tabIndex={0}>
- <table className="earnings-table"><colgroup><col className="earnings-company-column"/><col className="earnings-time-column"/><col className="earnings-eps-column"/><col className="earnings-eps-column"/><col className="earnings-revenue-column"/><col className="earnings-revenue-column"/><col className="earnings-market-cap-column"/></colgroup><thead><tr><th scope="col">{et('Company','Spółka')}</th><th scope="col" className="earnings-center">{et('Results time · Poland','Czas wyników · Polska')}</th>{[["Current EPS","EPS aktualny"],["Previous EPS","EPS poprzednio"],["Current revenue","Przychody aktualne"],["Previous revenue","Przychody poprzednio"]].map(([en,pl])=><th key={en} scope="col" className="earnings-center">{et(en,pl)}<small>Actual / {et('Forecast','Prognoza')}</small></th>)}<th scope="col" className="earnings-center" aria-label="Market Cap">Market Cap<small><a href="https://deltascreener.com/data" target="_blank" rel="noreferrer">DeltaScreener</a> · <a href="https://tgmcharts.com" target="_blank" rel="noreferrer">TGMCharts</a></small></th></tr></thead>
+ <table className="earnings-table"><colgroup><col className="earnings-company-column"/><col className="earnings-time-column"/><col className="earnings-eps-column"/><col className="earnings-eps-column"/><col className="earnings-revenue-column"/><col className="earnings-revenue-column"/><col className="earnings-market-cap-column"/></colgroup><thead><tr><th scope="col">{et('Company','Spółka')}</th><th scope="col" className="earnings-center">{et('Results time · Poland','Czas wyników · Polska')}</th>{[["Current EPS","EPS aktualny"],["Previous EPS","EPS poprzednio"],["Current revenue","Przychody aktualne"],["Previous revenue","Przychody poprzednio"]].map(([en,pl])=><th key={en} scope="col" className="earnings-center">{et(en,pl)}<small>Actual / {et('Forecast','Prognoza')}</small></th>)}<th scope="col" className="earnings-center" aria-label="Market Cap">Market Cap</th></tr></thead>
  {[...groups].map(([key,rows])=><tbody key={key}><tr className="earnings-date"><th colSpan={7} scope="rowgroup"><h3>{formatAgendaDate(key)}</h3></th></tr>{rows.map(e=><EarningsRow key={e.event_id} event={e}/>)}</tbody>)}
  </table></div></>:null}
  </section>;

@@ -33,12 +33,12 @@ it('formats precise amounts and small issuers without zero placeholders',()=>{
  expect(marketCap({...event,market_cap_usd:'850405000000'})?.value).toBe('850.41 bn USD');
 });
 
-it.each(['TGMCharts','DeltaScreener'] as const)('links public attribution for %s without new columns',async provider=>{
+it.each(['TGMCharts','DeltaScreener'] as const)('keeps the Market Cap header plain for %s',async provider=>{
  const source=provider==='TGMCharts'?'https://tgmcharts.com':'https://deltascreener.com/data';
  vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:true,json:async()=>({events:[{...event,market_cap_provider:provider,market_cap_source:source}],undated:[]})}));
  render(<EarningsCalendar startDate="2026-11-01" endDate="2026-11-30"/>);
- expect(await screen.findByRole('link',{name:provider})).toHaveAttribute('href',source);
- expect(screen.getByRole('link',{name:provider}).closest('thead')).not.toBeNull();
+ expect(await screen.findByRole('columnheader',{name:'Market Cap'})).toHaveTextContent(/^Market Cap$/);
+ expect(screen.queryByRole('link',{name:provider})).not.toBeInTheDocument();
  expect(screen.getAllByRole('columnheader')).toHaveLength(7);
  expect(marketCap({...event,market_cap_provider:provider,market_cap_source:'https://unapproved.invalid'} as EarningsItem)?.source).toBeUndefined();
 });
