@@ -1,3 +1,5 @@
+import {ForecastValue} from './ForecastValue';
+import type {ForecastDetail} from '../api/macrolens';
 import {useEffect,useState} from 'react';
 import {fetchEarnings,type CalendarItemsResponse,type EarningsItem} from './earningsTypes';
 import {et} from './earningsPresentation';
@@ -23,7 +25,7 @@ function EarningsRow({event:e}:{event:EarningsItem}){
  return <tr className="earnings-row">
  <th scope="row">{source?<a className="earnings-company-link" href={source} target="_blank" rel="noreferrer" aria-label={`${e.ticker} · ${e.period_label} · ${et('Official financial report','Oficjalny raport finansowy')}`}>{company}</a>:company}</th>
  <td className="earnings-center">{earningsTimeLabel(timing.window)}{timing.call?<small>{timing.call}</small>:null}</td>
- {(['current_eps','previous_eps','current_revenue','previous_revenue'] as const).map(key=><td key={key} className={`earnings-number${key.startsWith('previous')?' earnings-previous':''}`}>{financialValue(key==='current_eps'?(e.current_eps_actual===undefined?e.reported_eps_actual??e.gaap_diluted_eps_actual:e.current_eps_actual):key==='current_revenue'?(e.current_revenue_actual===undefined?e.revenue_actual:e.current_revenue_actual):e[`${key}_actual`])}<small>{financialValue(e[`${key}_forecast`])}</small></td>)}
+ {(['current_eps','previous_eps','current_revenue','previous_revenue'] as const).map(key=><td key={key} className={`earnings-number${key.startsWith('previous')?' earnings-previous':''}`}>{financialValue(key==='current_eps'?(e.current_eps_actual===undefined?e.reported_eps_actual??e.gaap_diluted_eps_actual:e.current_eps_actual):key==='current_revenue'?(e.current_revenue_actual===undefined?e.revenue_actual:e.current_revenue_actual):e[`${key}_actual`])}{e[`${key}_forecast`]?.kind?<ForecastValue forecast={e[`${key}_forecast`] as ForecastDetail} currency={e[`${key}_forecast`]?.currency}/>:<small>{financialValue(e[`${key}_forecast`])}</small>}</td>)}
  <td className="earnings-number">{cap?cap.value:'—'}</td>
  </tr>;
 }

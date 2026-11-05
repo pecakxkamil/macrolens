@@ -1,3 +1,4 @@
+import {ForecastValue} from './ForecastValue';
 import {Fragment,useCallback,useEffect,useMemo,useState} from 'react';
 import {fetchCalendarAgenda,requestOverviewRefresh,type CalendarEvent,type CalendarMeasure,type CalendarResponse} from '../api/macrolens';
 import {useBackgroundRefresh} from '../brief/useOverviewRefresh';
@@ -140,7 +141,7 @@ function AgendaRow({event,measure,now,next,showCountdown,expanded,toggle,check,r
  <td className="agenda-time">{instant!==null?formatPolandTime(event.release_datetime_utc).replace(/ PL$/,''):'\u2014'}</td>
  <th scope="row"><button type="button" id={buttonId} className="agenda-measure-name" aria-expanded={expanded} aria-controls={expanded?detailId:undefined} onClick={toggle}>{name}{period?` (${period})`:''}</button>{remaining?<small>{remaining}</small>:null}</th>
  <td className="agenda-stars"><span role="img" aria-label={tLabel(stars===null?'Importance unavailable':`Importance ${stars} of 3`)}>{stars===null?'\u2014':'\u2605'.repeat(stars)}</span></td>
- <td className="agenda-number agenda-secondary" data-label={tLabel('Forecast')}>{measure?compactMeasureValue(forecast,measure.unit):'\u2014'}</td>
+ <td className="agenda-number agenda-secondary" data-label={tLabel('Forecast')}>{measure?.forecast_details?<ForecastValue forecast={measure.forecast_details} unit={measure.unit}/>:measure?compactMeasureValue(forecast,measure.unit):'\u2014'}</td>
  <td className="agenda-difference" data-label={tLabel('vs forecast')}>{vsForecast?<ComparisonTooltip comparison={vsForecast}/>:event.expects_numeric_result===false?'—':null}</td>
  <td className="agenda-number agenda-actual" data-label={tLabel('Actual')}>{event.result_integration_status==='publisher_permission_required'?<a href={safeLink(event.document_url)??event.publisher_reports_url} target="_blank" rel="noreferrer">{tText(event.document_status==='available'&&event.document_url?'Data at publisher':'Publisher reports')}</a>:measure?calendarReadingValue(measure,'actual'):'\u2014'}{measure?.year_over_year?<><br/><small>{tText('YoY (NSA)')}: {calendarReadingValue(measure.year_over_year,'actual')}</small></>:null}</td>
  <td className="agenda-difference" data-label={tLabel('vs previous')}>{vsPrevious?<ComparisonTooltip comparison={vsPrevious}/>:event.expects_numeric_result===false?'—':null}</td>

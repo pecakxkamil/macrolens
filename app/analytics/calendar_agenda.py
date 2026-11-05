@@ -68,6 +68,8 @@ def calendar_agenda(start=None,end=None,now=None,category=None):
             with connection.cursor() as cursor:cursor.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ')
             data=release_calendar.list_calendar_events(start,end,category)
             data['events']=load_results(data['events'],start,end,now,connection)
+            from app.forecast_f1 import enrich_macro
+            data['events']=enrich_macro(data['events'],connection)
             resources=event_resources(data['events'])
             if any((e.get('schedule_provenance') and e.get('release_id') is not None) or e.get('release_id') in (50,10,46,11,192,9,13) for e in data['events']):resources.add('calendar:periods')
             checks=load_source_checks(start,resources,end)

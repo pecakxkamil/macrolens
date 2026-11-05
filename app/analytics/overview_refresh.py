@@ -397,7 +397,28 @@ class RefreshCoordinator:
         self.store = store or RefreshStore()
         self.runner, self.clock = runner, clock
         self.release_runner=release_runner
-        self.launch = launch or (lambda fn: threading.Thread(target=fn, daemon=True, name='overview-refresh').start())
+        self._launcher = launch or (lambda fn: threading.Thread(target=fn, daemon=True, name='overview-refresh').start())
+        self._launch_listeners = {}
+        self._listener_lock = threading.Lock()
+
+    def register_launch_listener(self, module, callback):
+        """Subscribe to an existing lifecycle job, never create another clock."""
+        key=str(uuid4())
+        with self._listener_lock:self._launch_listeners[key]=(module,callback)
+        def remove():
+            with self._listener_lock:self._launch_listeners.pop(key,None)
+        return remove
+
+    def launch(self, fn):
+        result=self._launcher(fn)
+        with self._listener_lock:listeners=list(self._launch_listeners.values())
+        for module,callback in listeners:
+            if getattr(fn,'__module__',None)==module:
+                try:callback()
+                except Exception:
+                    import logging
+                    logging.getLogger(__name__).exception('Optional lifecycle job listener failed')
+        return result
 
     def intervals(self):
         interval = seconds('OVERVIEW_REFRESH_INTERVAL_SECONDS', 900)

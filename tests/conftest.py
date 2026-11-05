@@ -88,6 +88,7 @@ def _install_guard(monkeypatch):
     from pathlib import Path
     from uuid import uuid4
     monkeypatch.setenv("EARNINGS_MONITOR_TOKEN", str(Path(gettempdir()) / ("uninitialized-monitor-"+uuid4().hex) / "activation.json"))
+    monkeypatch.setenv("FORECAST_F1_TOKEN", str(Path(gettempdir()) / ("uninitialized-f1-"+uuid4().hex) / "activation.json"))
     for key, value in dict(DB_HOST="invalid.test", DB_PORT="1",
                            DB_NAME="macrolens_test_unused", DB_USER="unused",
                            DB_PASSWORD="unused").items():

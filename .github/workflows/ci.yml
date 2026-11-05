@@ -186,3 +186,12 @@ jobs:
           DB_NAME: macrolens_history_v2_control
           REPORT_TEST_CONTAINER: ${{ job.services.postgres.id }}
         run: python tests/postgres_earnings_history_v2_validation.py
+      - name: PostgreSQL Forecast F1 vintages and immutable freezes
+        env:
+          DB_NAME: macrolens_forecast_f1_control
+        run: python tests/postgres_forecast_f1_validation.py
+      - name: PostgreSQL Forecast F1 guarded activation and recovery
+        env:
+          DB_NAME: macrolens_f1_activation_control
+          F1_TEST_CONTAINER: ${{ job.services.postgres.id }}
+        run: python tests/postgres_forecast_f1_activation_ci.py

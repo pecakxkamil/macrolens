@@ -10,10 +10,17 @@ from app.analytics.calendar_agenda import calendar_agenda, validate_range
 router=APIRouter()
 
 
+@router.get('/api/v1/forecasts/status')
+def forecast_status():
+    from app.forecast_f1_runtime import status
+    return status()
+
+
 @router.get('/api/v1/earnings/monitor/status')
 def monitor_status():
     from app.earnings_monitor_runtime import status
     return status()
+
 
 
 @router.get('/api/v1/calendar/events')
@@ -28,10 +35,15 @@ def events(start_date: Optional[date]=None,end_date: Optional[date]=None,domains
     try:
         macro=calendar_agenda(start,end) if 'macro' in selected else None
         equity=earnings.calendar_events(start,end,symbols) if 'earnings' in selected else None
+        if equity and equity['events']:
+            from app.forecast_f1 import project_earnings
+            project_earnings(equity['events'],factory=earnings.get_independent_connection)
+            equity['forecast_snapshot_scope']='independent_read_only_forecast_snapshot'
         return {'events':([{'domain':'macro','event':e} for e in macro['events']] if macro else [])+(equity['events'] if equity else []),
                 'undated':equity['undated'] if equity else [],'macro_data_revision':macro.get('data_revision') if macro else None,
                 'earnings_data_revision':equity['earnings_data_revision'] if equity else None,
-                'assembled_at':datetime.now(timezone.utc),'snapshot_scope':'independent_domain_snapshots'}
+                'assembled_at':datetime.now(timezone.utc),'snapshot_scope':'independent_domain_snapshots',
+                'forecast_snapshot_scope':equity.get('forecast_snapshot_scope') if equity else None}
     except Exception as error:
         raise HTTPException(503,'Calendar domain unavailable; earnings requires the opt-in E2A schema.') from error
 

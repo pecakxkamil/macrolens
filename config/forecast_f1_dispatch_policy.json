@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "scope": "local_personal_noncommercial_only",
+  "source_id": "cleveland-inflation",
+  "source_url": "https://www.clevelandfed.org/indicators-and-data/inflation-nowcasting",
+  "terms_url": "https://www.clevelandfed.org/privacy",
+  "terms_section_sha256": "c5283d1db7a07bf8e611cd24f72b810a658320726f5571c13bf0a30edcdb4d85",
+  "reviewed_on": "2026-11-05",
+  "minimum_attempt_interval_seconds": 86400,
+  "periods": [
+    "2026-10-01",
+    "2026-11-01"
+  ],
+  "indicators": [
+    "CPIAUCSL",
+    "CPILFESL",
+    "PCEPI",
+    "PCEPILFE"
+  ],
+  "transforms": [
+    "mom",
+    "yoy"
+  ],
+  "adjustment": "SA",
+  "publication_stage": "main",
+  "kind": "model_nowcast",
+  "guidance_refresh": false,
+  "consensus": false,
+  "clock": "existing Earnings lifecycle launch every30seconds; no new timer",
+  "freeze": "worker only, persisted before-release selection or permanent null",
+  "terms_scope": "Entire Privacy and Terms of Use section; any changed clause stops data fetch"
+}

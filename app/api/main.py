@@ -39,7 +39,7 @@ DEVELOPMENT_CORS_ORIGINS = (
     "http://127.0.0.1:5173",
 )
 
-from app.earnings_monitor_runtime import lifespan as task_lifespan
+from app.forecast_f1_runtime import lifespan as task_lifespan
 app = FastAPI(title="MacroLens API", version="0.1.0", lifespan=task_lifespan)
 from app.api.earnings import router as earnings_router
 app.include_router(earnings_router)

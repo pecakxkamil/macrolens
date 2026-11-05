@@ -1,0 +1,11 @@
+import {render,screen,cleanup} from '@testing-library/react';
+import {afterEach,expect,test} from 'vitest';
+import {ForecastValue} from './ForecastValue';
+import {setLanguage} from '../i18n/language';
+import type {ForecastDetail} from '../api/macrolens';
+const forecast:ForecastDetail={kind:'model_nowcast',value:'0.24',low:null,high:null,source_url:'https://www.clevelandfed.org/',methodology:'SA MoM',state:'live',comparison_allowed:false};
+afterEach(()=>{cleanup();setLanguage('en');});
+test('nowcast is explicitly labelled, attributed, and small',()=>{render(<ForecastValue forecast={forecast} unit="percent"/>);expect(screen.getByRole('link').textContent).toBe('0.24% \u00b7 Nowcast');expect(screen.getByRole('link').querySelector('small')).not.toBeNull();});
+test('guidance range is not an invented consensus midpoint',()=>{render(<ForecastValue forecast={{...forecast,kind:'issuer_guidance',value:null,low:'1.22',high:'1.42'}} currency="USD"/>);expect(screen.getByRole('link').textContent).toBe('1.22\u20131.42 USD \u00b7 Guidance');});
+test('Polish number format and compact revenue',()=>{setLanguage('pl');render(<ForecastValue forecast={{...forecast,kind:'issuer_guidance',value:'108000000000'}} currency="USD"/>);expect(screen.getByRole('link').textContent).toBe('108 mld USD \u00b7 Guidance');});
+test('nonfinite values stay empty',()=>{render(<ForecastValue forecast={{...forecast,value:'NaN'}}/>);expect(screen.queryByRole('link')).toBeNull();expect(screen.getByText('\u2014')).toBeTruthy();});

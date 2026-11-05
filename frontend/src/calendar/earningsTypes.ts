@@ -1,4 +1,4 @@
-import type {CalendarEvent} from '../api/macrolens';
+import type {CalendarEvent,ForecastDetail} from '../api/macrolens';
 export type EarningsPrecision='exact'|'approximate'|'after_close'|'before_open'|'date_only'|'unknown';
 export interface EarningsTime {
  component:'release'|'call'; date_status:'unknown'|'confirmed'|'changed'|'cancelled'; precision:EarningsPrecision;
@@ -30,7 +30,7 @@ export interface EarningsItem {
  publication_state?:{code:'scheduled'|'published_pending'|'published_complete'|'published_partial'|'date_passed_unconfirmed'|'unconfirmed';reason:string;missing_metrics:string[];evidence:ReportDocument[]};
  revenue_consensus?:null;eps_consensus?:null;financial_history?:FinancialObservation[];
 }
-export interface FinancialObservation {
+export interface FinancialObservation extends Partial<ForecastDetail> {
  metric:'revenue'|'gaap_diluted_eps'|'reported_diluted_eps';actual:string;currency:'USD'|'EUR'|'TWD';unit:string;
  source_value:string;source_unit:string;decimal_places:string;methodology:string;
  source_url:string;document_type:string;verified_on:string;captured_at:string;

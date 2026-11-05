@@ -1,0 +1,171 @@
+{
+  "version": 1,
+  "reviewed_on": "2026-11-05",
+  "scope": "local_noncommercial_research_only",
+  "earnings_basis": {
+    "NVDA": {
+      "company_id": "02e39e5f-cbd9-5ba4-b9c7-5d1ca29ff36f",
+      "cik": "0001045810",
+      "currency": "USD",
+      "standard": "US_GAAP",
+      "share_basis": "common_share"
+    },
+    "QCOM": {
+      "company_id": "625a4620-fe78-5e8d-ab44-a6be1afcbcb3",
+      "cik": "0000804328",
+      "currency": "USD",
+      "standard": "US_GAAP",
+      "share_basis": "common_share"
+    },
+    "ARM": {
+      "company_id": "bbca4300-272d-53c4-8874-69258cdc4e43",
+      "cik": "0001973239",
+      "currency": "USD",
+      "standard": "US_GAAP",
+      "share_basis": "ordinary_share"
+    }
+  },
+  "earnings_records": [
+    {
+      "kind": "issuer_guidance",
+      "subject": {
+        "domain": "earnings",
+        "company_id": "02e39e5f-cbd9-5ba4-b9c7-5d1ca29ff36f",
+        "cik": "0001045810",
+        "fiscal_year": 2027,
+        "fiscal_quarter": 3,
+        "metric": "revenue",
+        "currency": "USD",
+        "standard": "US_GAAP",
+        "eps_basis": "not_applicable",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_quarterly_revenue"
+      },
+      "value": "108000000000",
+      "low": "105840000000",
+      "high": "110160000000",
+      "source_id": "nvda-guidance",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000073/q2fy27pr.htm",
+      "published_at": "2026-08-26T00:00:00Z",
+      "publication_precision": "date",
+      "methodology": "issuer_reported_outlook_no_midpoint_inference",
+      "source_sha256": "61787ab91a7617ab1dbdcfe46f7216573f2697a82edbbeb3c863742b4a7e6990",
+      "rights": "public_filing_facts",
+      "note": "Revenue 108.0 billion +/-2%; endpoints reflect explicitly reported tolerance, not analyst consensus. No EPS guidance in this document."
+    },
+    {
+      "kind": "issuer_guidance",
+      "subject": {
+        "domain": "earnings",
+        "company_id": "625a4620-fe78-5e8d-ab44-a6be1afcbcb3",
+        "cik": "0000804328",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 4,
+        "metric": "revenue",
+        "currency": "USD",
+        "standard": "US_GAAP",
+        "eps_basis": "not_applicable",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_quarterly_revenue"
+      },
+      "value": null,
+      "low": "9700000000",
+      "high": "10500000000",
+      "source_id": "qcom-guidance",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/804328/000080432826000085/qcom062826erex991.htm",
+      "published_at": "2026-07-29T00:00:00Z",
+      "publication_precision": "date",
+      "methodology": "issuer_reported_outlook_no_midpoint_inference",
+      "source_sha256": "6c772dbc712fc5386c92047cafd11dec221c3603ecbb2148c6b58b8f4752dd55",
+      "rights": "public_filing_facts",
+      "note": "GAAP Q4 FY26 guidance. Captured after Actual: not eligible for historical comparison; range only, no invented midpoint."
+    },
+    {
+      "kind": "issuer_guidance",
+      "subject": {
+        "domain": "earnings",
+        "company_id": "625a4620-fe78-5e8d-ab44-a6be1afcbcb3",
+        "cik": "0000804328",
+        "fiscal_year": 2026,
+        "fiscal_quarter": 4,
+        "metric": "reported_diluted_eps",
+        "currency": "USD",
+        "standard": "US_GAAP",
+        "eps_basis": "diluted",
+        "share_basis": "common_share",
+        "methodology": "reported_diluted_eps"
+      },
+      "value": null,
+      "low": "1.22",
+      "high": "1.42",
+      "source_id": "qcom-guidance",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/804328/000080432826000085/qcom062826erex991.htm",
+      "published_at": "2026-07-29T00:00:00Z",
+      "publication_precision": "date",
+      "methodology": "issuer_reported_outlook_no_midpoint_inference",
+      "source_sha256": "6c772dbc712fc5386c92047cafd11dec221c3603ecbb2148c6b58b8f4752dd55",
+      "rights": "public_filing_facts",
+      "note": "GAAP Q4 FY26 guidance. Captured after Actual: not eligible for historical comparison; range only, no invented midpoint."
+    },
+    {
+      "kind": "issuer_guidance",
+      "subject": {
+        "domain": "earnings",
+        "company_id": "bbca4300-272d-53c4-8874-69258cdc4e43",
+        "cik": "0001973239",
+        "fiscal_year": 2027,
+        "fiscal_quarter": 3,
+        "metric": "revenue",
+        "currency": "USD",
+        "standard": "US_GAAP",
+        "eps_basis": "not_applicable",
+        "share_basis": "not_applicable",
+        "methodology": "consolidated_quarterly_revenue"
+      },
+      "value": "1540000000",
+      "low": "1490000000",
+      "high": "1590000000",
+      "source_id": "arm-guidance",
+      "source_url": "https://investors.arm.com/static-files/0b5baa2e-fc47-4d05-b724-e49de7bd4356",
+      "published_at": "2026-11-04T00:00:00Z",
+      "publication_precision": "date",
+      "methodology": "issuer_reported_outlook_no_midpoint_inference",
+      "source_sha256": "88fe0960810dd97a04bb459572f2684010eb8473452d834dc57533087f1279ad",
+      "rights": "public_filing_facts",
+      "note": "Q3 FYE27 revenue $1.54bn +/-$50m. No corresponding existing calendar event; no synthetic event created. EPS guidance is non-GAAP and intentionally omitted."
+    }
+  ],
+  "sources": {
+    "cleveland-inflation": {
+      "url": "https://www.clevelandfed.org/indicators-and-data/inflation-nowcasting",
+      "terms": "https://www.clevelandfed.org/privacy",
+      "attribution": "Federal Reserve Bank of Cleveland",
+      "read": true,
+      "store": true,
+      "local_display": true,
+      "public_commercial_display": false,
+      "automatic_read": true,
+      "rights_note": "Bank permits attributed noncommercial reproduction. Low-rate HTML download is an interpretation of intended public data access with robots respected, not an API SLA or blanket commercial license."
+    },
+    "atlanta-gdpnow": {
+      "url": "https://www.atlantafed.org/research-and-data/data/gdpnow",
+      "terms": "https://www.atlantafed.org/en/terms-of-use",
+      "read": true,
+      "store": false,
+      "local_display": false,
+      "public_commercial_display": false,
+      "automatic_read": false,
+      "rights_note": "Noncommercial reproduction clause also requests sending copies to Public Affairs. No contact authorized; GDP value audited but not imported/displayed until condition resolved."
+    },
+    "sec-guidance": {
+      "url": "https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data",
+      "terms": "https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data",
+      "read": true,
+      "store": true,
+      "local_display": true,
+      "public_commercial_display": false,
+      "automatic_read": false,
+      "rights_note": "Small structured issuer facts only, no redistribution of full copyrighted exhibits. Reviewed manual capture; future automated SEC fetching requires declared compliant contact UA and source adapter review. Free EDGAR access is not a blanket license for all exhibits."
+    }
+  }
+}

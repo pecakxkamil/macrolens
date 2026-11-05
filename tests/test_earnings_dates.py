@@ -80,6 +80,8 @@ def test_invalid_manual_metadata(mutation):
 
 
 def test_api_read_only_union(monkeypatch):
+    from app import forecast_f1
+    monkeypatch.setattr(forecast_f1,'project_earnings',lambda events,**kwargs:events)
     seen=[]
     monkeypatch.setattr(e,'companies',lambda:[{'ticker':v[1]} for v in e.PILOTS.values()])
     monkeypatch.setattr(e,'calendar_events',lambda start,end,symbols:(seen.append(symbols) or {'events':[{'domain':'earnings','event_id':'earnings:one'}],'undated':[],'earnings_data_revision':'e1'}))
@@ -89,6 +91,7 @@ def test_api_read_only_union(monkeypatch):
         assert response.status_code==200
         data=response.json();assert [x['domain'] for x in data['events']]==['macro','earnings']
         assert data['macro_data_revision']=='m1' and data['earnings_data_revision']=='e1'
+        assert data['forecast_snapshot_scope']=='independent_read_only_forecast_snapshot'
         assert seen==[{'NVDA'}] and 'revenue' not in response.text and 'EPS' not in response.text
         assert len(client.get('/api/v1/earnings/companies').json())==3
 
