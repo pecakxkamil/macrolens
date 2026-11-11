@@ -687,7 +687,7 @@ export default function App() {
     <nav className="app-navigation" aria-label={tLabel("Main navigation")}>
       <a href="#/" aria-current={route.section === "overview" ? "page" : undefined}>{tText("Overview")}</a>
       <a href="#/calendar" aria-current={route.section === "calendar" ? "page" : undefined}>{tText("Calendar")}</a>
-      <a href="#/explore/indicators" aria-current={route.section === "explore" ? "page" : undefined}>{tText("Explore Data")}</a>
+      <a href="#/explore/charts" aria-current={route.section === "explore" ? "page" : undefined}>{tText("Explore Data")}</a>
       <a href="#/research" aria-current={route.section === "research" ? "page" : undefined}>{tText("Research")}</a>
     </nav>
     <div className="app-shell">

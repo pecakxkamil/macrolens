@@ -1,20 +1,41 @@
 import {afterEach,expect,it,vi} from 'vitest';
-import {cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
+import {act,cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
 import {CalendarPage} from './CalendarPage';
 import {fetchCalendarAgenda,requestOverviewRefresh} from '../api/macrolens';
 import {setLanguage} from '../i18n/language';
 vi.mock('../api/macrolens',async original=>({...await original<typeof import('../api/macrolens')>(),fetchCalendarAgenda:vi.fn(),requestOverviewRefresh:vi.fn()}));
-afterEach(()=>{cleanup();vi.unstubAllGlobals();vi.clearAllMocks();setLanguage('en');});
+afterEach(()=>{cleanup();vi.useRealTimers();vi.restoreAllMocks();vi.unstubAllGlobals();vi.clearAllMocks();setLanguage('en');});
 it.each(['en','pl'] as const)('domain changes retain macro filters and do not add macro GET or POST in %s',async language=>{
  setLanguage(language);
  vi.mocked(fetchCalendarAgenda).mockImplementation(async(start_date,end_date)=>({start_date,end_date,events:[],timezone:'Europe/Warsaw',policy:{},refresh:{status:'complete',next_check_at:'2099-01-01T00:00:00Z',results:[]}} as unknown as Awaited<ReturnType<typeof fetchCalendarAgenda>>));
  const fetcher=vi.fn().mockResolvedValue({ok:true,json:async()=>({events:[],undated:[]})});vi.stubGlobal('fetch',fetcher);
  render(<CalendarPage/>);await waitFor(()=>expect(fetchCalendarAgenda).toHaveBeenCalledTimes(1));
  const radio=(name:string)=>screen.getByRole('radio',{name});
- expect(radio(language==='pl'?'Makro':'Macro')).toBeChecked();expect(fetcher).not.toHaveBeenCalled();
+ expect(radio(language==='pl'?'Wszystko':'All')).toBeChecked();await waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(1));
  const stars=screen.getByRole('checkbox',{name:/★★★/});fireEvent.click(stars);expect(stars).toBeChecked();
- fireEvent.click(radio(language==='pl'?'Wyniki spółek':'Company earnings'));await screen.findByText(language==='pl'?'Brak publikacji wyników z potwierdzoną datą w wybranym zakresie.':'No earnings releases with a confirmed date in the selected range.');
- fireEvent.click(radio(language==='pl'?'Wszystkie':'All'));expect(stars).toBeChecked();
- fireEvent.click(radio(language==='pl'?'Makro':'Macro'));expect(stars).toBeChecked();
+ fireEvent.click(radio(language==='pl'?'Wyniki':'Earnings'));await screen.findByText(language==='pl'?'Brak publikacji wyników z potwierdzoną datą w wybranym zakresie.':'No earnings releases with a confirmed date in the selected range.');
+ fireEvent.click(radio(language==='pl'?'Wszystko':'All'));expect(stars).toBeChecked();
+ fireEvent.click(radio(language==='pl'?'Dane':'Data'));expect(stars).toBeChecked();
  expect(fetchCalendarAgenda).toHaveBeenCalledTimes(1);expect(requestOverviewRefresh).not.toHaveBeenCalled();expect(fetcher).toHaveBeenCalledTimes(1);
+});
+
+it.each(['en','pl'] as const)('orders All, Data, Earnings and keeps deliberate selection through polling in %s',async language=>{
+ setLanguage(language);vi.useFakeTimers({toFake:['setInterval','clearInterval']});
+ vi.spyOn(document,'visibilityState','get').mockReturnValue('visible');
+ vi.mocked(fetchCalendarAgenda).mockImplementation(async(start_date,end_date)=>({start_date,end_date,events:[],timezone:'Europe/Warsaw',policy:{},refresh:{status:'complete',next_check_at:'2099-01-01T00:00:00Z',results:[]}} as unknown as Awaited<ReturnType<typeof fetchCalendarAgenda>>));
+ const fetcher=vi.fn().mockResolvedValue({ok:true,json:async()=>({events:[],undated:[]})});vi.stubGlobal('fetch',fetcher);
+ const labels=language==='pl'?['Wszystko','Dane','Wyniki']:['All','Data','Earnings'];
+ localStorage.setItem('macrolens.calendar.domain','earnings');
+ const view=render(<CalendarPage/>);
+ await waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(1));
+ expect(screen.getAllByRole('radio').map(r=>r.closest('label')?.textContent)).toEqual(labels);
+ expect(screen.getByRole('radio',{name:labels[0]})).toBeChecked();
+ fireEvent.click(screen.getByRole('radio',{name:labels[1]}));view.rerender(<CalendarPage/>);
+ expect(screen.getByRole('radio',{name:labels[1]})).toBeChecked();
+ fireEvent.click(screen.getByRole('radio',{name:labels[2]}));await waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(2));
+ await act(async()=>{await vi.advanceTimersByTimeAsync(60000);});
+ expect(fetcher).toHaveBeenCalledTimes(3);expect(screen.getByRole('radio',{name:labels[2]})).toBeChecked();
+ view.rerender(<CalendarPage/>);expect(screen.getByRole('radio',{name:labels[2]})).toBeChecked();
+ view.unmount();render(<CalendarPage/>);expect(screen.getByRole('radio',{name:labels[0]})).toBeChecked();
+ localStorage.removeItem('macrolens.calendar.domain');vi.useRealTimers();vi.restoreAllMocks();
 });

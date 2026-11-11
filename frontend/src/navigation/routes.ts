@@ -15,13 +15,13 @@ export function resolveRoute(hash: string): AppRoute {
   if (path.startsWith("/indicators/")) path = `/explore${path}`;
   else path = legacyRoutes[path] ?? path;
   if (path === "/calendar") return { section: "calendar", view: "calendar", hash: "#/calendar" };
-  if (path === "/explore/charts") return { section: "explore", view: "charts", hash: `#${path}` };
-  if (path === "/explore" || path === "/explore/indicators" || path.startsWith("/explore/indicators/")) {
+  if (path === "/explore" || path === "/explore/charts") return { section: "explore", view: "charts", hash: "#/explore/charts" };
+  if (path === "/explore/indicators" || path.startsWith("/explore/indicators/")) {
     let seriesId: string | undefined;
     try { seriesId = decodeURIComponent(path.slice("/explore/indicators/".length)) || undefined; }
     catch { seriesId = "Invalid series ID"; }
     return { section: "explore", view: "indicators", seriesId,
-      hash: path === "/explore" ? "#/explore/indicators" : `#${path}` };
+      hash: `#${path}` };
   }
   if (path === "/research/mci") return { section: "research", view: "mci", hash: "#/research/mci" };
   if (path === "/research/macro-market") return { section: "research", view: "macro-market", hash: `#${path}` };

@@ -1,3 +1,4 @@
+vi.mock('./earningsTypes',async original=>({...await original<typeof import('./earningsTypes')>(),fetchEarnings:vi.fn(async()=>({events:[],undated:[]}))}));
 import {act,cleanup,fireEvent,render,screen} from '@testing-library/react';
 import {afterEach,beforeEach,expect,test,vi} from 'vitest';
 import type {CalendarResponse,CalendarMeasure,OverviewRefreshState} from '../api/macrolens';
@@ -31,7 +32,8 @@ test.each(['en','pl'] as const)('visible Calendar keeps GDP blank until committe
  await act(async()=>{await vi.advanceTimersByTimeAsync(2000);});await flush();
  expect(document.querySelector('.agenda-actual')).toHaveTextContent(language==='en'?'3.37%':'3,37%');
  fireEvent.click(document.querySelector('.agenda-measure-name')!);
- expect(document.querySelector('.agenda-detail')).toHaveTextContent(language==='en'?'Current-vintage':'Bieżąca');
+ expect(document.querySelector('.macro-insight-values dd')).toHaveTextContent(language==='en'?'3.37%':'3,37%');
+ expect(document.querySelector('.agenda-measure-detail')).toBeNull();
  fireEvent.keyDown(document.querySelector('.agenda-detail')!,{key:'Escape'});
  expect(document.querySelector('.agenda-detail')).toBeNull();
  expect(document.querySelector('.agenda-measure-name')).toHaveFocus();

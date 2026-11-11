@@ -2,11 +2,12 @@ import type {CalendarEvent,CalendarMeasure} from '../api/macrolens';
 import {getLanguage,getLocale} from '../i18n/language';
 import {eventDay,eventInstant,eventImportanceStars} from '../brief/upcomingEvents';
 import {shiftDate,todayIso,weekRange} from './calendarDates';
-export type DatePreset='yesterday'|'today'|'tomorrow'|'week'|'nextWeek'|'custom';
+export type DatePreset='previousWeek'|'yesterday'|'today'|'tomorrow'|'week'|'nextWeek'|'custom';
 export const MAX_DAYS=366;
 export function presetRange(preset:DatePreset,now=new Date()){
  const today=todayIso(now),week=weekRange(today);
  if(preset==='week'||preset==='custom')return week;
+ if(preset==='previousWeek')return {startDate:shiftDate(week.startDate,-7),endDate:shiftDate(week.endDate,-7)};
  if(preset==='nextWeek')return {startDate:shiftDate(week.startDate,7),endDate:shiftDate(week.endDate,7)};
  const day=shiftDate(today,preset==='yesterday'?-1:preset==='tomorrow'?1:0);return {startDate:day,endDate:day};
 }

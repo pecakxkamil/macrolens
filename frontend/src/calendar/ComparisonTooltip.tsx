@@ -1,7 +1,7 @@
 import {useEffect,useId,useLayoutEffect,useRef,useState} from 'react';
 import type {Comparison} from './calendarComparisons';
 
-export function ComparisonTooltip({comparison}:{comparison:Comparison}){
+export function ComparisonTooltip({comparison,colorByDirection=false}:{comparison:Comparison;colorByDirection?:boolean}){
  const [open,setOpen]=useState(false),[position,setPosition]=useState({left:0,top:0});
  const trigger=useRef<HTMLButtonElement>(null),popup=useRef<HTMLSpanElement>(null),id=useId();
  useEffect(()=>{
@@ -16,7 +16,7 @@ export function ComparisonTooltip({comparison}:{comparison:Comparison}){
   place();window.addEventListener('resize',place);window.addEventListener('scroll',place,true);
   return()=>{window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true);};
  },[open]);
- return <span className={`agenda-comparison agenda-comparison--${comparison.tone}`} onMouseEnter={()=>setOpen(true)} onMouseLeave={()=>setOpen(false)}>
+ return <span className={`agenda-comparison agenda-comparison--${colorByDirection?(comparison.direction??'neutral'):comparison.tone}`} onMouseEnter={()=>setOpen(true)} onMouseLeave={()=>setOpen(false)}>
   <button ref={trigger} type="button" aria-describedby={open?id:undefined} aria-expanded={open} onFocus={()=>setOpen(true)} onBlur={()=>setOpen(false)} onClick={()=>setOpen(true)} onKeyDown={event=>{if(event.key==='Escape'){event.stopPropagation();setOpen(false);}}}>{comparison.text}</button>
   {open?<span ref={popup} id={id} role="tooltip" className="agenda-comparison-tooltip" style={position}>{comparison.explanation}</span>:null}
  </span>;

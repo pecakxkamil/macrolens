@@ -8,7 +8,7 @@ const ranges = [1, 3, 5, 10] as const;
 type Range = typeof ranges[number];
 
 export function ChartsPage({ embedded = false }: { embedded?: boolean } = {}) {
-  const Heading = embedded ? "h2" : "h1";
+  const Page = embedded ? "section" : "main";
   const [domain, setDomain] = useState<ChartDomain>("labor");
   const [range, setRange] = useState<Range>(3);
   const [results, setResults] = useState<Record<string, HistoryResult>>({});
@@ -36,15 +36,8 @@ export function ChartsPage({ embedded = false }: { embedded?: boolean } = {}) {
   }, [domain, range]);
 
   return (
-    <main className="charts-page">
-      <header className="charts-header">
-        <p className="eyebrow">{tText("MacroLens")}</p>
-        <Heading>{tText("Historical Charts")}</Heading>
-        <p className="subtitle">{tText("Explore how key US macroeconomic indicators have evolved over time.")}</p>
-      </header>
-      <div className="charts-notice">
-        <strong>{tText("Current-vintage history.")}</strong> {tText(" Historical observations use the latest stored values and may include revisions. This is not point-in-time historical reconstruction.")}<span>{tText("No trading signals.")}</span>
-      </div>
+    <Page className="charts-page" aria-label={tLabel("Curated charts")}>
+      {!embedded?<header className="charts-header"><h1>{tText("Historical Charts")}</h1></header>:null}
       <div className="charts-controls">
         <div className="charts-domain-tabs" role="group" aria-label={tLabel("Chart domain")}>
           {chartDomains.map((item) => <button key={item.id} type="button" aria-pressed={domain === item.id} className={domain === item.id ? "is-active" : ""} onClick={() => setDomain(item.id)}>{tText(item.label)}</button>)}
@@ -54,6 +47,6 @@ export function ChartsPage({ embedded = false }: { embedded?: boolean } = {}) {
         </div>
       </div>
       <div className="charts-grid">{definitions.map((definition) => <ChartCard key={definition.id} definition={definition} results={results} />)}</div>
-    </main>
+    </Page>
   );
 }

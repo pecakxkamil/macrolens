@@ -51,7 +51,7 @@ test.each([
   ["#/state", "Gospodarka USA"],
   ["#/macro-index", "Indeks warunków makroekonomicznych"],
   ["#/market-comparison", "Analiza makro i rynku"],
-  ["#/charts", "Wykresy historyczne"],
+  ["#/charts", "Eksploracja danych"],
   ["#/indicators", "Wskaźniki"],
   ["#/calendar", "Kalendarz"],
   ["#/relationships", "Por\u00f3wnaj dane"],
@@ -66,7 +66,7 @@ test.each([
 
 test("switch preserves the selected range and route without another request", async () => {
   const fetch = offline(); window.location.hash = "#/charts"; render(<App />);
-  await screen.findByRole("heading", { name: "Historical Charts" });
+  await screen.findByRole("region", { name: "Curated charts" });
   fireEvent.click(screen.getByRole("button", { name: "1Y" }));
   await waitFor(() => expect(screen.getByRole("button", { name: "1Y" })).toHaveAttribute("aria-pressed", "true"));
   const count = fetch.mock.calls.length;

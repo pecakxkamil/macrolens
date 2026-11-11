@@ -57,11 +57,12 @@ afterEach(() => {
 });
 
 describe("Indicator Explorer", () => {
-  test("top navigation opens Indicators and the catalog loads", async () => {
+  test("top navigation opens charts, then Data sets loads the catalog", async () => {
     mockApi();
     window.location.hash = "#/";
     render(<App />);
     fireEvent.click(screen.getByRole("link", { name: "Explore Data" }));
+    fireEvent.click(await screen.findByRole("link", { name: "Data sets" }));
     expect(await screen.findByRole("heading", { name: "Indicators" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Explore Data" })).toHaveAttribute("aria-current", "page");
     expect(await screen.findByRole("link", { name: /UNRATE Unemployment Rate/ })).toBeInTheDocument();

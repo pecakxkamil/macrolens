@@ -23,6 +23,7 @@ test.each(["en","pl"] as const)("partial check keeps its Warsaw timestamp withou
   expect(status.querySelector("time")).toHaveAttribute("dateTime","2026-10-23T10:30:00Z");
   expect(status.querySelector("button")).toBeNull();
   expect(status.querySelector('[role="tooltip"]')).toBeNull();
+  expect(status.querySelector('details')).toBeNull();
   expect(fetch).not.toHaveBeenCalled();
 });
 
@@ -45,12 +46,14 @@ test("Warsaw DST formatting uses the timestamp's actual timezone offset",()=>{
  expect(document.querySelector(".overview-source-check time")).toHaveTextContent("11:30 (Europe/Warsaw)");
 });
 
-test.each(["en","pl"] as const)("errors never claim complete coverage and details retain missing source scope in %s",language=>{
+test.each(["en","pl"] as const)("errors never claim complete coverage or show check details in %s",language=>{
  setLanguage(language);const checks=metadata();checks.status="complete";
  render(<SourceCheckStatus checks={checks} refresh={{status:"partial",results:[{resource:"ism:services",status:"error",error_code:"latest_publication_not_verified",manual_import_available:true}]}}/>);
  const status=document.querySelector('[role="status"]')!;
  expect(status).toHaveTextContent(language==="pl"?"Nie uda\u0142o si\u0119 sprawdzi\u0107 cz\u0119\u015bci \u017ar\u00f3de\u0142":"Unable to check some sources");
- expect(document.querySelector("details")).not.toHaveAttribute("open");expect(document.querySelector("details")).toHaveTextContent("ism:services");
+ expect(document.querySelector("details")).toBeNull();
+ const report=availabilityReportDetails({source_checks:checks,refresh:{status:"partial",results:[{resource:"ism:services",status:"error",error_code:"latest_publication_not_verified",manual_import_available:true}]}} as EconomyBriefResponse).join('\n');
+ expect(report).toContain("ism:services");expect(report).toContain("latest_publication_not_verified");
 });
 
 function scopedMetadata(displayedMissing=false,fetchFailed=false):Checks {
@@ -62,13 +65,10 @@ function scopedMetadata(displayedMissing=false,fetchFailed=false):Checks {
 }
 const partialJob={status:"partial" as const,results:[{resource:"fed:calendar",status:"partial",missing_times:["2027-01-27"]}]};
 
-test.each(["en","pl"] as const)("distant incomplete FOMC schedule stays in details and report without lowering Overview in %s",language=>{
+test.each(["en","pl"] as const)("distant incomplete FOMC schedule stays in the report without lowering Overview in %s",language=>{
  setLanguage(language);const checks=scopedMetadata();render(<SourceCheckStatus checks={checks} refresh={partialJob}/>);
  expect(document.querySelector('[role="status"]')).toHaveTextContent(language==="pl"?"\u0179r\u00f3d\u0142a sprawdzono:":"Sources checked:");
- const details=document.querySelector('details')!;
- expect(details).toHaveTextContent("2027-01-27");expect(details).toHaveTextContent(language==="pl"?"Kompletno\u015b\u0107 przysz\u0142ego harmonogramu":"Future schedule completeness");
- expect(details).toHaveTextContent(language==="pl"?"Harmonogram niepe\u0142ny":"Incomplete schedule");
- expect(details).not.toHaveTextContent(language==="pl"?"Niezweryfikowane \u017ar\u00f3d\u0142a":"Unverified sources");
+ expect(document.querySelector('details')).toBeNull();
  const report=availabilityReportDetails({source_checks:checks,refresh:partialJob} as EconomyBriefResponse).join('\n');
  expect(report).toContain("Overview check result: Complete check");expect(report).toContain("Future schedule completeness: Incomplete schedule");expect(report).toContain("2027-01-27");expect(report).toContain("Full refresh result: Partial check");
 });
@@ -76,7 +76,8 @@ test.each(["en","pl"] as const)("distant incomplete FOMC schedule stays in detai
 test.each(["en","pl"] as const)("unconfirmed displayed FOMC decision keeps the current scope partial in %s",language=>{
  setLanguage(language);render(<SourceCheckStatus checks={scopedMetadata(true)} refresh={partialJob}/>);
  expect(document.querySelector('[role="status"]')).toHaveTextContent(language==="pl"?"Sprawdzono cz\u0119\u015b\u0107 \u017ar\u00f3de\u0142:":"Some sources checked:");
- expect(document.querySelector('details')).toHaveTextContent("2026-10-28");
+ expect(document.querySelector('details')).toBeNull();
+ expect(availabilityReportDetails({source_checks:scopedMetadata(true),refresh:partialJob} as EconomyBriefResponse).join('\n')).toContain("2026-10-28");
 });
 
 test.each(["en","pl"] as const)("displayed source fetch failure is an error rather than an unpublished time in %s",language=>{

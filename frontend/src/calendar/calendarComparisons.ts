@@ -1,9 +1,10 @@
 import type {CalendarMeasure} from '../api/macrolens';
 import {getLanguage,getLocale} from '../i18n/language';
 import {compactMeasureName} from './calendarPresentation';
+import {changeDirection,type ChangeDirection} from './changeDirection';
 
 type ComparisonKind='forecast'|'previous';
-export type Comparison={text:string;explanation:string;tone:'favorable'|'unfavorable'|'neutral'};
+export type Comparison={text:string;explanation:string;tone:'favorable'|'unfavorable'|'neutral';direction?:ChangeDirection};
 // Economic interpretation only. Every unlisted series/transform stays neutral.
 export const comparisonRules:Record<string,'higher'|'lower'>={
  'PAYEMS:monthly_change':'higher',
@@ -75,5 +76,5 @@ export function calendarComparison(m:CalendarMeasure,kind:ComparisonKind):Compar
  if(kind==='previous'&&m.previous_kind==='previous_estimate'&&m.revision_confirmed)explanation+=pl?' Potwierdzona rewizja.':' Confirmed revision.';
  if(kind==='previous'&&m.series_id==='DGORDER'&&m.period_provenance?.estimate_stage==='full')explanation+=pl?' Pełny raport M3 dla tego samego miesiąca; porównanie dotyczy poprzedniego miesiąca, nie wstępnego szacunku.':' Full M3 report for the same month; this compares the previous month, not the advance estimate.';
  if(m.data_version==='current_vintage'||(kind==='previous'&&m.previous_data_version==='current_vintage'))explanation+=pl?' Dane mogą zawierać późniejsze rewizje.':' Values may include later revisions.';
- return {text,explanation,tone};
+ return {text,explanation,tone,direction:changeDirection(rounded)};
 }
