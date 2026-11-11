@@ -1,0 +1,849 @@
+diff --git a/app/bls_employment_runtime.py b/app/bls_employment_runtime.py
+new file mode 100644
+--- /dev/null
++++ b/app/bls_employment_runtime.py
+@@ -0,0 +1,25 @@
++"""Subscribe to the existing Earnings clock; no browser dependency or new timer."""
++import json
++import threading
++from datetime import datetime,timezone
++from app.database.connection import get_independent_connection
++from app.ingestion import bls_employment as source
++
++BUSY=threading.Lock()
++STATE=dict(registered=False,status='awaiting_authorization',last_result=None)
++
++
++def tick(token_path,directory,cancelled=lambda:False):
++    if cancelled() or not token_path.exists() or not BUSY.acquire(False):return
++    def work():
++        try:
++            if cancelled():return
++            token=json.loads(token_path.read_text(encoding='utf-8'))
++            if token.get('version')!=3:return
++            result=source.run(get_independent_connection,token,directory)
++            STATE.update(status=result['status'],last_result=result)
++        except Exception as error:STATE.update(status='stopped',last_result=dict(error_type=type(error).__name__))
++        finally:BUSY.release()
++    from app.analytics.overview_refresh import coordinator
++    try:coordinator.launch(work)
++    except BaseException:BUSY.release();raise
+diff --git a/app/forecast_f1_runtime.py b/app/forecast_f1_runtime.py
+--- a/app/forecast_f1_runtime.py
++++ b/app/forecast_f1_runtime.py
+@@ -26,7 +26,7 @@
+  def work():
+   try:
+    token=json.loads(TOKEN.read_text(encoding='utf-8'))
+-   loaded=IMPORTED_BACKEND_ARTIFACTS if token.get('version')==2 else IMPORTED_ARTIFACTS
++   loaded=IMPORTED_BACKEND_ARTIFACTS if token.get('version') in (2,3) else IMPORTED_ARTIFACTS
+    if token['artifacts']!=loaded:raise ValueError('Loaded F1 code changed')
+    if cancelled():return
+    from app.forecast_f1_bindings import publication_events
+@@ -47,10 +47,14 @@
+  from app.earnings_monitor_runtime import lifespan as earnings_lifespan
+  stopped=threading.Event()
+  remove=coordinator.register_launch_listener('app.earnings_monitor_runtime',lambda:tick(stopped.is_set))
++ from app import bls_employment_runtime as bls_runtime
++ remove_bls=coordinator.register_launch_listener('app.earnings_monitor_runtime',lambda:bls_runtime.tick(TOKEN,activation.ROOT/'data/raw/bls-employment',stopped.is_set))
++ bls_runtime.STATE['registered']=True
+  STATE['registered']=True
+  try:
+   async with earnings_lifespan(app):
++   bls_runtime.tick(TOKEN,activation.ROOT/'data/raw/bls-employment',stopped.is_set)
+    tick(stopped.is_set)  # one controlled startup check; no additional timer
+    yield
+  finally:
+-  stopped.set();remove();STATE['registered']=False
++  stopped.set();remove();remove_bls();bls_runtime.STATE['registered']=False;STATE['registered']=False
+diff --git a/app/analytics/calendar_readings.py b/app/analytics/calendar_readings.py
+--- a/app/analytics/calendar_readings.py
++++ b/app/analytics/calendar_readings.py
+@@ -283,4 +283,7 @@
+     if any(e.get('release_id') in (53,54) for e in events):
+         from app.analytics.bea_direct import apply,load_state
+         bound=apply(bound,load_state(connection),now)
++    if any(e.get("release_id")==50 for e in events):
++        from app.ingestion.bls_employment import project
++        bound=project(bound,connection,now)
+     return bound
+diff --git a/app/analytics/overview_refresh.py b/app/analytics/overview_refresh.py
+--- a/app/analytics/overview_refresh.py
++++ b/app/analytics/overview_refresh.py
+@@ -84,8 +84,16 @@
+         validate_employment_metadata(series_id, metadata)
+         changed = (previous.get('last_updated') != metadata['last_updated']
+             or previous.get('local_signature') != local.get('signature') or previous.get('transformations') != spec)
++        release_probe = False
++        if series_id in ('PAYEMS','UNRATE','CES0500000003','CIVPART','U6RATE','AWHAETP'):
++            from app.ingestion.bls_employment import events,complete
++            pending=[e for e in events(now) if not complete(connection,e)]
++            if pending:
++                latest=connection.execute('SELECT max(observation_date) FROM observation_vintages WHERE series_id=%s',(series_id,)).fetchone()[0]
++                release_probe=latest is None or str(latest)<pending[0]['reference_period']
++        changed=changed or release_probe
+         details = {'last_updated':metadata['last_updated'], 'observation_end':metadata.get('observation_end'),
+-                   'observation_fetch_status':'fetched' if changed else 'metadata_unchanged'}
++                   'observation_fetch_status':'fetched' if changed else 'metadata_unchanged', 'release_observation_probe':release_probe}
+         if changed:
+             payload = fetch_series_observations(series_id, observation_start=local.get('start'))
+             # Full CURRENT snapshot over the stored history catches older revisions;
+diff --git a/app/database/activate_forecast_f1.py b/app/database/activate_forecast_f1.py
+--- a/app/database/activate_forecast_f1.py
++++ b/app/database/activate_forecast_f1.py
+@@ -85,6 +85,9 @@
+  return rows[0][0]
+ 
+ def authorized(c,token,check_schema=True):
++ if token.get("version")==3:
++  from app.database.forecast_f1_authorization_bls import authorized as authorize_bls
++  return authorize_bls(c,token,check_schema)
+  if token.get("version")==2:
+   from app.database.forecast_f1_authorization_v2 import authorized as authorize_v2
+   return authorize_v2(c,token,check_schema)
+diff --git a/app/database/forecast_f1_authorization_bls.py b/app/database/forecast_f1_authorization_bls.py
+new file mode 100644
+--- /dev/null
++++ b/app/database/forecast_f1_authorization_bls.py
+@@ -0,0 +1,157 @@
++"""One explicitly reviewed BLS backend upgrade, preserving the immutable V1/V2 chain."""
++import argparse
++import json
++from pathlib import Path
++from uuid import uuid5,NAMESPACE_URL
++from psycopg.types.json import Jsonb
++from psycopg import sql
++from app.database import forecast_f1_authorization_v2 as old
++from app.database import activate_forecast_f1 as legacy, activate_earnings as base, activate_earnings_financials as financial
++from app import forecast_f1 as model
++
++SOURCE='activation-bls-revision'
++LOCKS=(726530032,726530031,726530033)
++CONDITIONS=dict(version=3,ddl=False,scope='one BLS Employment Situation backend upgrade',
++    writes='one authorization revision, one reviewed BLS document, one non-HTTP seed receipt',forecast_import=False,
++    previous='exactly one complete V2 UI revision',runtime='verified separate token; no normal auto-upgrade')
++
++
++def predecessor(c):
++    rows=old.revisions(c)
++    if len(rows)!=1:raise ValueError('Exactly one complete V2 predecessor required')
++    p=rows[0]['plan'];root=old.root_policy(c)
++    if p['version']!=2 or p['revision']!=1 or p['original_policy']!=root:raise ValueError('Foreign predecessor/root')
++    h=p['historical_plan'];policy=root['detail']
++    if (model.digest(h)!=p['previous_plan_sha256'] or policy['plan_sha256']!=p['previous_plan_sha256']
++        or h['artifacts']!=policy['artifacts'] or h['target']!=policy['target']
++        or p['dispatch']!=legacy.policy() or p['dispatch']!=h['dispatch'] or policy['dispatch']!=p['dispatch']
++        or p['reference_data']!=policy['reference_data'] or p['reference_data']!=h['reference_data']
++        or model.digest(p['schema'])!=policy['schema_sha256'] or h['reference']['after']!=p['schema']
++        or h['ledger']['records']!=legacy.seed()):raise ValueError('Invalid immutable historical chain')
++    return rows[0]
++
++
++def revision(c):
++    return c.execute('SELECT check_id,outcome,detail FROM forecast_refresh_checks WHERE source_id=%s',(SOURCE,)).fetchall()
++
++
++def token_for(p):return dict(version=3,plan_sha256=model.digest(p),target=p['target'],artifacts=p['artifacts'])
++
++
++def validate_seed(c,seed):
++    import hashlib
++    from datetime import datetime,timedelta,timezone
++    from app.ingestion import bls_employment as source
++    from app.database.connection import shared_connection
++    if set(seed)!={'id','source','kind','source_url','retrieved_at','http_status','raw_hash','raw_path','metadata'}:raise ValueError('Incomplete reviewed snapshot')
++    meta=seed['metadata'];raw=meta['raw_utf8'].encode('utf-8');event=meta['event']
++    if (seed['source']!=source.SOURCE or seed['kind']!='employment-batch' or seed['source_url']!=source.URL or seed['http_status']!=200
++        or hashlib.sha256(raw).hexdigest()!=seed['raw_hash'] or Path(seed['raw_path']).read_bytes()!=raw
++        or meta['contract']!=json.loads(json.dumps(source.POLICY)) or source.parse(raw,event['reference_period'])!=meta['readings']):raise ValueError('Unverified BLS snapshot')
++    stamp=source.instant(seed['retrieved_at']);scheduled=source.instant(event['scheduled_at'])
++    if not scheduled<=stamp<=datetime.now(timezone.utc):raise ValueError('BLS capture precedes release or is in future')
++    expected=uuid5(NAMESPACE_URL,source.SOURCE+':'+event['release_date']+':'+event['reference_period']+':'+seed['raw_hash'])
++    if str(expected)!=seed['id']:raise ValueError('Wrong BLS document identity')
++    with shared_connection(c):eligible=source.events(scheduled+timedelta(seconds=1))
++    if not any(all(e.get(k)==event.get(k) for k in ('release_id','release_date','reference_period','scheduled_at')) for e in eligible):raise ValueError('BLS seed schedule or period changed')
++
++
++def stored_seed(c,p):
++    seed=p['seed'];row=c.execute('SELECT id::text,source,kind,source_url,retrieved_at,http_status,raw_hash,raw_path,metadata FROM publisher_documents WHERE id=%s',(seed['id'],)).fetchone()
++    if not row:raise ValueError('Reviewed BLS seed missing')
++    actual=dict(zip(('id','source','kind','source_url','retrieved_at','http_status','raw_hash','raw_path','metadata'),row));actual['retrieved_at']=row[4].isoformat()
++    if actual!=seed:raise ValueError('Reviewed BLS document changed')
++
++
++def check(c,p):
++    from app.ingestion.bls_employment import POLICY
++    keys={'version','ready_for_apply','target','predecessor','artifacts','schema','references','dispatch','bls_policy','protected','delivery','conditions','seed'}
++    if set(p)!=keys or p['version']!=3 or p['ready_for_apply'] is not True or p['conditions']!=CONDITIONS:raise ValueError('Invalid BLS upgrade plan')
++    if p['artifacts']!=old.artifacts() or p['bls_policy']!=json.loads(json.dumps(POLICY)) or p['dispatch']!=legacy.policy():raise ValueError('Frozen backend/source policy changed')
++    if not 170000<=c.info.server_version<180000 or base.target_identity(c)!=p['target']:raise ValueError('Exact PG17 target required')
++    validate_seed(c,p['seed'])
++    pred=predecessor(c)
++    if pred!=p['predecessor'] or p['schema']!=pred['plan']['schema'] or p['references']!=pred['plan']['reference_data']:raise ValueError('Broken predecessor continuity')
++    if legacy.schema_state(c)!=p['schema'] or legacy.reference_data(c)!=p['references']:raise ValueError('Schema or critical reference changed')
++    old_target=pred['plan']['target'];new=p['target']
++    if new!=old_target and not(new['host'] in ('localhost','127.0.0.1') and new['port']!=5432 and new['user']=='macrolens_ci' and new['database'].startswith('macrolens_forecast_f1_ui_')):raise ValueError('Only own clone may retain original predecessor identity')
++
++
++def prepare(c,delivery,backup,seed):
++    from app.ingestion.bls_employment import POLICY
++    with c.transaction():
++        c.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
++        p=dict(version=3,ready_for_apply=True,target=base.target_identity(c),predecessor=predecessor(c),artifacts=old.artifacts(),
++            schema=legacy.schema_state(c),references=legacy.reference_data(c),dispatch=legacy.policy(),bls_policy=json.loads(json.dumps(POLICY)),
++            protected=financial.table_snapshots(c,model.TABLES),delivery=delivery,conditions=CONDITIONS,seed=seed)
++        check(c,p);financial.check_backup(backup,p['target'])
++        if any(backup['source_snapshots'].get(t)!=v for t,v in p['protected'].items()):raise ValueError('Backup protected state differs')
++        if revision(c):raise ValueError('Upgrade exists: verify, never silently prepare a new plan')
++    return p
++
++
++def authorized(c,t,check_schema=True):
++    if set(t)!={'version','plan_sha256','target','artifacts'} or t['version']!=3:raise ValueError('BLS requires separately approved version-3 token')
++    rows=revision(c)
++    if len(rows)!=1:raise ValueError('One complete BLS authorization revision required')
++    identifier,outcome,detail=rows[0]
++    if set(detail)!={'plan','plan_sha256'} or model.digest(detail['plan'])!=detail['plan_sha256'] or outcome!='success':raise ValueError('Invalid BLS authorization receipt')
++    if str(identifier)!=str(uuid5(NAMESPACE_URL,'f1-bls-upgrade:'+detail['plan_sha256'])) or t!=token_for(detail['plan']):raise ValueError('Foreign or stale token')
++    check(c,detail['plan']);stored_seed(c,detail['plan']);return detail['plan']
++
++
++def apply(c,p,target_confirmation,hash_confirmation,backup,fail_after_insert=False):
++    if target_confirmation!=base.target_label(p['target']) or hash_confirmation!=model.digest(p):raise ValueError('Separate exact target/hash approval required')
++    financial.check_backup(backup,p['target'])
++    with c.transaction():
++        c.execute('SET TRANSACTION ISOLATION LEVEL READ COMMITTED READ WRITE')
++        c.execute("SET LOCAL lock_timeout='5s'");c.execute("SET LOCAL statement_timeout='120s'")
++        for lock in LOCKS:
++            if not c.execute('SELECT pg_try_advisory_xact_lock(%s)',(lock,)).fetchone()[0]:raise ValueError('Concurrent upgrade/worker')
++        c.execute(sql.SQL('LOCK TABLE {} IN SHARE MODE').format(sql.SQL(',').join(sql.Identifier(t) for t in (*legacy.REF_TABLES,*legacy.MACRO_REF_TABLES,'forecast_vintages','forecast_freezes'))))
++        c.execute('LOCK TABLE forecast_refresh_checks IN SHARE ROW EXCLUSIVE MODE');check(c,p)
++        if revision(c):
++            authorized(c,token_for(p));return dict(outcome='already_initialized',plan_sha256=hash_confirmation)
++        if financial.table_snapshots(c,model.TABLES)!=p['protected']:raise ValueError('Protected data changed since prepare')
++        seed=p['seed']
++        c.execute('INSERT INTO publisher_documents(id,source,kind,source_url,retrieved_at,http_status,raw_hash,raw_path,metadata) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)',
++            (seed['id'],seed['source'],seed['kind'],seed['source_url'],seed['retrieved_at'],seed['http_status'],seed['raw_hash'],seed['raw_path'],Jsonb(seed['metadata'])))
++        from app.ingestion.bls_employment import SOURCE as BLS_SOURCE
++        c.execute("INSERT INTO source_check_runs(id,resource,attempted_at,finished_at,status,scope) VALUES(%s,%s,clock_timestamp(),clock_timestamp(),'success',%s)",
++            (uuid5(NAMESPACE_URL,'bls-reviewed-seed:'+hash_confirmation),BLS_SOURCE+':seed',Jsonb(dict(phase='reviewed_snapshot_import_not_new_http',raw_hash=seed['raw_hash'],original_captured_at=seed['retrieved_at'],plan_sha256=hash_confirmation))))
++        c.execute("INSERT INTO forecast_refresh_checks(check_id,source_id,outcome,retry_at,detail) VALUES(%s,%s,'success','2099-01-01',%s)",
++            (uuid5(NAMESPACE_URL,'f1-bls-upgrade:'+hash_confirmation),SOURCE,Jsonb(dict(plan=p,plan_sha256=hash_confirmation))))
++        if fail_after_insert:c.execute('SELECT 1/0')
++        authorized(c,token_for(p))
++    return dict(outcome='created',plan_sha256=hash_confirmation)
++
++
++def verify(c,p):
++    with c.transaction():
++        c.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
++        authorized(c,token_for(p))
++        protected=financial.table_snapshots(c,('forecast_vintages','forecast_freezes'))
++        if any(v!=p['protected'][k] for k,v in protected.items()):raise ValueError('Forecast data changed during cutover')
++    return dict(outcome='verified',plan_sha256=model.digest(p),runtime_token=token_for(p))
++
++
++def main():
++    from app.database.connection import get_independent_connection
++    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('command',choices=['prepare','plan','apply','verify'])
++    for a in ('plan','delivery','backup','out','seed'):parser.add_argument('--'+a,type=Path)
++    parser.add_argument('--confirm-target');parser.add_argument('--confirm-plan');a=parser.parse_args()
++    if not a.out or a.out.exists():raise ValueError('New output required')
++    read=lambda p:json.loads(p.read_text(encoding='utf-8'))
++    with get_independent_connection() as c:
++        c.read_only=a.command!='apply'
++        if a.command=='prepare':result=prepare(c,read(a.delivery),read(a.backup),read(a.seed))
++        else:
++            p=read(a.plan)
++            if a.command=='plan':
++                result=prepare(c,p['delivery'],read(a.backup),p['seed'])
++                if result!=p:raise ValueError('Plan changed')
++            elif a.command=='apply':result=apply(c,p,a.confirm_target,a.confirm_plan,read(a.backup))
++            else:result=verify(c,p)
++    a.out.write_text(json.dumps(result,indent=2),encoding='utf-8');print(model.digest(result) if a.command in ('prepare','plan') else result['outcome'])
++
++if __name__=='__main__':main()
+diff --git a/app/database/install_bls_reviewed.py b/app/database/install_bls_reviewed.py
+new file mode 100644
+--- /dev/null
++++ b/app/database/install_bls_reviewed.py
+@@ -0,0 +1,53 @@
++"""Install exact approved delivery after DB revision verify; no database writes.
++
++Use only during the agreed service window. Never stops a process itself.
++Existing token and old bytes are retained in the owned deployment archive.
++"""
++import argparse,hashlib,json,os,socket,tempfile
++from pathlib import Path
++
++def digest(value):return hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':'),ensure_ascii=True).encode()).hexdigest()
++def filehash(p):return hashlib.sha256(p.read_bytes()).hexdigest() if p.exists() else None
++def main():
++ parser=argparse.ArgumentParser(description=__doc__)
++ for name in ('root','source','plan','receipt','archive'):parser.add_argument('--'+name,type=Path,required=True)
++ parser.add_argument('--confirm-plan',required=True);args=parser.parse_args()
++ root=args.root.resolve();source=args.source.resolve();archive=args.archive.resolve()
++ plan=json.loads(args.plan.read_text(encoding='utf-8'));receipt=json.loads(args.receipt.read_text(encoding='utf-8'))
++ if digest(plan)!=args.confirm_plan or receipt['outcome']!='verified' or receipt['plan_sha256']!=args.confirm_plan:raise ValueError('Verified approved revision required')
++ token=receipt['runtime_token']
++ if token['target']!=plan['target'] or token['artifacts']!=plan['artifacts'] or token.get('version')!=3 or token['plan_sha256']!=args.confirm_plan:raise ValueError('Wrong runtime token')
++ if root==Path('C:/Projects/macrolens').resolve():
++  for port in (8000,5173):
++   with socket.socket() as probe:
++    if probe.connect_ex(('127.0.0.1',port))==0:raise ValueError('Normal API/Vite must be stopped in the agreed window')
++ if root==source or archive==root or root in archive.parents and 'data' not in archive.relative_to(root).parts:raise ValueError('Unsafe deployment archive')
++ for item in plan['delivery']:
++  rel=Path(item['path'])
++  if rel.is_absolute() or '..' in rel.parts:raise ValueError('Unsafe delivery path')
++  if filehash(source/rel)!=item['after'] or filehash(root/rel) not in (item['before'],item['after']):raise ValueError('Delivery/source base changed: '+str(rel))
++ archive.mkdir(parents=True,exist_ok=True)
++ for item in plan['delivery']:
++  rel=Path(item['path']);dest=root/rel;old=archive/'before'/rel
++  if dest.exists() and filehash(dest)!=item['after']:
++   old.parent.mkdir(parents=True,exist_ok=True)
++   if old.exists():
++    if filehash(old)!=item['before']:raise ValueError('Deployment archive conflict')
++   else:
++    with old.open('xb') as stream:stream.write(dest.read_bytes())
++  dest.parent.mkdir(parents=True,exist_ok=True)
++  with tempfile.NamedTemporaryFile(dir=dest.parent,delete=False) as stream:
++   stream.write((source/rel).read_bytes());temp=stream.name
++  os.replace(temp,dest)
++ tokenpath=root/'data/raw/forecast-f1/activation.json'
++ tokenpath.parent.mkdir(parents=True,exist_ok=True)
++ if tokenpath.exists():
++  old=archive/'original-runtime-token.json'
++  if not old.exists():
++   with old.open('xb') as stream:stream.write(tokenpath.read_bytes())
++ with tempfile.NamedTemporaryFile(dir=tokenpath.parent,delete=False) as stream:
++  stream.write(json.dumps(token,indent=2).encode());temp=stream.name
++ os.replace(temp,tokenpath)
++ print('Exact delivery and verified BLS V3 token installed; services remain stopped')
++
++if __name__=='__main__':main()
+diff --git a/app/ingestion/bls_employment.py b/app/ingestion/bls_employment.py
+new file mode 100644
+--- /dev/null
++++ b/app/ingestion/bls_employment.py
+@@ -0,0 +1,230 @@
++"""Bounded BLS Employment Situation batches. No schema initialization or GET writes."""
++import hashlib
++import json
++from datetime import date, datetime, timedelta, timezone
++from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
++from email.utils import parsedate_to_datetime
++from pathlib import Path
++from uuid import uuid4, uuid5, NAMESPACE_URL
++
++import httpx
++from psycopg.types.json import Jsonb
++
++URL = 'https://api.bls.gov/publicAPI/v2/timeseries/data/'
++SOURCE = 'bls:employment'
++LOCK = 726530033
++MAX_BYTES = 2 * 1024 * 1024
++CONTRACT = {
++    'PAYEMS': ('CES0000000001', 'monthly_change', 'thousand jobs', 'thousands of persons'),
++    'UNRATE': ('LNS14000000', 'raw', 'percent', 'percent'),
++    'CES0500000003': ('CES0500000003', 'mom', 'percent', 'dollars per hour'),
++    'CIVPART': ('LNS11300000', 'raw', 'percent', 'percent'),
++    'U6RATE': ('LNS13327709', 'raw', 'percent', 'percent'),
++    'AWHAETP': ('CES0500000002', 'raw', 'hours', 'hours'),
++}
++POLICY = dict(release_id=50, source=SOURCE, url=URL, series=CONTRACT,
++              interval_seconds=900, window_seconds=7200, rolling_daily_calls=8,
++              timeout_seconds=25, max_bytes=MAX_BYTES, seasonal_adjustment='SA',
++              storage='publisher_documents only; never overwrite FRED/ALFRED',
++              publication_precision='scheduled release; availability is HTTP capture, not proven first print')
++
++
++def instant(value):
++    return datetime.fromisoformat(str(value).replace('Z', '+00:00'))
++
++
++def parse(raw, period):
++    payload = json.loads(raw)
++    observed = date.fromisoformat(period)
++    if observed.day != 1 or payload.get('status') != 'REQUEST_SUCCEEDED':
++        raise ValueError('Unconfirmed BLS response/period')
++    rows = payload.get('Results', {}).get('series', [])
++    expected = {v[0] for v in CONTRACT.values()}
++    if len(rows) != 6 or {r.get('seriesID') for r in rows} != expected:
++        raise ValueError('Missing, duplicated or unexpected BLS series')
++    result = {}; previous = (observed-timedelta(days=1)).replace(day=1)
++    earlier = (previous-timedelta(days=1)).replace(day=1)
++    for sid, (bls, feature, unit, input_unit) in CONTRACT.items():
++        series = next(r for r in rows if r['seriesID'] == bls)
++        if series.get('seasonal_adjustment', 'SA') != 'SA' or series.get('unit', input_unit) != input_unit:
++            raise ValueError('BLS basis differs from reviewed series contract')
++        points = {}
++        for row in series['data']:
++            code = row.get('period', '')
++            if code == 'M13': continue
++            if len(code) != 3 or code[0] != 'M' or not code[1:].isdigit() or not 1 <= int(code[1:]) <= 12:
++                raise ValueError('Invalid monthly BLS observation')
++            key = str(date(int(row['year']), int(code[1:]), 1))
++            try: value = Decimal(row['value'])
++            except (InvalidOperation, TypeError): raise ValueError('Invalid BLS number') from None
++            if key in points or not value.is_finite() or value < 0 or (unit == 'percent' and feature == 'raw' and value > 100):
++                raise ValueError('Invalid/duplicate BLS level')
++            points[key] = dict(value=str(value), footnotes=row.get('footnotes', []))
++        required = [str(observed), str(previous)] + ([str(earlier)] if feature != 'raw' else [])
++        if any(p not in points for p in required): raise ValueError('Incomplete BLS transformation dependencies')
++        def value(p): return Decimal(points[str(p)]['value'])
++        current, prior = value(observed), value(previous)
++        method = 'published SA level'; unrounded = None
++        if feature == 'monthly_change':
++            current, prior = current-prior, prior-value(earlier)
++            method = 'difference of same-document SA payroll levels'
++        if feature == 'mom':
++            if not prior or not value(earlier): raise ValueError('Zero wage denominator')
++            unrounded = (current/prior-1)*100
++            current = unrounded.quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)
++            prior = ((prior/value(earlier)-1)*100).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)
++            method = 'derived MoM from published SA dollar levels; rounded 1 decimal'
++        trend={}
++        for key in sorted(points):
++            previous_key=str((date.fromisoformat(key)-timedelta(days=1)).replace(day=1))
++            n=Decimal(points[key]['value'])
++            if feature!='raw':
++                if previous_key not in points:continue
++                denominator=Decimal(points[previous_key]['value'])
++                if feature=='monthly_change':n-=denominator
++                elif denominator:n=((n/denominator-1)*100).quantize(Decimal('0.1'),rounding=ROUND_HALF_UP)
++                else:continue
++            trend[key]=str(n)
++        result[sid] = dict(series_id=sid, bls_series_id=bls, feature_name=feature, unit=unit,
++            input_unit=input_unit, seasonal_adjustment='SA', actual=str(current), previous=str(prior),
++            reference_period=period, previous_period=str(previous), method=method,
++            unrounded_actual=str(unrounded) if unrounded is not None else None,
++            inputs={p:points[p] for p in required}, history=points, trend=trend)
++    return result
++
++
++def events(now):
++    from app.analytics.release_calendar import list_calendar_events
++    from app.analytics.calendar_evidence import read_evidence, period_evidence
++    from app.analytics.employment_measures import expand_employment_evidence
++    evidence = expand_employment_evidence(read_evidence()); result = []
++    for e in list_calendar_events(now.date()-timedelta(days=1), now.date())['events']:
++        if e.get('release_id') != 50 or not e.get('release_datetime_utc'): continue
++        schedule = instant(e['release_datetime_utc'])
++        if not schedule <= now < schedule+timedelta(seconds=POLICY['window_seconds']): continue
++        proofs = [period_evidence(evidence,50,str(e['release_date']),sid) for sid in CONTRACT]
++        if not all(p and p.get('source_url','').startswith('https://www.bls.gov/') for p in proofs): continue
++        periods = {p['reference_period'] for p in proofs}
++        if len(periods) != 1: continue
++        period = periods.pop()
++        if date.fromisoformat(period) >= schedule.date(): continue
++        result.append(dict(release_id=50, release_date=str(e['release_date']), reference_period=period,
++            scheduled_at=schedule.isoformat(), schedule_proofs=proofs))
++    return result
++
++
++def documents(c):
++    result=[]
++    for i,url,stamp,sha,meta in c.execute("SELECT id,source_url,retrieved_at,raw_hash,metadata FROM publisher_documents WHERE source=%s AND kind='employment-batch' ORDER BY retrieved_at,id",(SOURCE,)):
++        try:
++            raw=meta['raw_utf8'].encode('utf-8')
++            if url!=URL or hashlib.sha256(raw).hexdigest()!=sha or meta['contract']!=json.loads(json.dumps(POLICY)):continue
++            if parse(raw,meta['event']['reference_period'])!=meta['readings']:continue
++        except (ValueError,KeyError,TypeError):continue
++        result.append(dict(id=str(i),source_url=url,retrieved_at=stamp,raw_hash=sha,metadata=meta))
++    return result
++
++
++def complete(c, event):
++    return any(all(d['metadata']['event'].get(k)==event.get(k) for k in ('release_id','release_date','reference_period','scheduled_at')) and d['metadata'].get('readings') for d in documents(c))
++
++
++def retry_after(value, now):
++    try: return now+timedelta(seconds=max(0,int(value)))
++    except (ValueError,TypeError):
++        try: return parsedate_to_datetime(value).astimezone(timezone.utc)
++        except (ValueError,TypeError,OverflowError): return now+timedelta(hours=24)
++
++
++def fetch(client, event):
++    period = date.fromisoformat(event['reference_period'])
++    first = (period-timedelta(days=62)).year
++    request = dict(seriesid=[v[0] for v in CONTRACT.values()],startyear=str(first),endyear=str(period.year))
++    with client.stream('POST',URL,json=request) as response:
++        # No redirects, key, HTML fallback, identity rotation or immediate retries.
++        if response.status_code != 200:
++            return None, request, response.status_code, response.headers.get('Retry-After')
++        chunks=[];size=0
++        for chunk in response.iter_bytes():
++            size+=len(chunk)
++            if size>MAX_BYTES: raise ValueError('BLS response too large')
++            chunks.append(chunk)
++        return b''.join(chunks),request,200,None
++
++
++def run(factory, token, directory, now=None, client=None, events_loader=events, crash_after_claim=False):
++    from app.database.forecast_f1_authorization_bls import authorized
++    now = now or datetime.now(timezone.utc)
++    with factory() as c:
++        c.read_only=True; authorized(c,token)
++        candidates=events_loader(now)
++    if not candidates: return dict(status='outside_release_window',added=0)
++    with factory() as c:
++        c.autocommit=True
++        if not c.execute('SELECT pg_try_advisory_lock(%s)',(LOCK,)).fetchone()[0]: return dict(status='busy',added=0)
++        try:
++            event=candidates[0]; key=event['release_date']+':'+event['reference_period']
++            if complete(c,event): return dict(status='complete',added=0)
++            # The independent durable row counts errors/interrupted calls too.
++            rows=c.execute("SELECT attempted_at,scope FROM source_check_runs WHERE resource=%s AND (attempted_at>%s OR (scope->>'retry_at')::timestamptz>%s) ORDER BY attempted_at DESC",(SOURCE,now-timedelta(days=1),now)).fetchall()
++            deadlines=[instant(r[1]['retry_at']) for r in rows if r[1].get('retry_at')]
++            if sum(r[0]>now-timedelta(days=1) for r in rows)>=POLICY['rolling_daily_calls']: return dict(status='daily_limit',added=0)
++            if deadlines and max(deadlines)>now: return dict(status='cooldown',added=0)
++            claim=uuid4(); scope=dict(event=event,key=key,retry_at=(now+timedelta(minutes=15)).isoformat(),phase='claimed_before_http')
++            c.execute("INSERT INTO source_check_runs(id,resource,attempted_at,status,scope) VALUES(%s,%s,%s,'running',%s)",(claim,SOURCE,now,Jsonb(scope)))
++            if crash_after_claim: raise RuntimeError('Injected crash after durable claim')
++            owned=client is None
++            if owned: client=httpx.Client(timeout=25,follow_redirects=False)
++            try:
++                raw,request,status,retry=fetch(client,event)
++                captured=datetime.now(timezone.utc)
++                if status!=200:
++                    until=max(captured+timedelta(minutes=15),retry_after(retry,captured) if retry else captured+timedelta(hours=24))
++                    scope.update(retry_at=until.isoformat(),http_status=status,phase='http_refused')
++                    c.execute("UPDATE source_check_runs SET finished_at=%s,status='error',error_code='bls_http_refused',scope=%s WHERE id=%s",(captured,Jsonb(scope),claim))
++                    return dict(status='http_refused',added=0)
++                readings=parse(raw,event['reference_period']);sha=hashlib.sha256(raw).hexdigest()
++                # Original bytes are immutable; a database failure can leave an unreferenced RAW, not a fake SQL receipt.
++                directory=Path(directory);directory.mkdir(parents=True,exist_ok=True);path=directory/(sha+'.json')
++                if path.exists():
++                    if path.read_bytes()!=raw: raise ValueError('RAW fingerprint conflict')
++                else:
++                    with path.open('xb') as f:f.write(raw)
++                meta=dict(version=1,event=event,readings=readings,request=request,contract=POLICY,raw_utf8=raw.decode('utf-8'),
++                          source='BLS Public API',availability='current_at_capture; not proven first print')
++                identifier=uuid5(NAMESPACE_URL,SOURCE+':'+key+':'+sha)
++                with c.transaction():
++                    authorized(c,token)
++                    c.execute("INSERT INTO publisher_documents(id,source,kind,source_url,retrieved_at,http_status,raw_hash,raw_path,metadata) VALUES(%s,%s,'employment-batch',%s,%s,200,%s,%s,%s) ON CONFLICT(source,kind,raw_hash) DO NOTHING",(identifier,SOURCE,URL,captured,sha,str(path),Jsonb(meta)))
++                    scope.update(phase='stored',raw_hash=sha,document_id=str(identifier),http_status=200)
++                    c.execute("UPDATE source_check_runs SET finished_at=%s,status='success',scope=%s WHERE id=%s",(captured,Jsonb(scope),claim))
++                return dict(status='complete',added=1,raw_hash=sha)
++            except Exception:
++                c.execute("UPDATE source_check_runs SET finished_at=clock_timestamp(),status='error',error_code='bls_unconfirmed' WHERE id=%s",(claim,))
++                raise
++            finally:
++                if owned:client.close()
++        finally:c.execute('SELECT pg_advisory_unlock(%s)',(LOCK,))
++
++
++def project(events, c, now):
++    docs=documents(c)
++    for event in events:
++        if event.get('release_id')!=50:continue
++        matching=[d for d in docs if d['retrieved_at']<=now and d['metadata']['event']['release_date']==str(event['release_date'])
++                  and instant(d['metadata']['event']['scheduled_at'])<=now]
++        if not matching:continue
++        doc=matching[-1];meta=doc['metadata']
++        for m in event.get('measures',[]):
++            row=meta['readings'].get(m['series_id'])
++            if not row or m['feature_name']!=row['feature_name'] or m.get('unit')!=row['unit'] or m.get('reference_period')!=row['reference_period']:continue
++            original={k:m.get(k) for k in ('actual','previous','actual_provenance','previous_provenance','data_version')}
++            proof=dict(source=SOURCE,source_url=URL,document_id=doc['id'],raw_hash=doc['raw_hash'],retrieved_at=doc['retrieved_at'].isoformat(),
++                observation_period=row['reference_period'],version='captured_snapshot',method=row['method'],unit=row['unit'],
++                inputs=row['inputs'],publication_precision='capture',first_print=False)
++            m.update(actual=float(row['actual']),previous=float(row['previous']),data_version='official_release',previous_data_version='official_release',
++                previous_period=row['previous_period'],previous_kind='previous_period',source_url=URL,selected_source=SOURCE,
++                result_status='available',actual_provenance=proof,previous_provenance={**proof,'observation_period':row['previous_period'],'version':'revised_same_capture'},
++                result_provenance=proof,fred_alternative=original,comparison_status='same_bls_capture',revision_confirmed=original['previous'] is not None and Decimal(row['previous'])!=Decimal(str(original['previous'])),
++                missing_reason={'actual':None,'previous':None},bls_history=row['trend'],bls_method=row['method'],seasonal_adjustment='SA')
++    return events
+diff --git a/config/forecast_f1_runtime_manifest_v2.json b/config/forecast_f1_runtime_manifest_v2.json
+--- a/config/forecast_f1_runtime_manifest_v2.json
++++ b/config/forecast_f1_runtime_manifest_v2.json
+@@ -54,6 +54,7 @@
+     "app/api/__init__.py",
+     "app/api/earnings.py",
+     "app/api/main.py",
++    "app/bls_employment_runtime.py",
+     "app/database/__init__.py",
+     "app/database/activate_earnings.py",
+     "app/database/activate_earnings_coverage.py",
+@@ -73,10 +74,12 @@
+     "app/database/earnings_monitor_schema.sql",
+     "app/database/earnings_report_schema.sql",
+     "app/database/earnings_schema.sql",
++    "app/database/forecast_f1_authorization_bls.py",
+     "app/database/forecast_f1_authorization_v2.py",
+     "app/database/forecast_f1_schema.sql",
+     "app/database/init_db.py",
+     "app/database/init_earnings_db.py",
++    "app/database/install_bls_reviewed.py",
+     "app/database/overview_refresh.sql",
+     "app/database/prepare_earnings_financials.py",
+     "app/database/schema.sql",
+@@ -105,6 +108,7 @@
+     "app/ingestion/__init__.py",
+     "app/ingestion/alfred.py",
+     "app/ingestion/backfill_vintages.py",
++    "app/ingestion/bls_employment.py",
+     "app/ingestion/bls_schedule.py",
+     "app/ingestion/discover_ism.py",
+     "app/ingestion/fred.py",
+diff --git a/frontend/src/api/macrolens.ts b/frontend/src/api/macrolens.ts
+--- a/frontend/src/api/macrolens.ts
++++ b/frontend/src/api/macrolens.ts
+@@ -423,8 +423,8 @@
+ }
+ export interface CalendarMeasure {
+  annual_context_source?:'fred';
+- selected_source?:'bea_official'|'fred_fallback'|'not_available';published_precision?:number;previous_precision?:number|null;
+- source_comparison?:'conflict'|'consistent_with_rounding'|'bea_only';comparison_status?:'mixed_sources'|'same_bea_document'|'previous_unavailable';
++ bls_history?:Record<string,string>;bls_method?:string;selected_source?:'bls:employment'|'bea_official'|'fred_fallback'|'not_available';published_precision?:number;previous_precision?:number|null;
++ source_comparison?:'conflict'|'consistent_with_rounding'|'bea_only';comparison_status?:'same_bls_capture'|'mixed_sources'|'same_bea_document'|'previous_unavailable';
+  fred_alternative?:{actual:number|null;previous:number|null;source_url?:string;data_version?:string;actual_provenance?:Record<string,unknown>|null};
+  source_value_millions?:string|null;previous_source_value_millions?:string|null;
+  usage_rights?:PublisherUsageRights;report_current?:number|null;
+diff --git a/frontend/src/calendar/macroInsight.ts b/frontend/src/calendar/macroInsight.ts
+--- a/frontend/src/calendar/macroInsight.ts
++++ b/frontend/src/calendar/macroInsight.ts
+@@ -34,6 +34,13 @@
+  if(measure.mapping_status!=='confirmed')warnings.push(et('The observation period or measure mapping is unconfirmed.','Okres odczytu lub przypisanie miary nie są potwierdzone.'));
+  if(measure.source_comparison==='conflict')warnings.push(et('Available sources disagree; the selected reading is shown.','Dostępne źródła podają rozbieżne wartości; pokazano wybrany odczyt.'));
+  if(measure.comparison_status==='mixed_sources')warnings.push(et('Actual and Previous use different sources; no change is calculated.','Aktualny i Poprzednio pochodzą z różnych źródeł; zmiana nie jest obliczana.'));
++ if(measure.selected_source==='bls:employment'){
++  warnings.push(et('Current and Previous come from one captured BLS response. Previous may include revisions.','Aktualny i Poprzednio pochodz\u0105 z jednej pobranej odpowiedzi BLS. Poprzednio mo\u017ce zawiera\u0107 rewizje.'));
++  const earlier=measure.fred_alternative?.previous;
++  if(earlier!==null&&earlier!==undefined&&earlier!==measure.previous)warnings.push(et(`BLS Previous: ${calendarReadingValue(measure,'previous')}. Earlier locally stored: ${calendarReadingValue({...measure,previous:earlier},'previous')}.`,`Poprzednio BLS: ${calendarReadingValue(measure,'previous')}. Wcze\u015bniej zapisane lokalnie: ${calendarReadingValue({...measure,previous:earlier},'previous')}.`));
++  if(measure.bls_method?.startsWith('derived'))warnings.push(et('Monthly wage change is derived from published dollar levels and rounded to one decimal.','Miesi\u0119czna zmiana p\u0142ac jest wyliczona z opublikowanych poziom\u00f3w dolarowych i zaokr\u0105glona do jednego miejsca.'));
++  return warnings;
++ }
+  if(measure.data_version==='current_vintage')warnings.push(et('This reading may include later revisions.','Odczyt może obejmować późniejsze rewizje.'));
+  else if(measure.revision_confirmed)warnings.push(et('This is a revised estimate.','To zrewidowany szacunek.'));
+  return warnings;
+diff --git a/frontend/src/calendar/MacroTrend.tsx b/frontend/src/calendar/MacroTrend.tsx
+--- a/frontend/src/calendar/MacroTrend.tsx
++++ b/frontend/src/calendar/MacroTrend.tsx
+@@ -3,23 +3,23 @@
+ import {formatObservationDate} from '../format';
+ import {et} from './earningsPresentation';
+ import {compactMeasureValue} from './calendarPresentation';
+-import {comparableTrend,trendGeometry,trendRequest,type TrendPoint} from './macroTrendData';
++import {blsTrend,comparableTrend,trendGeometry,trendRequest,type TrendPoint} from './macroTrendData';
+ 
+ export function MacroTrend({measure}:{measure:CalendarMeasure}){
+  const container=useRef<HTMLElement>(null),[width,setWidth]=useState(540);
+  useLayoutEffect(()=>{const node=container.current;if(!node)return;const resize=()=>setWidth(Math.max(240,node.clientWidth||540));resize();if(typeof ResizeObserver==='undefined')return;const observer=new ResizeObserver(resize);observer.observe(node);return()=>observer.disconnect();});
+  const request=trendRequest(measure),key=JSON.stringify({request,actual:measure.actual,vintage:measure.vintage_date}),[state,setState]=useState<{key:string;points:TrendPoint[]}>();
+  useEffect(()=>{
+-  if(!request)return;
++  if(!request||measure.selected_source==='bls:employment')return;
+   const abort=new AbortController(),options={startDate:request.startDate,endDate:request.endDate,signal:abort.signal};
+   const promise=request.feature?fetchFeatureHistory(request.series,request.feature,options):fetchSeriesHistory(request.series,options);
+   promise.then(data=>{if(!abort.signal.aborted)setState({key,points:comparableTrend(measure,data)});}).catch(()=>{if(!abort.signal.aborted)setState({key,points:[]});});
+   return()=>abort.abort();
+  },[key]);
+- const points=state?.key===key?state.points:[];if(!points.length)return null;
++ const fromBls=blsTrend(measure);const points=fromBls.length?fromBls:state?.key===key?state.points:[];if(!points.length)return null;
+  const geometry=trendGeometry(points,measure.frequency,width),title=et(`Trend · ${points.length} observations`,`Trend · ${points.length} odczytów`);
+  return <section ref={container} className="macro-insight-trend" aria-label={title}><h4>{title}</h4>
+- <svg viewBox={`0 0 ${width} 198`} role="img" aria-label={title}><title>{title}</title><desc>{request?.documentHash?et('History from the selected report.','Historia z wybranego raportu.'):et('Current-vintage history; may include revisions.','Historia w bieżącej wersji; może zawierać rewizje.')}</desc>
++ <svg viewBox={`0 0 ${width} 198`} role="img" aria-label={title}><title>{title}</title><desc>{measure.selected_source==='bls:employment'?et('BLS history from one captured response; includes revisions.','Historia BLS z jednej pobranej odpowiedzi; obejmuje rewizje.'):request?.documentHash?et('History from the selected report.','Historia z wybranego raportu.'):et('Current-vintage history; may include revisions.','Historia w bieżącej wersji; może zawierać rewizje.')}</desc>
+  <g className="macro-trend-axis">{geometry.ticks.map(t=><g key={t.value}><line x1={geometry.left} x2={geometry.right} y1={t.y} y2={t.y}/><text x={geometry.left-8} y={t.y+4} textAnchor="end">{compactMeasureValue(t.value,measure.unit)}</text></g>)}
+  <line className="macro-trend-baseline" x1={geometry.left} x2={geometry.left} y1={geometry.top} y2={geometry.bottom}/>
+  {geometry.xTicks.map((p,i)=><text key={p.period} x={p.x} y={166} textAnchor={i===0?'start':i===geometry.xTicks.length-1?'end':'middle'}>{formatObservationDate(p.period,measure.frequency)}</text>)}
+diff --git a/frontend/src/calendar/macroTrendData.ts b/frontend/src/calendar/macroTrendData.ts
+--- a/frontend/src/calendar/macroTrendData.ts
++++ b/frontend/src/calendar/macroTrendData.ts
+@@ -12,6 +12,11 @@
+  'ISM_SERVICES_PMI:raw':{frequency:'monthly',unit:'index points',sourceUnit:'index',document:true},
+ };
+ for(const series of ['CPIAUCSL','CPILFESL','PCEPI','PCEPILFE'])for(const feature of ['mom','yoy'])rules[`${series}:${feature}`]={frequency:'monthly',unit:'percent',sourceUnit:'index',feature};
++
++export function blsTrend(m:CalendarMeasure):TrendPoint[]{
++ if(m.selected_source!=='bls:employment'||!m.bls_history||!m.actual_provenance?.raw_hash)return [];
++ return Object.entries(m.bls_history).filter(([period,value])=>validDate(period)&&period<=(m.reference_period??'')&&Number.isFinite(Number(value))).sort(([a],[b])=>a.localeCompare(b)).slice(-12).map(([period,value])=>({period,value:Number(value)}));
++}
+ 
+ export type TrendPoint={period:string;value:number};
+ export type TrendRequest={series:string;feature?:string;startDate:string;endDate:string;rule:Rule;documentHash?:string};
+diff --git a/tests/conftest.py b/tests/conftest.py
+--- a/tests/conftest.py
++++ b/tests/conftest.py
+@@ -127,3 +127,11 @@
+     monkeypatch.setattr(psycopg, "connect", blocked)
+     monkeypatch.setattr(psycopg.Connection, "connect", blocked)
+     monkeypatch.setattr(psycopg.AsyncConnection, "connect", blocked_async)
++
++
++@pytest.fixture(autouse=True)
++def isolate_unrelated_bls_employment(request, monkeypatch):
++    if request.node.module.__name__.endswith('test_bls_employment'):return
++    from app.ingestion import bls_employment
++    monkeypatch.setattr(bls_employment,'events',lambda now:[])
++    monkeypatch.setattr(bls_employment,'documents',lambda connection:[])
+diff --git a/tests/test_bls_employment.py b/tests/test_bls_employment.py
+new file mode 100644
+--- /dev/null
++++ b/tests/test_bls_employment.py
+@@ -0,0 +1,119 @@
++"""Offline production adapter tests; the fixture is an actual captured BLS batch."""
++import copy
++import json
++from datetime import datetime,timedelta,timezone
++from pathlib import Path
++import httpx
++import pytest
++from app.ingestion import bls_employment as s
++
++FIXTURE=Path(__file__).parent/'fixtures/bls_employment_response.json'
++
++def payload():return json.loads(FIXTURE.read_text(encoding='utf-8'))
++
++def test_real_bls_batch_derivations_and_source_specific_history():
++    rows=s.parse(FIXTURE.read_bytes(),'2026-10-01')
++    assert {k:v['actual'] for k,v in rows.items()}==dict(PAYEMS='165',UNRATE='4.1',CES0500000003='0.4',CIVPART='61.9',U6RATE='7.9',AWHAETP='34.4')
++    assert rows['PAYEMS']['previous']=='60'
++    assert rows['CES0500000003']['previous']=='0.3'
++    assert rows['PAYEMS']['trend']['2026-09-01']=='60'
++    assert rows['CES0500000003']['unrounded_actual'].startswith('0.369783')
++    assert rows['AWHAETP']['unit']=='hours'
++    assert all(v['seasonal_adjustment']=='SA' for v in rows.values())
++
++@pytest.mark.parametrize('fault',['missing','duplicate','nsa','unit','nonfinite','month','duplicate_month','missing_dependency','wrong_period','failed','zero_denominator'])
++def test_bad_batch_rejected(fault):
++    p=payload();rows=p['Results']['series'];period='2026-10-01'
++    if fault=='missing':rows.pop()
++    elif fault=='duplicate':rows[-1]=copy.deepcopy(rows[0])
++    elif fault=='nsa':rows[0]['seriesID']='CEU0000000001'
++    elif fault=='unit':rows[0]['unit']='millions of persons'
++    elif fault=='nonfinite':rows[0]['data'][0]['value']='NaN'
++    elif fault=='month':rows[0]['data'][0]['period']='Q04'
++    elif fault=='duplicate_month':rows[0]['data'].append(rows[0]['data'][0])
++    elif fault=='missing_dependency':rows[0]['data']=[r for r in rows[0]['data'] if r['period']!='M09']
++    elif fault=='wrong_period':period='2026-11-01'
++    elif fault=='failed':p['status']='REQUEST_NOT_PROCESSED'
++    elif fault=='zero_denominator':next(r for r in rows if r['seriesID']=='CES0500000003')['data'][1]['value']='0'
++    with pytest.raises(ValueError):s.parse(json.dumps(p).encode(),period)
++
++@pytest.mark.parametrize('code',[301,403,429,503])
++def test_transport_refuses_redirect_or_error_without_retry(code):
++    calls=[]
++    def respond(request):calls.append(request);return httpx.Response(code,headers={'Retry-After':'900'})
++    with httpx.Client(transport=httpx.MockTransport(respond),follow_redirects=False) as client:
++        raw,request,status,retry=s.fetch(client,dict(reference_period='2026-10-01'))
++    assert len(calls)==1 and status==code and raw is None
++    assert len(request['seriesid'])==6 and 'registrationkey' not in request
++    assert calls[0].url==s.URL
++
++def test_transport_one_batch_and_maximum_bytes():
++    with httpx.Client(transport=httpx.MockTransport(lambda request:httpx.Response(200,content=FIXTURE.read_bytes()))) as client:
++        raw,request,status,_=s.fetch(client,dict(reference_period='2026-10-01'))
++    assert status==200 and raw==FIXTURE.read_bytes()
++    with httpx.Client(transport=httpx.MockTransport(lambda request:httpx.Response(200,content=b'x'*(s.MAX_BYTES+1)))) as client:
++        with pytest.raises(ValueError,match='large'):s.fetch(client,dict(reference_period='2026-10-01'))
++
++@pytest.mark.parametrize('header,days',[('259200',3),('Mon, 09 Nov 2026 14:00:00 GMT',3)])
++def test_long_retry_after_never_capped(header,days):
++    now=datetime(2026,11,6,14,tzinfo=timezone.utc)
++    assert s.retry_after(header,now)>=now+timedelta(days=days)
++
++def test_series_contract_is_frozen_and_not_inferred_from_payload():
++    assert len(s.CONTRACT)==6
++    assert s.CONTRACT['AWHAETP'][0]=='CES0500000002'
++    assert s.CONTRACT['CES0500000003'][3]=='dollars per hour'
++
++def test_projection_uses_same_capture_previous_and_retains_first_print_alternative(monkeypatch):
++    stamp=datetime.now(timezone.utc);raw=FIXTURE.read_bytes();rows=s.parse(raw,'2026-10-01')
++    doc=dict(id='test-document',retrieved_at=stamp,raw_hash='a'*64,metadata=dict(event=dict(release_date='2026-11-06',scheduled_at='2026-11-06T13:30:00+00:00'),readings=rows))
++    monkeypatch.setattr(s,'documents',lambda c:[doc])
++    measures=[dict(series_id=sid,feature_name=v[1],unit=v[2],reference_period='2026-10-01',actual=None,previous=29 if sid=='PAYEMS' else None) for sid,v in s.CONTRACT.items()]
++    result=s.project([dict(release_id=50,release_date='2026-11-06',measures=measures)],None,stamp)[0]['measures']
++    nfp=next(m for m in result if m['series_id']=='PAYEMS')
++    assert nfp['actual']==165 and nfp['previous']==60 and nfp['actual']-nfp['previous']==105
++    assert nfp['fred_alternative']['previous']==29 and nfp['actual_provenance']['first_print'] is False
++    assert nfp['bls_history']['2026-09-01']=='60' and nfp['bls_history']['2026-10-01']=='165'
++    assert all(m['comparison_status']=='same_bls_capture' for m in result)
++
++def test_new_schedule_check_does_not_reactivate_complete_report(monkeypatch):
++    event=dict(release_id=50,release_date='2026-11-06',reference_period='2026-10-01',scheduled_at='2026-11-06T13:30:00+00:00',schedule_proofs=['new'])
++    monkeypatch.setattr(s,'documents',lambda c:[dict(metadata=dict(event={**event,'schedule_proofs':['old']},readings={'PAYEMS':{}}))])
++    assert s.complete(None,event)
++
++def test_runtime_uses_existing_launcher_without_browser_or_timer(monkeypatch,tmp_path):
++    from app import bls_employment_runtime as runtime
++    from app.analytics.overview_refresh import coordinator
++    calls=[];token=tmp_path/'token.json';token.write_text('{"version":3}')
++    monkeypatch.setattr(coordinator,'launch',lambda fn:fn())
++    monkeypatch.setattr(s,'run',lambda *args,**kwargs:calls.append(True) or dict(status='cooldown',added=0))
++    runtime.tick(token,tmp_path)
++    assert calls==[True] and runtime.STATE['status']=='cooldown'
++    runtime.tick(token,tmp_path,cancelled=lambda:True)
++    assert calls==[True]
++
++def test_real_refresh_function_fetches_missing_period_despite_unchanged_metadata(monkeypatch):
++    from contextlib import contextmanager
++    from unittest.mock import Mock
++    from app.analytics import overview_refresh as refresh,compute_features as features
++    from app.ingestion import fred,ingest_series
++    @contextmanager
++    def check(*args,**kwargs):yield {'scope':{}}
++    monkeypatch.setattr(refresh,'availability_check',check)
++    monkeypatch.setattr(s,'events',lambda now:[dict(reference_period='2026-10-01')])
++    monkeypatch.setattr(s,'complete',lambda c,event:False)
++    monkeypatch.setattr(features,'_load_series_config',lambda:{'PAYEMS':{'transformations':['monthly_change']}})
++    monkeypatch.setattr(fred,'fetch_series_metadata',lambda sid:dict(last_updated='unchanged',observation_end='2026-09-01'))
++    fetch=Mock(return_value=dict(observations=[dict(date='2026-10-01',value='159293')]))
++    monkeypatch.setattr(fred,'fetch_series_observations',fetch)
++    stored=[];monkeypatch.setattr(ingest_series,'_ingest_series',lambda sid,response_data:stored.append(response_data))
++    monkeypatch.setattr(features,'compute_features',lambda *args,**kwargs:None)
++    monkeypatch.setattr(refresh,'inventory',lambda *args:{'PAYEMS':dict(signature=[2])})
++    connection=Mock();connection.execute.return_value.fetchone.return_value=('2026-09-01',)
++    prior=dict(last_updated='unchanged',local_signature=[1],transformations=['monthly_change'])
++    state,result=refresh.refresh_fred('PAYEMS',prior,dict(signature=[1]),connection,datetime.now(timezone.utc))
++    assert result['release_observation_probe'] and result['observation_fetch_status']=='fetched'
++    assert fetch.call_count==1 and stored[0]['observations'][0]['date']=='2026-10-01'
++    connection.execute.return_value.fetchone.return_value=('2026-10-01',)
++    _,result=refresh.refresh_fred('PAYEMS',state,dict(signature=[2]),connection,datetime.now(timezone.utc))
++    assert not result['release_observation_probe'] and fetch.call_count==1
+diff --git a/tests/fixtures/bls_employment_response.json b/tests/fixtures/bls_employment_response.json
+new file mode 100644
+--- /dev/null
++++ b/tests/fixtures/bls_employment_response.json
+@@ -0,0 +1,9 @@
++{"status":"REQUEST_SUCCEEDED","responseTime":18,"message":[],"Results":{
++"series":
++[{"seriesID":"CES0000000001","data":[{"year":"2026","period":"M10","periodName":"October","latest":"true","value":"159293","footnotes":[{"code":"P","text":"preliminary"}]},{"year":"2026","period":"M09","periodName":"September","value":"159128","footnotes":[{"code":"P","text":"preliminary"}]},{"year":"2026","period":"M08","periodName":"August","value":"159068","footnotes":[{}]},{"year":"2026","period":"M07","periodName":"July","value":"158882","footnotes":[{}]},{"year":"2026","period":"M06","periodName":"June","value":"158892","footnotes":[{}]},{"year":"2026","period":"M05","periodName":"May","value":"158861","footnotes":[{}]},{"year":"2026","period":"M04","periodName":"April","value":"158798","footnotes":[{}]},{"year":"2026","period":"M03","periodName":"March","value":"158650","footnotes":[{}]},{"year":"2026","period":"M02","periodName":"February","value":"158436","footnotes":[{}]},{"year":"2026","period":"M01","periodName":"January","value":"158592","footnotes":[{}]}]},
++{"seriesID":"LNS14000000","data":[{"year":"2026","period":"M10","periodName":"October","latest":"true","value":"4.1","footnotes":[{}]},{"year":"2026","period":"M09","periodName":"September","value":"4.2","footnotes":[{}]},{"year":"2026","period":"M08","periodName":"August","value":"4.1","footnotes":[{}]},{"year":"2026","period":"M07","periodName":"July","value":"4.1","footnotes":[{}]},{"year":"2026","period":"M06","periodName":"June","value":"4.2","footnotes":[{}]},{"year":"2026","period":"M05","periodName":"May","value":"4.3","footnotes":[{}]},{"year":"2026","period":"M04","periodName":"April","value":"4.3","footnotes":[{}]},{"year":"2026","period":"M03","periodName":"March","value":"4.3","footnotes":[{}]},{"year":"2026","period":"M02","periodName":"February","value":"4.4","footnotes":[{}]},{"year":"2026","period":"M01","periodName":"January","value":"4.3","footnotes":[{"code":"12","text":"January 2026 estimates were revised to incorporate updated population controls. For more information, see www.bls.gov/cps/documentation.htm#pop."}]}]},
++{"seriesID":"CES0500000003","data":[{"year":"2026","period":"M10","periodName":"October","latest":"true","value":"38.00","footnotes":[{"code":"P","text":"preliminary"}]},{"year":"2026","period":"M09","periodName":"September","value":"37.86","footnotes":[{"code":"P","text":"preliminary"}]},{"year":"2026","period":"M08","periodName":"August","value":"37.76","footnotes":[{}]},{"year":"2026","period":"M07","periodName":"July","value":"37.64","footnotes":[{}]},{"year":"2026","period":"M06","periodName":"June","value":"37.59","footnotes":[{}]},{"year":"2026","period":"M05","periodName":"May","value":"37.49","footnotes":[{}]},{"year":"2026","period":"M04","periodName":"April","value":"37.41","footnotes":[{}]},{"year":"2026","period":"M03","periodName":"March","value":"37.35","footnotes":[{}]},{"year":"2026","period":"M02","periodName":"February","value":"37.27","footnotes":[{}]},{"year":"2026","period":"M01","periodName":"January","value":"37.15","footnotes":[{}]}]},
++{"seriesID":"LNS11300000","data":[{"year":"2026","period":"M10","periodName":"October","latest":"true","value":"61.9","footnotes":[{}]},{"year":"2026","period":"M09","periodName":"September","value":"61.8","footnotes":[{}]},{"year":"2026","period":"M08","periodName":"August","value":"61.6","footnotes":[{}]},{"year":"2026","period":"M07","periodName":"July","value":"61.4","footnotes":[{}]},{"year":"2026","period":"M06","periodName":"June","value":"61.5","footnotes":[{}]},{"year":"2026","period":"M05","periodName":"May","value":"61.8","footnotes":[{}]},{"year":"2026","period":"M04","periodName":"April","value":"61.8","footnotes":[{}]},{"year":"2026","period":"M03","periodName":"March","value":"61.9","footnotes":[{}]},{"year":"2026","period":"M02","periodName":"February","value":"62.0","footnotes":[{}]},{"year":"2026","period":"M01","periodName":"January","value":"62.1","footnotes":[{"code":"12","text":"January 2026 estimates were revised to incorporate updated population controls. For more information, see www.bls.gov/cps/documentation.htm#pop."}]}]},
++{"seriesID":"LNS13327709","data":[{"year":"2026","period":"M10","periodName":"October","latest":"true","value":"7.9","footnotes":[{}]},{"year":"2026","period":"M09","periodName":"September","value":"7.6","footnotes":[{}]},{"year":"2026","period":"M08","periodName":"August","value":"7.7","footnotes":[{}]},{"year":"2026","period":"M07","periodName":"July","value":"7.9","footnotes":[{}]},{"year":"2026","period":"M06","periodName":"June","value":"7.9","footnotes":[{}]},{"year":"2026","period":"M05","periodName":"May","value":"8.1","footnotes":[{}]},{"year":"2026","period":"M04","periodName":"April","value":"8.2","footnotes":[{}]},{"year":"2026","period":"M03","periodName":"March","value":"8.0","footnotes":[{}]},{"year":"2026","period":"M02","periodName":"February","value":"7.9","footnotes":[{}]},{"year":"2026","period":"M01","periodName":"January","value":"8.1","footnotes":[{"code":"12","text":"January 2026 estimates were revised to incorporate updated population controls. For more information, see www.bls.gov/cps/documentation.htm#pop."}]}]},
++{"seriesID":"CES0500000002","data":[{"year":"2026","period":"M10","periodName":"October","latest":"true","value":"34.4","footnotes":[{"code":"P","text":"preliminary"}]},{"year":"2026","period":"M09","periodName":"September","value":"34.4","footnotes":[{"code":"P","text":"preliminary"}]},{"year":"2026","period":"M08","periodName":"August","value":"34.4","footnotes":[{}]},{"year":"2026","period":"M07","periodName":"July","value":"34.3","footnotes":[{}]},{"year":"2026","period":"M06","periodName":"June","value":"34.3","footnotes":[{}]},{"year":"2026","period":"M05","periodName":"May","value":"34.3","footnotes":[{}]},{"year":"2026","period":"M04","periodName":"April","value":"34.3","footnotes":[{}]},{"year":"2026","period":"M03","periodName":"March","value":"34.2","footnotes":[{}]},{"year":"2026","period":"M02","periodName":"February","value":"34.3","footnotes":[{}]},{"year":"2026","period":"M01","periodName":"January","value":"34.3","footnotes":[{}]}]}]
++}}
+\ No newline at end of file
+diff --git a/frontend/src/calendar/BlsProjection.test.tsx b/frontend/src/calendar/BlsProjection.test.tsx
+new file mode 100644
+--- /dev/null
++++ b/frontend/src/calendar/BlsProjection.test.tsx
+@@ -0,0 +1,23 @@
++import {afterEach,expect,it,vi} from 'vitest';
++import {cleanup,render,screen} from '@testing-library/react';
++import type {CalendarEvent,CalendarMeasure} from '../api/macrolens';
++import {setLanguage} from '../i18n/language';
++import {MacroTrend} from './MacroTrend';
++import {blsTrend} from './macroTrendData';
++import {insightWarnings} from './macroInsight';
++
++const m:CalendarMeasure={label:'NFP',previous_period:'2026-09-01',previous_kind:'previous_period',forecast:null,consensus_status:'not_integrated',data_version:'official_release',binding_method:'official_bls',vintage_date:null,realtime_end:null,result_status:'available',source_url:'https://api.bls.gov/publicAPI/v2/timeseries/data/',series_id:'PAYEMS',feature_name:'monthly_change',frequency:'monthly',unit:'thousand jobs',reference_period:'2026-10-01',actual:165,previous:60,selected_source:'bls:employment',mapping_status:'confirmed',revision_confirmed:true,actual_provenance:{raw_hash:'a'.repeat(64)},fred_alternative:{actual:null,previous:29},bls_history:{'2026-08-01':'186','2026-09-01':'60','2026-10-01':'165'}};
++afterEach(()=>{cleanup();setLanguage('en');vi.unstubAllGlobals();});
++it.each(['pl','en'] as const)('explains same-capture Previous without calling Current a revision in %s',language=>{
++ setLanguage(language);const warnings=insightWarnings({release_date:'2026-11-06'} as CalendarEvent,m).join(' ');
++ expect(warnings).toContain('BLS');expect(warnings).toContain('60');expect(warnings).toContain('29');
++ expect(warnings).not.toContain('revised estimate');expect(warnings).not.toContain('zrewidowany szacunek');expect(warnings).not.toContain('\\u');
++});
++it('draws source-specific BLS points without requesting or mixing FRED history',()=>{
++ const fetch=vi.fn();vi.stubGlobal('fetch',fetch);render(<MacroTrend measure={m}/>);
++ expect(screen.getByRole('img')).toBeInTheDocument();expect(document.querySelectorAll('circle')).toHaveLength(3);
++ expect(blsTrend(m).map(p=>p.value)).toEqual([186,60,165]);expect(fetch).not.toHaveBeenCalled();
++});
++it('keeps ordinary FRED measures on their existing path',()=>{
++ expect(blsTrend({...m,selected_source:'fred_fallback'})).toEqual([]);
++});
