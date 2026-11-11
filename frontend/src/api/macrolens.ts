@@ -423,8 +423,8 @@ export interface PublisherUsageRights {
 }
 export interface CalendarMeasure {
  annual_context_source?:'fred';
- selected_source?:'bea_official'|'fred_fallback'|'not_available';published_precision?:number;previous_precision?:number|null;
- source_comparison?:'conflict'|'consistent_with_rounding'|'bea_only';comparison_status?:'mixed_sources'|'same_bea_document'|'previous_unavailable';
+ bls_history?:Record<string,string>;bls_method?:string;selected_source?:'bls:employment'|'bea_official'|'fred_fallback'|'not_available';published_precision?:number;previous_precision?:number|null;
+ source_comparison?:'conflict'|'consistent_with_rounding'|'bea_only';comparison_status?:'same_bls_capture'|'mixed_sources'|'same_bea_document'|'previous_unavailable';
  fred_alternative?:{actual:number|null;previous:number|null;source_url?:string;data_version?:string;actual_provenance?:Record<string,unknown>|null};
  source_value_millions?:string|null;previous_source_value_millions?:string|null;
  usage_rights?:PublisherUsageRights;report_current?:number|null;
