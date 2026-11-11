@@ -85,6 +85,12 @@ def policy_row(c):
  return rows[0][0]
 
 def authorized(c,token,check_schema=True):
+ if token.get("version")==3:
+  from app.database.forecast_f1_authorization_bls import authorized as authorize_bls
+  return authorize_bls(c,token,check_schema)
+ if token.get("version")==2:
+  from app.database.forecast_f1_authorization_v2 import authorized as authorize_v2
+  return authorize_v2(c,token,check_schema)
  if set(token)!={'plan_sha256','target','artifacts'} or token['artifacts']!=artifacts() or base.target_identity(c)!=token['target'] or not 170000<=c.info.server_version<180000:raise ValueError('F1 runtime target/artifacts changed')
  row=policy_row(c)
  if row['plan_sha256']!=token['plan_sha256'] or row['target']!=token['target'] or row['artifacts']!=token['artifacts'] or row['dispatch']!=policy() or row['reference_data']!=reference_data(c):raise ValueError('F1 policy/reference data changed')

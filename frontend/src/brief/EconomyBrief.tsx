@@ -64,7 +64,7 @@ function ReadingRow({ reading, onChart, explanations }: { reading: PreparedReadi
   return <tr className={`overview-reading-row${reading.raw?.unit === "index" ? " overview-reading-row--index" : ""}`} aria-label={tLabel(reading.label)}>
     <th scope="row"><div className="overview-reading-heading"><a href={reading.indicatorHref}>{tText(reading.label)}</a><span className="overview-reading-actions"><ChartButton title={reading.label} onClick={onChart} />{explanations ? <span className="overview-explanation"><ExplanationSlot><ReadingExplanation reading={reading} /></ExplanationSlot></span> : null}</span></div><div className="overview-period"><time dateTime={reading.current.date}>{tText(reading.current.period)}</time></div></th>
     <td className="overview-value--latest"><div className="overview-value"><div className="overview-reading-number">{value(reading.current)}{reading.current.yoy !== undefined ? <small className="overview-yoy">{tText(reading.current.yoy)}{reading.current.yoy === "\u2014" ? "" : "%"} {tText("YoY")}</small> : null}</div><span className={`overview-change overview-change--${reading.tone}`}>
-      <InfoTooltip label={`${reading.label}: ${reading.labels.change} - ${directionLabel}`} description={readingHoverText(reading)} trigger={reading.arrow} closable bounded={Boolean(reading.raw?.bea_direct)}
+      <InfoTooltip label={`${reading.label}: ${reading.labels.change} - ${directionLabel}`} description={readingHoverText(reading)} trigger={reading.arrow} closable bounded
         content={<div className="reading-change-details">{readingHoverLines(reading).map((line, index) => <span key={index}>{index > 0 ? " " : ""}{tText(line)}</span>)}{reading.raw?.bea_direct?<BeaEvidence measure={reading.raw.bea_direct}/>:null}</div>} />
     </span><InterpretationMarker label={reading.label} interpretation={interpretation} /></div></td>
     <td className="overview-value--earlier">{value(reading.previous)}<time dateTime={reading.previous.date}>{tText(reading.previous.period)}</time></td>
@@ -75,7 +75,7 @@ function EventRow({ event }: { event: CalendarEvent }) {
   const stars = eventImportanceStars(event);
   return <li className="overview-event">
     <time dateTime={event.release_datetime_utc ?? eventDay(event)}>{tText(eventShortDateLabel(event))} · {tText(formatPolandTime(event.release_datetime_utc))}</time>
-    <strong>{tText(event.release_name)}{(event.event_type?.startsWith('michigan_')||event.event_type==='adp_monthly')?<> ({event.reference_period?formatObservationDate(event.reference_period,'monthly'):tText('Reference period unconfirmed')})<br/><a href={event.document_url??event.publisher_reports_url} target="_blank" rel="noreferrer">{tText(event.document_status==='available'&&event.document_url?'Data at publisher':'Publisher reports')}</a></>:null}{(event.event_type==='empire_state'||event.event_type==='ft900')&&event.usage_rights?<small>{event.reference_period?formatObservationDate(event.reference_period,'monthly'):''} · {event.usage_rights.copyright} <a href={event.usage_rights.original_url} target="_blank" rel="noreferrer">{tText(event.event_type==='ft900'?'Official Exhibit 1 XLSX':'Original NY Fed CSV')}</a>{' · '}<a href={event.usage_rights.terms_url} target="_blank" rel="noreferrer">{tText(event.event_type==='ft900'?'BEA data use policy':'NY Fed Terms of Use')}</a> · {tText(event.usage_rights.modifications)}</small>:null}</strong>
+    <strong>{tText(event.release_name)}</strong>
 
     <span className="overview-event-stars" role="img" aria-label={tLabel(stars === null ? "Importance unavailable" : `Importance ${stars} of 3`)}><span aria-hidden="true">{stars === null ? "\u2014" : "\u2605".repeat(stars)}</span></span>
   </li>;
@@ -132,7 +132,6 @@ export function EconomyBrief({explanations=false}: {explanations?:boolean} = {})
           {!model.upcoming.available ? <p role="status">{tText("Release calendar unavailable; upcoming coverage is unknown.")}</p> : null}
           {model.upcoming.selected.length ? <ul className="overview-event-list">{model.upcoming.selected.map(event => <EventRow key={eventIdentity(event)} event={event} />)}</ul> : model.upcoming.available ? <p>{tText("No key upcoming events in the stored 7-day window.")}</p> : null}
         </div>
-        {model.upcoming.nextFomc ? <div className="overview-policy" aria-labelledby="brief-policy"><h3 id="brief-policy">{tText("Next FOMC decision")}</h3><ul className="overview-event-list"><EventRow event={model.upcoming.nextFomc} /></ul></div> : null}
 
         <a className="overview-full-calendar" href="#/calendar">{tText("View full calendar")}</a>
       </section>

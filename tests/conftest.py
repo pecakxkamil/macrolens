@@ -127,3 +127,11 @@ def _install_guard(monkeypatch):
     monkeypatch.setattr(psycopg, "connect", blocked)
     monkeypatch.setattr(psycopg.Connection, "connect", blocked)
     monkeypatch.setattr(psycopg.AsyncConnection, "connect", blocked_async)
+
+
+@pytest.fixture(autouse=True)
+def isolate_unrelated_bls_employment(request, monkeypatch):
+    if request.node.module.__name__.endswith('test_bls_employment'):return
+    from app.ingestion import bls_employment
+    monkeypatch.setattr(bls_employment,'events',lambda now:[])
+    monkeypatch.setattr(bls_employment,'documents',lambda connection:[])

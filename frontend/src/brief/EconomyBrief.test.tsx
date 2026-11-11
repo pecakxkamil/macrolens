@@ -212,12 +212,14 @@ test("release times remain timezone-aware across the US/Polish DST mismatch", ()
   expect(eventText({ ...event, release_datetime_utc: null })).toContain("Time unavailable");
 });
 
-test("next FOMC decision is independent of seven-day preview, with DST-aware time and report provenance", async () => {
+test("FOMC outside the seven-day preview stays off the screen while export retains policy provenance", async () => {
   const data = fixture();
   data.policy = { status: "ready", error: null, data: { schedule_status: "available", retrieved_at: "2026-10-19T09:00:00Z", source_url: "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm", market_probabilities: { status: "not_integrated", source_url: "https://www.cmegroup.com/fedwatch" },
     next_decision: { release_id: null, event_id: "fomc:2026-10-28", event_type: "fomc_decision", release_name: "FOMC policy decision", release_date: "2026-10-28", meeting_start_date: "2026-10-27", meeting_end_date: "2026-10-28", release_time: "14:00:00", source_timezone: "America/New_York", release_datetime_utc: "2026-10-28T18:00:00Z", retrieved_at: "2026-10-19T09:00:00Z", time_source_url: "https://www.federalreserve.gov/newsevents/2026-october.htm", importance: "high", source_link: "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm", date_precision: "date", series: [] } } };
-  mockApi(data); render(<EconomyBrief />);
-  await screen.findByText(/Oct 28.*19:00 PL/);
+  mockApi(data); const { unmount } = render(<EconomyBrief />);
+  await screen.findByRole("heading", { name: "Upcoming events" });
+  expect(screen.queryByText(/Oct 28.*19:00 PL/)).not.toBeInTheDocument();
+  expect(document.querySelector(".overview-policy")).toBeNull();
   expect(screen.queryByRole("link", { name: "View market probabilities on CME FedWatch" })).not.toBeInTheDocument();
   const model = briefModel(data);
   const report = briefMarkdown(model, data, data.assembled_at);
@@ -229,6 +231,14 @@ test("next FOMC decision is independent of seven-day preview, with DST-aware tim
   for (const domain of model.domains) for (const reading of domain.compact) expect(main).toContain(readingReportLine(reading));
   expect(report).toContain(model.policy.metadata);
   expect(data.calendar.data!.events).toHaveLength(1);
+  unmount();
+  vi.setSystemTime(new Date("2026-10-25T10:00:00Z"));
+  data.calendar_start_date = "2026-10-25";
+  data.calendar_end_date = "2026-10-31";
+  render(<EconomyBrief />);
+  await screen.findByText(/Oct 28.*19:00 PL/);
+  expect(document.querySelectorAll(".overview-event")).toHaveLength(1);
+  expect(document.querySelector(".overview-policy")).toBeNull();
 });
 
 
@@ -807,13 +817,15 @@ test("report during a background check uses its saved dataset and records the ru
  expect(report).toContain("Latest: 199,000 (Oct 3, 2026)");
 });
 
-test.each(['en','pl'] as const)('Overview includes Michigan month and restricted publisher link without a seventh card in %s',async language=>{
+test.each(['en','pl'] as const)('Michigan has a compact Overview row and retains publisher details in export in %s',async language=>{
  setLanguage(language);const data=fixture();
  data.calendar.data!.events=[{release_id:null,event_id:'michigan:2026-10:final',event_type:'michigan_final',release_name:'Michigan Consumer Sentiment — Final',release_date:'2026-10-23',release_time:null,release_datetime_utc:null,source_timezone:'America/New_York',source_link:'https://data.sca.isr.umich.edu/survey-info.php',importance:'medium',date_precision:'date',series:[],measures:[],reference_period:'2026-10-01',publication_stage:'final',expects_numeric_result:true,result_integration_status:'publisher_permission_required',publisher_reports_url:'https://data.sca.isr.umich.edu/reports.php?year=2026'}];
  mockApi(data);render(<EconomyBrief/>);
- const link=await screen.findByRole('link',{name:language==='en'?'Publisher reports':'Raporty wydawcy'});
- expect(link).toHaveAttribute('href',data.calendar.data!.events[0].publisher_reports_url);
- expect(link.closest('li')).toHaveTextContent(language==='en'?'Oct 2026':'paź 2026');
+ const panel=await screen.findByRole('region',{name:language==='en'?'Upcoming events':'Nadchodzące wydarzenia'});
+ const row=panel.querySelector('.overview-event')!;
+ expect(row.querySelector('strong')).toHaveTextContent(language==='en'?'Michigan Consumer Sentiment':'Michigan');
+ expect(row.querySelector('strong')!.children).toHaveLength(0);
+ expect(row.querySelector('a')).toBeNull();
  expect(document.querySelectorAll('.overview-domain')).toHaveLength(6);
  const report=briefMarkdown(briefModel(data),data,data.assembled_at);
  expect(report).toContain('https://data.sca.isr.umich.edu/reports.php?year=2026');
@@ -824,21 +836,28 @@ test.each(['en','pl'] as const)('FT900 attribution and source links survive Over
  data.calendar_start_date='2026-11-01';data.calendar_end_date='2026-11-07';
  data.calendar.data!.events=[{release_id:null,event_id:'ft900:2026-09:monthly',event_type:'ft900',release_name:'U.S. Trade Balance — Goods and Services',reference_period:'2026-09-01',release_date:'2026-11-04',release_time:'08:30:00',release_datetime_utc:'2026-11-04T13:30:00Z',source_timezone:'America/New_York',source_link:'https://www.census.gov/foreign-trade/schedule.html',importance:'medium',date_precision:'date',series:[],usage_rights:{source:'U.S. Census Bureau / U.S. Bureau of Economic Analysis',copyright:'Source: U.S. Census Bureau and U.S. Bureau of Economic Analysis.',terms_url:'https://www.bea.gov/help/faq/147',original_url:'https://www.census.gov/foreign-trade/Press-Release/current_press_release/exh1.xlsx',modifications:'MacroLens converts millions to billions; current-vintage, no publisher endorsement.',redistribution_conditions:'BEA public-domain policy with exceptions.'}}];
  mockApi(data);render(<EconomyBrief/>);
- const link=await screen.findByRole('link',{name:language==='en'?'BEA data use policy':'Zasady wykorzystania danych BEA'});
- expect(link.closest('li')).toHaveTextContent('14:30');expect(link.closest('li')).toHaveTextContent('U.S. Census Bureau');
+ const panel=await screen.findByRole('region',{name:language==='en'?'Upcoming events':'Nadchodzące wydarzenia'});
+ const row=panel.querySelector('.overview-event')!;
+ expect(row.querySelector('time')).toHaveTextContent('14:30');
+ expect(row.querySelector('strong')!.textContent).toBe(language==='en'?'U.S. Trade Balance — Goods and Services':'Bilans handlowy USA — towary i usługi');
+ expect(row.querySelector('strong')!.children).toHaveLength(0);
+ expect(row.querySelector('a')).toBeNull();
  expect(document.querySelectorAll('.overview-domain')).toHaveLength(6);
  expect(document.querySelectorAll('.overview-calendar .overview-event').length).toBeLessThanOrEqual(4);
  const report=briefMarkdown(briefModel(data),data,data.assembled_at);
  expect(report).toContain('https://www.bea.gov/help/faq/147');expect(report).toContain('no publisher endorsement');
 });
 
-test.each(['en','pl'] as const)('Empire attribution is present in Overview and exported report without a seventh card in %s',async language=>{
+test.each(['en','pl'] as const)('Empire has a compact Overview row and retains attribution in export in %s',async language=>{
  setLanguage(language);vi.setSystemTime(new Date('2026-11-14T12:00:00Z'));const data=fixture();
  data.calendar_start_date='2026-11-14';data.calendar_end_date='2026-11-20';
  data.calendar.data!.events=[{release_id:null,event_id:'empire-state:2026-11:monthly',event_type:'empire_state',release_name:'Empire State Manufacturing Survey',reference_period:'2026-11-01',release_date:'2026-11-16',release_time:'08:30:00',release_datetime_utc:'2026-11-16T13:30:00Z',source_timezone:'America/New_York',source_link:'https://www.newyorkfed.org/survey/empire/empiresurvey_overview',importance:'medium',date_precision:'date',series:[],usage_rights:{source:'Federal Reserve Bank of New York',copyright:'© 2026 Federal Reserve Bank of New York.',terms_url:'https://www.newyorkfed.org/privacy/termsofuse',original_url:'https://www.newyorkfed.org/medialibrary/media/survey/empire/data/esms_seasonallyadjusted_diffusion.csv',modifications:'MacroLens index-point differences; no New York Fed endorsement.',redistribution_conditions:'https://www.newyorkfed.org/privacy/termsofuse'}}];
  mockApi(data);render(<EconomyBrief/>);
- const link=await screen.findByRole('link',{name:language==='en'?'NY Fed Terms of Use':'Warunki wykorzystania NY Fed'});
- expect(link.closest('li')).toHaveTextContent('14:30');expect(link.closest('li')).toHaveTextContent('Federal Reserve Bank of New York');
+ const panel=await screen.findByRole('region',{name:language==='en'?'Upcoming events':'Nadchodzące wydarzenia'});
+ const row=panel.querySelector('.overview-event')!;
+ expect(row.querySelector('time')).toHaveTextContent('14:30');
+ expect(row.querySelector('strong')!.children).toHaveLength(0);
+ expect(row.querySelector('a')).toBeNull();
  expect(document.querySelectorAll('.overview-domain')).toHaveLength(6);
  expect(document.querySelectorAll('.overview-calendar .overview-event').length).toBeLessThanOrEqual(4);
  const report=briefMarkdown(briefModel(data),data,data.assembled_at);
@@ -850,8 +869,12 @@ test.each(['en','pl'] as const)('ADP appears in Overview as a monthly report wit
  data.calendar_start_date='2026-11-01';data.calendar_end_date='2026-11-07';
  data.calendar.data!.events=[{release_id:null,event_id:'adp:2026-10:monthly',event_type:'adp_monthly',release_name:'ADP National Employment Report',release_date:'2026-11-04',release_time:'08:15:00',release_datetime_utc:'2026-11-04T13:15:00Z',source_timezone:'America/New_York',source_link:'https://adpemploymentreport.com/',importance:'high',date_precision:'date',series:[],measures:[],reference_period:'2026-10-01',publication_stage:'monthly',expects_numeric_result:true,result_integration_status:'publisher_permission_required',publisher_reports_url:'https://mediacenter.adp.com/press-releases?l=100'}];
  mockApi(data);render(<EconomyBrief/>);
- const link=await screen.findByRole('link',{name:language==='en'?'Publisher reports':'Raporty wydawcy'});
- expect(link.closest('li')).toHaveTextContent('14:15');expect(document.querySelectorAll('.overview-domain')).toHaveLength(6);
+ const panel=await screen.findByRole('region',{name:language==='en'?'Upcoming events':'Nadchodzące wydarzenia'});
+ const row=panel.querySelector('.overview-event')!;
+ expect(row.querySelector('time')).toHaveTextContent('14:15');
+ expect(row.querySelector('strong')!.children).toHaveLength(0);
+ expect(row.querySelector('a')).toBeNull();
+ expect(document.querySelectorAll('.overview-domain')).toHaveLength(6);
  expect(document.querySelectorAll('.overview-calendar .overview-event').length).toBeLessThanOrEqual(4);
  const report=briefMarkdown(briefModel(data),data,data.assembled_at);
  expect(report).toContain('2026-10-01');expect(report).toContain('https://mediacenter.adp.com/press-releases?l=100');

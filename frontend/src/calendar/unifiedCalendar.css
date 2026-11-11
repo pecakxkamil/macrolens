@@ -1,0 +1,30 @@
+.agenda-earnings .agenda-financials { display: grid; gap: 2px; font-size: 12px; font-weight: 400; line-height: 1.35; }
+.agenda-earnings .agenda-financial-line { display: flex; justify-content: center; align-items: baseline; gap: 4px; white-space: nowrap; }
+.agenda-earnings .agenda-financial-label { font-size: 10px; color: #91a5bd; }
+.calendar-agenda .agenda-table .agenda-comparison button { font-weight: 400; }
+.agenda-table .agenda-entry > .agenda-number:last-child { color: #edf4fc; font-weight: 700; }
+.agenda-table .agenda-entry > .agenda-number:last-child small { color: inherit; }
+.missing-value { color: #aabbd0; font-weight: 400; cursor: help; }
+.agenda-earnings .agenda-number [data-financial-metric],
+.agenda-table.agenda-unified .agenda-number.agenda-secondary { font-weight: 700; }
+.agenda-table.agenda-unified .agenda-secondary,
+.agenda-table.agenda-unified .agenda-number small { color: #edf4fc; }
+.agenda-table .agenda-comparison--positive,
+.agenda-unified .agenda-financial-line--positive { color: #86cfad; }
+.agenda-table .agenda-comparison--negative,
+.agenda-unified .agenda-financial-line--negative { color: #ed9b9b; }
+@media (max-width: 780px) {
+  .agenda-table.agenda-unified .agenda-entry > .agenda-actual {
+    grid-column: 1 / 4;
+  }
+  .agenda-table.agenda-unified .agenda-entry > .agenda-secondary:last-child {
+    grid-column: 4 / 7;
+  }
+  .agenda-table.agenda-unified .agenda-entry > .agenda-difference {
+    grid-column: 1 / 7;
+  }
+  .agenda-table.agenda-unified .agenda-number {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}

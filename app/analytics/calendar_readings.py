@@ -283,4 +283,7 @@ def load_results(events,start,end,now,connection):
     if any(e.get('release_id') in (53,54) for e in events):
         from app.analytics.bea_direct import apply,load_state
         bound=apply(bound,load_state(connection),now)
+    if any(e.get("release_id")==50 for e in events):
+        from app.ingestion.bls_employment import project
+        bound=project(bound,connection,now)
     return bound

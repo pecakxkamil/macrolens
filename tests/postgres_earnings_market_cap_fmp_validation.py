@@ -1,7 +1,7 @@
 """Offline FMP wire examples -> existing SQL store -> real API. NOT a live pilot."""
 import copy,json,os,sys,tempfile
 from pathlib import Path
-from datetime import date
+from datetime import date,datetime
 from uuid import uuid4
 from unittest.mock import patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
@@ -25,10 +25,14 @@ def example_transport(request):
     return httpx.Response(200,json=rows,headers={'x-request-id':'offline-owned-test'})
 
 
-def collected(scope):
+def collected(scope,captured_at='2026-11-04T15:00:00+00:00'):
     client=f.Client(TOKEN,access(),transport=httpx.MockTransport(example_transport),max_requests=54,sleeper=lambda s:None)
-    try:bundle=f.collect(client,scope)
-    finally:client.close()
+    # Freeze only the synthetic transport's clock, including receipt timestamps.
+    with patch.object(f,'datetime',wraps=datetime) as clock:
+        clock.now.return_value=datetime.fromisoformat(captured_at)
+        try:bundle=f.collect(client,scope)
+        finally:client.close()
+    assert bundle['retrieved_at']==captured_at
     assert bundle['fixture'] is True
     assert len(bundle['receipts'])==(11 if scope=='pilot' else 54)
     return bundle
@@ -54,7 +58,9 @@ def verify(factory):
         f.import_reviewed(c,prepared,ledger,allow_examples=True)
         first=table_snapshots(c);c.rollback();assert first['earnings_market_cap_snapshots']['rows']==10
         # An independent retrieval has different receipt times, not a new valuation.
-        second_bundle=collected('pilot');second=f.prepare(second_bundle,review_for(second_bundle),allow_examples=True)
+        second_bundle=collected('pilot',captured_at='2026-11-04T15:01:00+00:00')
+        assert second_bundle['retrieved_at']!=bundle['retrieved_at']
+        second=f.prepare(second_bundle,review_for(second_bundle),allow_examples=True)
         second['records'][0]['verified_on']='2026-11-04'
         ledger.write_text(json.dumps(second['records']));f.import_reviewed(c,second,ledger,allow_examples=True)
         assert table_snapshots(c)==first;c.rollback()

@@ -15,10 +15,26 @@
 .earnings-date { background: #15202b; }
 .earnings-scroll-hint { font-size: .85rem; color: #a8b8c8; }
 @media (min-width: 1000px) { .earnings-scroll-hint { display: none; } }
-.calendar-domains { display: flex; flex-wrap: wrap; gap: 1rem; margin-block: 1rem; }
+.calendar-domains { display: flex; gap: 4px; width: fit-content; max-width: 100%; min-inline-size: 0; margin: 1rem 0; padding: 4px; border: 1px solid #29384a; border-radius: 9px; background: #10171f; }
+.calendar-domains legend,.calendar-domains input { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.calendar-domains label { display: flex; align-items: center; justify-content: center; min-height: 38px; padding: 0 16px; border: 1px solid transparent; border-radius: 6px; color: #91a5bd; font-size: 13px; font-weight: 500; cursor: pointer; transition: background-color 120ms,color 120ms,border-color 120ms; }
+.calendar-domains label:hover { color: #edf4fc; background: #17212e; }
+.calendar-domains label:has(input:checked) { color: #edf4fc; background: #203348; border-color: #476785; }
+.calendar-domains label:has(input:focus-visible) { outline: 2px solid #91c5ff; outline-offset: 2px; }
+.agenda-date-group { display: flex; gap: 4px; min-width: 0; max-width: 100%; padding: 4px; border: 1px solid #29384a; border-radius: 9px; background: #10171f; }
+.calendar-agenda .agenda-date-group button { display: inline-flex; justify-content: center; align-items: center; gap: 5px; min-width: 0; border-color: transparent; border-radius: 6px; background: transparent; }
+.calendar-agenda .agenda-date-group button:hover { background: #17212e; border-color: #344353; }
+.calendar-agenda .agenda-date-group button[aria-pressed=true] { background: #203348; border-color: #476785; color: #edf4fc; }
+@media(max-width: 700px) {
+ .agenda-date-group:not(:last-child) { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); width: 100%; }
+}
 
-.earnings-table .earnings-previous { font-size: .9em; color: #b9c8d6; }
+.earnings-table .earnings-previous { font-size: inherit; color: #edf4fc; }
+.earnings-table .earnings-previous-value,.earnings-table [class*="earnings-actual--"] { font-weight: 700; }
+.earnings-table .earnings-number small { font-weight: 400; }
 
 .earnings-company-link { color: inherit; text-decoration: none; }
 .earnings-company-link:hover { text-decoration: underline; }
 .earnings-company-link:focus-visible { outline: 2px solid #8bc4ff; outline-offset: 3px; }
+.earnings-table .earnings-actual--positive { color: #86cfad; }
+.earnings-table .earnings-actual--negative { color: #ed9b9b; }

@@ -9,7 +9,7 @@ import "../charts/ChartsPage";
 
 const mappings = [
   ["#/state", "#/", "overview", "USA Economy Now"],
-  ["#/charts", "#/explore/charts", "explore", "Historical Charts"],
+  ["#/charts", "#/explore/charts", "explore", "Explore Data"],
   ["#/indicators", "#/explore/indicators", "explore", "Indicators"],
   ["#/indicators/UNRATE", "#/explore/indicators/UNRATE", "explore", "Indicators"],
   ["#/macro-index", "#/research/mci", "research", "Macro Conditions Index"],
@@ -50,9 +50,10 @@ test("simple view switches and hash history keep the active main section in sync
   await screen.findByRole("heading", { name: "Compare Data" });
   expect(screen.queryByText("Loading current index...")).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("link", { name: "Explore Data" }));
+  await screen.findByRole("region", { name: "Curated charts" });
+  expect(within(screen.getByRole("navigation", { name: "Explore Data views" })).getAllByRole("link").map(link => link.textContent)).toEqual(["Curated charts", "Data sets"]);
+  fireEvent.click(screen.getByRole("link", { name: "Data sets" }));
   await screen.findByRole("heading", { name: "Indicators" });
-  fireEvent.click(screen.getByRole("link", { name: "Curated charts" }));
-  await screen.findByRole("heading", { name: "Historical Charts" });
   act(() => { window.location.hash = "#/research/mci"; window.dispatchEvent(new HashChangeEvent("hashchange")); });
   await screen.findByRole("heading", { name: "Macro Conditions Index" });
   expect(screen.getByRole("link", { name: "Research" })).toHaveAttribute("aria-current", "page");
@@ -69,7 +70,7 @@ test("calendar is a main tab and the old address remains compatible", async () =
 });
 
 test("route parsing handles defaults, unknown routes and encoded or malformed series IDs", () => {
-  expect(resolveRoute("#/explore")).toMatchObject({ hash: "#/explore/indicators", seriesId: undefined });
+  expect(resolveRoute("#/explore")).toMatchObject({ hash: "#/explore/charts", view: "charts" });
   expect(resolveRoute("#/indicators/%55NRATE")).toMatchObject({ seriesId: "UNRATE" });
   expect(resolveRoute("#/indicators/%ZZ")).toMatchObject({ seriesId: "Invalid series ID" });
   expect(resolveRoute("#/unrecognized")).toMatchObject({ hash: "#/", section: "overview" });

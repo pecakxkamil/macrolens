@@ -1,0 +1,513 @@
+--- a/frontend/src/calendar/CalendarPage.tsx
++++ b/frontend/src/calendar/CalendarPage.tsx
+@@ -149,7 +149,7 @@
+  {expanded?<EventDetails event={event} measure={measure} now={now} check={check} refresh={refresh} revision={revision} id={detailId} onClose={close}/>:null}</Fragment>;
+ }
+ export function CalendarPage(){
+- const [domain,setDomain]=useState<'macro'|'earnings'|'all'>('macro');
++ const [domain,setDomain]=useState<'macro'|'earnings'|'all'>('all');
+  const [now,setNow]=useState(()=>new Date());
+  const [preset,setPreset]=useState<DatePreset>('week'),[range,setRange]=useState(()=>presetRange('week'));
+  const [custom,setCustom]=useState(range),[validation,setValidation]=useState<string|null>(null),[showFilters,setShowFilters]=useState(false);
+@@ -175,7 +175,7 @@
+  const choose=(value:DatePreset)=>{setPreset(value);setSelected(undefined);setValidation(null);if(value==='custom')setCustom(range);else setRange(presetRange(value));};
+  const toggleStar=(star:number)=>setStars(old=>{const next=new Set(old);next.has(star)?next.delete(star):next.add(star);return next;});
+  return <main className="calendar-page calendar-agenda"><header className="calendar-header"><h1>{tText('Calendar')}</h1><p className="calendar-time-note">{tText('USA')} · {tText('Times shown in Poland local time (Europe/Warsaw).')}</p></header>
+- <fieldset className="calendar-domains"><legend>{et('Calendar domain','Domena kalendarza')}</legend>{([['macro',et('Macro','Makro')],['earnings',et('Company earnings','Wyniki spółek')],['all',et('All','Wszystkie')]] as const).map(([key,label])=><label key={key}><input type="radio" name="calendar-domain" checked={domain===key} onChange={()=>setDomain(key)}/>{label}</label>)}</fieldset>
++ <fieldset className="calendar-domains"><legend>{et('Calendar domain','Domena kalendarza')}</legend>{([['all',et('All','Wszystko')],['macro',et('Data','Dane')],['earnings',et('Earnings','Wyniki')]] as const).map(([key,label])=><label key={key}><input type="radio" name="calendar-domain" checked={domain===key} onChange={()=>setDomain(key)}/>{label}</label>)}</fieldset>
+  <div className="agenda-date-presets" role="group" aria-label={tLabel('Calendar date range')}>{presets.map(([value,label])=><button key={value} type="button" aria-pressed={preset===value} onClick={()=>choose(value)}>{tText(label)}</button>)}</div>
+  {preset==='custom'?<form className="agenda-range-form" onSubmit={e=>{e.preventDefault();const error=rangeError(custom.startDate,custom.endDate);setValidation(error);if(!error){setRange(custom);setSelected(undefined);}}}>
+  <label>{tText('Start date')}<input type="date" value={custom.startDate} onChange={e=>setCustom({...custom,startDate:e.target.value})} required/></label><label>{tText('End date')}<input type="date" value={custom.endDate} onChange={e=>setCustom({...custom,endDate:e.target.value})} required/></label><button type="submit">{tText('Apply range')}</button>{validation?<p role="alert">{tText(validation)}</p>:null}</form>:null}
+--- a/frontend/src/calendar/EarningsCalendar.tsx
++++ b/frontend/src/calendar/EarningsCalendar.tsx
+@@ -1,3 +1,4 @@
++import {companyDisplayName} from './earningsCompanyNames';
+ import {ForecastValue} from './ForecastValue';
+ import type {ForecastDetail} from '../api/macrolens';
+ import {useEffect,useState} from 'react';
+@@ -21,7 +22,7 @@
+ 
+ function EarningsRow({event:e}:{event:EarningsItem}){
+  const source=reportSource(e),cap=marketCap(e),timing=earningsSessionPresentation(e);
+- const company=<><strong>{e.ticker} · {e.period_label}</strong><span className="earnings-company-name">{e.name}</span></>;
++ const company=<><strong>{e.ticker} · {e.period_label}</strong><span className="earnings-company-name">{companyDisplayName(e)}</span></>;
+  return <tr className="earnings-row">
+  <th scope="row">{source?<a className="earnings-company-link" href={source} target="_blank" rel="noreferrer" aria-label={`${e.ticker} · ${e.period_label} · ${et('Official financial report','Oficjalny raport finansowy')}`}>{company}</a>:company}</th>
+  <td className="earnings-center">{earningsTimeLabel(timing.window)}{timing.call?<small>{timing.call}</small>:null}</td>
+--- /dev/null
++++ b/frontend/src/calendar/earningsCompanyNames.ts
+@@ -0,0 +1,61 @@
++// Reviewed presentation names for the existing 53 CIKs; database names stay untouched.
++const companyNames:Readonly<Record<string,string>>={
++ "0000320193": "Apple Inc.",
++ "0001559720": "Airbnb, Inc.",
++ "0000796343": "Adobe Inc.",
++ "0000006951": "Applied Materials, Inc.",
++ "0000002488": "Advanced Micro Devices, Inc.",
++ "0001018724": "Amazon.com, Inc.",
++ "0001973239": "Arm Holdings plc",
++ "0000937966": "ASML Holding N.V.",
++ "0001730168": "Broadcom Inc.",
++ "0000012927": "The Boeing Company",
++ "0000070858": "Bank of America Corporation",
++ "0001075531": "Booking Holdings Inc.",
++ "0001067983": "Berkshire Hathaway Inc.",
++ "0000018230": "Caterpillar Inc.",
++ "0001679788": "Coinbase Global, Inc.",
++ "0000909832": "Costco Wholesale Corporation",
++ "0001108524": "Salesforce, Inc.",
++ "0001535527": "CrowdStrike Holdings, Inc.",
++ "0000858877": "Cisco Systems, Inc.",
++ "0000093410": "Chevron Corporation",
++ "0001744489": "The Walt Disney Company",
++ "0001652044": "Alphabet Inc.",
++ "0000886982": "The Goldman Sachs Group, Inc.",
++ "0000354950": "The Home Depot, Inc.",
++ "0000051143": "IBM",
++ "0000050863": "Intel Corporation",
++ "0000200406": "Johnson & Johnson",
++ "0000019617": "JPMorgan Chase & Co.",
++ "0000319201": "KLA Corporation",
++ "0000059478": "Eli Lilly and Company",
++ "0000707549": "Lam Research Corporation",
++ "0001141391": "Mastercard Incorporated",
++ "0001326801": "Meta Platforms, Inc.",
++ "0000789019": "Microsoft Corporation",
++ "0000723125": "Micron Technology, Inc.",
++ "0001065280": "Netflix, Inc.",
++ "0001373715": "ServiceNow, Inc.",
++ "0001045810": "NVIDIA",
++ "0001341439": "Oracle Corporation",
++ "0001327567": "Palo Alto Networks, Inc.",
++ "0001321655": "Palantir Technologies Inc.",
++ "0001633917": "PayPal Holdings, Inc.",
++ "0000804328": "Qualcomm Incorporated",
++ "0001594805": "Shopify Inc.",
++ "0001640147": "Snowflake Inc.",
++ "0001318605": "Tesla, Inc.",
++ "0001046179": "TSMC",
++ "0000097476": "Texas Instruments Incorporated",
++ "0001543151": "Uber Technologies, Inc.",
++ "0000731766": "UnitedHealth Group Incorporated",
++ "0001403161": "Visa Inc.",
++ "0000104169": "Walmart Inc.",
++ "0002115436": "ExxonMobil Holdings Corporation"
++};
++
++export function companyDisplayName(company:{cik:string;name:string}):string {
++ const cik=/^[0-9]{1,10}$/.test(company.cik)?company.cik.padStart(10,'0'):company.cik;
++ return companyNames[cik]??company.name;
++}
+--- /dev/null
++++ b/frontend/src/calendar/earningsCompanyNames.test.ts
+@@ -0,0 +1,11 @@
++import {expect,it} from 'vitest';
++import {companyDisplayName} from './earningsCompanyNames';
++
++const reviewed=[["0000320193", "Apple Inc.", "Apple Inc."], ["0001559720", "Airbnb, Inc.", "Airbnb, Inc."], ["0000796343", "ADOBE INC.", "Adobe Inc."], ["0000006951", "APPLIED MATERIALS INC /DE", "Applied Materials, Inc."], ["0000002488", "ADVANCED MICRO DEVICES INC", "Advanced Micro Devices, Inc."], ["0001018724", "Amazon", "Amazon.com, Inc."], ["0001973239", "ARM HOLDINGS PLC /UK", "Arm Holdings plc"], ["0000937966", "ASML HOLDING NV", "ASML Holding N.V."], ["0001730168", "Broadcom Inc.", "Broadcom Inc."], ["0000012927", "BOEING CO", "The Boeing Company"], ["0000070858", "BANK OF AMERICA CORP /DE/", "Bank of America Corporation"], ["0001075531", "Booking Holdings Inc.", "Booking Holdings Inc."], ["0001067983", "BERKSHIRE HATHAWAY INC", "Berkshire Hathaway Inc."], ["0000018230", "CATERPILLAR INC", "Caterpillar Inc."], ["0001679788", "Coinbase Global, Inc.", "Coinbase Global, Inc."], ["0000909832", "COSTCO WHOLESALE CORP /NEW", "Costco Wholesale Corporation"], ["0001108524", "Salesforce, Inc.", "Salesforce, Inc."], ["0001535527", "CrowdStrike Holdings, Inc.", "CrowdStrike Holdings, Inc."], ["0000858877", "CISCO SYSTEMS, INC.", "Cisco Systems, Inc."], ["0000093410", "CHEVRON CORP", "Chevron Corporation"], ["0001744489", "Walt Disney Co", "The Walt Disney Company"], ["0001652044", "Alphabet Inc.", "Alphabet Inc."], ["0000886982", "GOLDMAN SACHS GROUP INC", "The Goldman Sachs Group, Inc."], ["0000354950", "HOME DEPOT, INC.", "The Home Depot, Inc."], ["0000051143", "INTERNATIONAL BUSINESS MACHINES CORP", "IBM"], ["0000050863", "Intel", "Intel Corporation"], ["0000200406", "JOHNSON & JOHNSON", "Johnson & Johnson"], ["0000019617", "JPMORGAN CHASE & CO", "JPMorgan Chase & Co."], ["0000319201", "KLA CORP", "KLA Corporation"], ["0000059478", "ELI LILLY & Co", "Eli Lilly and Company"], ["0000707549", "LAM RESEARCH CORP", "Lam Research Corporation"], ["0001141391", "Mastercard Inc", "Mastercard Incorporated"], ["0001326801", "Meta Platforms, Inc.", "Meta Platforms, Inc."], ["0000789019", "MICROSOFT CORP", "Microsoft Corporation"], ["0000723125", "MICRON TECHNOLOGY INC", "Micron Technology, Inc."], ["0001065280", "NETFLIX INC", "Netflix, Inc."], ["0001373715", "ServiceNow, Inc.", "ServiceNow, Inc."], ["0001045810", "NVIDIA", "NVIDIA"], ["0001341439", "ORACLE CORP", "Oracle Corporation"], ["0001327567", "Palo Alto Networks Inc", "Palo Alto Networks, Inc."], ["0001321655", "Palantir Technologies Inc.", "Palantir Technologies Inc."], ["0001633917", "PayPal Holdings, Inc.", "PayPal Holdings, Inc."], ["0000804328", "QUALCOMM INC/DE", "Qualcomm Incorporated"], ["0001594805", "SHOPIFY INC.", "Shopify Inc."], ["0001640147", "Snowflake Inc.", "Snowflake Inc."], ["0001318605", "Tesla, Inc.", "Tesla, Inc."], ["0001046179", "TAIWAN SEMICONDUCTOR MANUFACTURING CO LTD", "TSMC"], ["0000097476", "TEXAS INSTRUMENTS INC", "Texas Instruments Incorporated"], ["0001543151", "Uber Technologies, Inc", "Uber Technologies, Inc."], ["0000731766", "UNITEDHEALTH GROUP INC", "UnitedHealth Group Incorporated"], ["0001403161", "VISA INC.", "Visa Inc."], ["0000104169", "Walmart Inc.", "Walmart Inc."], ["0002115436", "ExxonMobil Holdings Corp", "ExxonMobil Holdings Corporation"]];
++it.each(reviewed)('uses reviewed presentation for CIK %s', (cik,name,display)=>{
++ const company={cik,name};expect(companyDisplayName(company)).toBe(display);expect(company.name).toBe(name);
++});
++it('binds aliases by CIK and preserves unknown brands without title casing',()=>{
++ expect(companyDisplayName({cik:'1652044',name:'GOOG alias'})).toBe('Alphabet Inc.');
++ for(const name of ['AMD','IBM','NVIDIA','TSMC','3M','AT&T',"McDonald’s","McDonald's",'Unreviewed COMPANY'])expect(companyDisplayName({cik:'9999999999',name})).toBe(name);
++});
+--- a/frontend/src/calendar/EarningsDomains.test.tsx
++++ b/frontend/src/calendar/EarningsDomains.test.tsx
+@@ -1,20 +1,41 @@
+-import {afterEach,expect,it,vi} from 'vitest';
+-import {cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
+-import {CalendarPage} from './CalendarPage';
+-import {fetchCalendarAgenda,requestOverviewRefresh} from '../api/macrolens';
+-import {setLanguage} from '../i18n/language';
+-vi.mock('../api/macrolens',async original=>({...await original<typeof import('../api/macrolens')>(),fetchCalendarAgenda:vi.fn(),requestOverviewRefresh:vi.fn()}));
+-afterEach(()=>{cleanup();vi.unstubAllGlobals();vi.clearAllMocks();setLanguage('en');});
+-it.each(['en','pl'] as const)('domain changes retain macro filters and do not add macro GET or POST in %s',async language=>{
+- setLanguage(language);
+- vi.mocked(fetchCalendarAgenda).mockImplementation(async(start_date,end_date)=>({start_date,end_date,events:[],timezone:'Europe/Warsaw',policy:{},refresh:{status:'complete',next_check_at:'2099-01-01T00:00:00Z',results:[]}} as unknown as Awaited<ReturnType<typeof fetchCalendarAgenda>>));
+- const fetcher=vi.fn().mockResolvedValue({ok:true,json:async()=>({events:[],undated:[]})});vi.stubGlobal('fetch',fetcher);
+- render(<CalendarPage/>);await waitFor(()=>expect(fetchCalendarAgenda).toHaveBeenCalledTimes(1));
+- const radio=(name:string)=>screen.getByRole('radio',{name});
+- expect(radio(language==='pl'?'Makro':'Macro')).toBeChecked();expect(fetcher).not.toHaveBeenCalled();
+- const stars=screen.getByRole('checkbox',{name:/★★★/});fireEvent.click(stars);expect(stars).toBeChecked();
+- fireEvent.click(radio(language==='pl'?'Wyniki spółek':'Company earnings'));await screen.findByText(language==='pl'?'Brak publikacji wyników z potwierdzoną datą w wybranym zakresie.':'No earnings releases with a confirmed date in the selected range.');
+- fireEvent.click(radio(language==='pl'?'Wszystkie':'All'));expect(stars).toBeChecked();
+- fireEvent.click(radio(language==='pl'?'Makro':'Macro'));expect(stars).toBeChecked();
+- expect(fetchCalendarAgenda).toHaveBeenCalledTimes(1);expect(requestOverviewRefresh).not.toHaveBeenCalled();expect(fetcher).toHaveBeenCalledTimes(1);
+-});
++import {afterEach,expect,it,vi} from 'vitest';
++import {act,cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
++import {CalendarPage} from './CalendarPage';
++import {fetchCalendarAgenda,requestOverviewRefresh} from '../api/macrolens';
++import {setLanguage} from '../i18n/language';
++vi.mock('../api/macrolens',async original=>({...await original<typeof import('../api/macrolens')>(),fetchCalendarAgenda:vi.fn(),requestOverviewRefresh:vi.fn()}));
++afterEach(()=>{cleanup();vi.useRealTimers();vi.restoreAllMocks();vi.unstubAllGlobals();vi.clearAllMocks();setLanguage('en');});
++it.each(['en','pl'] as const)('domain changes retain macro filters and do not add macro GET or POST in %s',async language=>{
++ setLanguage(language);
++ vi.mocked(fetchCalendarAgenda).mockImplementation(async(start_date,end_date)=>({start_date,end_date,events:[],timezone:'Europe/Warsaw',policy:{},refresh:{status:'complete',next_check_at:'2099-01-01T00:00:00Z',results:[]}} as unknown as Awaited<ReturnType<typeof fetchCalendarAgenda>>));
++ const fetcher=vi.fn().mockResolvedValue({ok:true,json:async()=>({events:[],undated:[]})});vi.stubGlobal('fetch',fetcher);
++ render(<CalendarPage/>);await waitFor(()=>expect(fetchCalendarAgenda).toHaveBeenCalledTimes(1));
++ const radio=(name:string)=>screen.getByRole('radio',{name});
++ expect(radio(language==='pl'?'Wszystko':'All')).toBeChecked();await waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(1));
++ const stars=screen.getByRole('checkbox',{name:/★★★/});fireEvent.click(stars);expect(stars).toBeChecked();
++ fireEvent.click(radio(language==='pl'?'Wyniki':'Earnings'));await screen.findByText(language==='pl'?'Brak publikacji wyników z potwierdzoną datą w wybranym zakresie.':'No earnings releases with a confirmed date in the selected range.');
++ fireEvent.click(radio(language==='pl'?'Wszystko':'All'));expect(stars).toBeChecked();
++ fireEvent.click(radio(language==='pl'?'Dane':'Data'));expect(stars).toBeChecked();
++ expect(fetchCalendarAgenda).toHaveBeenCalledTimes(1);expect(requestOverviewRefresh).not.toHaveBeenCalled();expect(fetcher).toHaveBeenCalledTimes(1);
++});
++
++it.each(['en','pl'] as const)('orders All, Data, Earnings and keeps deliberate selection through polling in %s',async language=>{
++ setLanguage(language);vi.useFakeTimers({toFake:['setInterval','clearInterval']});
++ vi.spyOn(document,'visibilityState','get').mockReturnValue('visible');
++ vi.mocked(fetchCalendarAgenda).mockImplementation(async(start_date,end_date)=>({start_date,end_date,events:[],timezone:'Europe/Warsaw',policy:{},refresh:{status:'complete',next_check_at:'2099-01-01T00:00:00Z',results:[]}} as unknown as Awaited<ReturnType<typeof fetchCalendarAgenda>>));
++ const fetcher=vi.fn().mockResolvedValue({ok:true,json:async()=>({events:[],undated:[]})});vi.stubGlobal('fetch',fetcher);
++ const labels=language==='pl'?['Wszystko','Dane','Wyniki']:['All','Data','Earnings'];
++ localStorage.setItem('macrolens.calendar.domain','earnings');
++ const view=render(<CalendarPage/>);
++ await waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(1));
++ expect(screen.getAllByRole('radio').map(r=>r.closest('label')?.textContent)).toEqual(labels);
++ expect(screen.getByRole('radio',{name:labels[0]})).toBeChecked();
++ fireEvent.click(screen.getByRole('radio',{name:labels[1]}));view.rerender(<CalendarPage/>);
++ expect(screen.getByRole('radio',{name:labels[1]})).toBeChecked();
++ fireEvent.click(screen.getByRole('radio',{name:labels[2]}));await waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(2));
++ await act(async()=>{await vi.advanceTimersByTimeAsync(60000);});
++ expect(fetcher).toHaveBeenCalledTimes(3);expect(screen.getByRole('radio',{name:labels[2]})).toBeChecked();
++ view.rerender(<CalendarPage/>);expect(screen.getByRole('radio',{name:labels[2]})).toBeChecked();
++ view.unmount();render(<CalendarPage/>);expect(screen.getByRole('radio',{name:labels[0]})).toBeChecked();
++ localStorage.removeItem('macrolens.calendar.domain');vi.useRealTimers();vi.restoreAllMocks();
++});
+--- a/frontend/src/calendar/CalendarPage.test.tsx
++++ b/frontend/src/calendar/CalendarPage.test.tsx
+@@ -1,3 +1,4 @@
++vi.mock('./earningsTypes',async original=>({...await original<typeof import('./earningsTypes')>(),fetchEarnings:vi.fn(async()=>({events:[],undated:[]}))}));
+ import {cleanup,fireEvent,render,screen,waitFor,within} from '@testing-library/react';
+ import {afterEach,beforeEach,expect,test,vi} from 'vitest';
+ import App from '../App';
+--- a/frontend/src/calendar/CalendarRefresh.test.tsx
++++ b/frontend/src/calendar/CalendarRefresh.test.tsx
+@@ -1,42 +1,43 @@
+-import {act,cleanup,fireEvent,render,screen} from '@testing-library/react';
+-import {afterEach,beforeEach,expect,test,vi} from 'vitest';
+-import type {CalendarResponse,CalendarMeasure,OverviewRefreshState} from '../api/macrolens';
+-import {CalendarPage} from './CalendarPage';
+-import {setLanguage} from '../i18n/language';
+-
+-const NOW=new Date('2026-10-29T12:52:00Z');
+-const base:CalendarMeasure={series_id:'GDPC1',label:'Real GDP QoQ, annualized',feature_name:'qoq_annualized',frequency:'quarterly',unit:'percent',reference_period:'2026-07-01',previous_period:'2026-04-01',previous_kind:'previous_period',actual:null,previous:2.22,forecast:null,consensus_status:'not_integrated',data_version:null,revision_confirmed:false,binding_method:'official_schedule',vintage_date:null,realtime_end:null,result_status:'awaiting_data',mapping_status:'confirmed',source_url:'https://fred.stlouisfed.org/series/GDPC1',missing_reason:{actual:'observation_missing',previous:null}};
+-beforeEach(()=>{vi.useFakeTimers();vi.setSystemTime(NOW);Object.defineProperty(document,'visibilityState',{configurable:true,value:'visible'});});
+-afterEach(()=>{cleanup();vi.useRealTimers();vi.unstubAllGlobals();setLanguage('en');});
+-async function flush(){await act(async()=>{for(let n=0;n<12;n++)await Promise.resolve();});}
+-
+-test.each(['en','pl'] as const)('visible Calendar keeps GDP blank until committed generation, then reloads automatically in %s',language=>{
+- // The async assertions run in the returned promise so fake timers remain active.
+- return (async()=>{
+- setLanguage(language);let committed=false;const requests:string[]=[];
+- const refresh=():OverviewRefreshState=>({status:committed?'partial':'running',publication_id:committed?'published-q3':'stored-q2',next_check_at:new Date(+NOW+900_000).toISOString(),results:[]});
+- const snapshot=(start:string,end:string):CalendarResponse=>({start_date:start,end_date:end,category:null,data_revision:committed?'published-q3':'stored-q2',automatic_refresh_supported:true,refresh:refresh(),events:[{release_id:53,release_name:'Gross Domestic Product',release_date:'2026-10-29',release_time:'08:30:00',source_timezone:'America/New_York',release_datetime_utc:'2026-10-29T12:30:00Z',importance:'high',source_link:null,date_precision:'date',series:[{series_id:'GDPC1',name:'Real GDP',short_name:'Real GDP',frequency:'quarterly',unit:'index',category:'growth'}],measures:[committed?{...base,actual:3.37,data_version:'current_vintage',result_status:'available',missing_reason:{actual:null,previous:null}}:base]}]});
+- vi.stubGlobal('fetch',vi.fn(async(input:string|URL,init?:RequestInit)=>{
+-  const u=new URL(String(input));requests.push(`${init?.method??'GET'} ${u.pathname}`);
+-  if(u.pathname.endsWith('/brief/refresh'))return {ok:true,json:async()=>refresh()};
+-  if(u.pathname==='/api/v1/calendar')return {ok:true,json:async()=>snapshot(u.searchParams.get('start_date')!,u.searchParams.get('end_date')!)};
+-  throw new Error('Unexpected request');
+- }));
+- render(<CalendarPage/>);await flush();
+- expect(document.querySelector('.agenda-actual')).toHaveTextContent('—');
+- expect(document.querySelector('.agenda-secondary:last-child')).toHaveTextContent(language==='en'?'2.22%':'2,22%');
+- await act(async()=>{await vi.advanceTimersByTimeAsync(2000);});
+- expect(document.querySelector('.agenda-actual')).toHaveTextContent('—');
+- committed=true;
+- await act(async()=>{await vi.advanceTimersByTimeAsync(2000);});await flush();
+- expect(document.querySelector('.agenda-actual')).toHaveTextContent(language==='en'?'3.37%':'3,37%');
+- fireEvent.click(document.querySelector('.agenda-measure-name')!);
+- expect(document.querySelector('.agenda-detail')).toHaveTextContent(language==='en'?'Current-vintage':'Bieżąca');
+- fireEvent.keyDown(document.querySelector('.agenda-detail')!,{key:'Escape'});
+- expect(document.querySelector('.agenda-detail')).toBeNull();
+- expect(document.querySelector('.agenda-measure-name')).toHaveFocus();
+- expect(requests.filter(r=>r.startsWith('POST'))).toHaveLength(0); // Entry saw an already-running job.
+- expect(requests.filter(r=>r==='GET /api/v1/calendar')).toHaveLength(2);
+- expect(screen.getByRole('main')).toBeInTheDocument();
+- })();
+-});
++vi.mock('./earningsTypes',async original=>({...await original<typeof import('./earningsTypes')>(),fetchEarnings:vi.fn(async()=>({events:[],undated:[]}))}));
++import {act,cleanup,fireEvent,render,screen} from '@testing-library/react';
++import {afterEach,beforeEach,expect,test,vi} from 'vitest';
++import type {CalendarResponse,CalendarMeasure,OverviewRefreshState} from '../api/macrolens';
++import {CalendarPage} from './CalendarPage';
++import {setLanguage} from '../i18n/language';
++
++const NOW=new Date('2026-10-29T12:52:00Z');
++const base:CalendarMeasure={series_id:'GDPC1',label:'Real GDP QoQ, annualized',feature_name:'qoq_annualized',frequency:'quarterly',unit:'percent',reference_period:'2026-07-01',previous_period:'2026-04-01',previous_kind:'previous_period',actual:null,previous:2.22,forecast:null,consensus_status:'not_integrated',data_version:null,revision_confirmed:false,binding_method:'official_schedule',vintage_date:null,realtime_end:null,result_status:'awaiting_data',mapping_status:'confirmed',source_url:'https://fred.stlouisfed.org/series/GDPC1',missing_reason:{actual:'observation_missing',previous:null}};
++beforeEach(()=>{vi.useFakeTimers();vi.setSystemTime(NOW);Object.defineProperty(document,'visibilityState',{configurable:true,value:'visible'});});
++afterEach(()=>{cleanup();vi.useRealTimers();vi.unstubAllGlobals();setLanguage('en');});
++async function flush(){await act(async()=>{for(let n=0;n<12;n++)await Promise.resolve();});}
++
++test.each(['en','pl'] as const)('visible Calendar keeps GDP blank until committed generation, then reloads automatically in %s',language=>{
++ // The async assertions run in the returned promise so fake timers remain active.
++ return (async()=>{
++ setLanguage(language);let committed=false;const requests:string[]=[];
++ const refresh=():OverviewRefreshState=>({status:committed?'partial':'running',publication_id:committed?'published-q3':'stored-q2',next_check_at:new Date(+NOW+900_000).toISOString(),results:[]});
++ const snapshot=(start:string,end:string):CalendarResponse=>({start_date:start,end_date:end,category:null,data_revision:committed?'published-q3':'stored-q2',automatic_refresh_supported:true,refresh:refresh(),events:[{release_id:53,release_name:'Gross Domestic Product',release_date:'2026-10-29',release_time:'08:30:00',source_timezone:'America/New_York',release_datetime_utc:'2026-10-29T12:30:00Z',importance:'high',source_link:null,date_precision:'date',series:[{series_id:'GDPC1',name:'Real GDP',short_name:'Real GDP',frequency:'quarterly',unit:'index',category:'growth'}],measures:[committed?{...base,actual:3.37,data_version:'current_vintage',result_status:'available',missing_reason:{actual:null,previous:null}}:base]}]});
++ vi.stubGlobal('fetch',vi.fn(async(input:string|URL,init?:RequestInit)=>{
++  const u=new URL(String(input));requests.push(`${init?.method??'GET'} ${u.pathname}`);
++  if(u.pathname.endsWith('/brief/refresh'))return {ok:true,json:async()=>refresh()};
++  if(u.pathname==='/api/v1/calendar')return {ok:true,json:async()=>snapshot(u.searchParams.get('start_date')!,u.searchParams.get('end_date')!)};
++  throw new Error('Unexpected request');
++ }));
++ render(<CalendarPage/>);await flush();
++ expect(document.querySelector('.agenda-actual')).toHaveTextContent('—');
++ expect(document.querySelector('.agenda-secondary:last-child')).toHaveTextContent(language==='en'?'2.22%':'2,22%');
++ await act(async()=>{await vi.advanceTimersByTimeAsync(2000);});
++ expect(document.querySelector('.agenda-actual')).toHaveTextContent('—');
++ committed=true;
++ await act(async()=>{await vi.advanceTimersByTimeAsync(2000);});await flush();
++ expect(document.querySelector('.agenda-actual')).toHaveTextContent(language==='en'?'3.37%':'3,37%');
++ fireEvent.click(document.querySelector('.agenda-measure-name')!);
++ expect(document.querySelector('.agenda-detail')).toHaveTextContent(language==='en'?'Current-vintage':'Bieżąca');
++ fireEvent.keyDown(document.querySelector('.agenda-detail')!,{key:'Escape'});
++ expect(document.querySelector('.agenda-detail')).toBeNull();
++ expect(document.querySelector('.agenda-measure-name')).toHaveFocus();
++ expect(requests.filter(r=>r.startsWith('POST'))).toHaveLength(0); // Entry saw an already-running job.
++ expect(requests.filter(r=>r==='GET /api/v1/calendar')).toHaveLength(2);
++ expect(screen.getByRole('main')).toBeInTheDocument();
++ })();
++});
+--- a/frontend/src/brief/marketImpact.test.tsx
++++ b/frontend/src/brief/marketImpact.test.tsx
+@@ -1,3 +1,4 @@
++vi.mock('../calendar/earningsTypes',async original=>({...await original<typeof import('../calendar/earningsTypes')>(),fetchEarnings:vi.fn(async()=>({events:[],undated:[]}))}));
+ import {afterEach, expect, test, vi} from 'vitest';
+ import {cleanup, render, screen, fireEvent, within} from '@testing-library/react';
+ import type {CalendarEvent, EconomyBriefResponse} from '../api/macrolens';
+--- a/frontend/src/calendar/EarningsFinancials.test.tsx
++++ b/frontend/src/calendar/EarningsFinancials.test.tsx
+@@ -10,7 +10,7 @@
+ afterEach(()=>{cleanup();vi.unstubAllGlobals();setLanguage('en');});
+ it.each(['en','pl'] as const)('shows every company, financial values, null forecasts and official evidence in %s',async language=>{
+  setLanguage(language);
+- const fourth={...event,event_id:'earnings:four',ticker:'FOUR',name:'Synthetic fourth company',financial_data_status:'partial' as const,gaap_diluted_eps_actual:null};
++ const fourth={...event,event_id:'earnings:four',ticker:'FOUR',company_id:'synthetic-four',cik:'9999999999',name:'Synthetic fourth company',financial_data_status:'partial' as const,gaap_diluted_eps_actual:null};
+  const fetcher=vi.fn().mockResolvedValue({ok:true,json:async()=>({events:[event,fourth],undated:[]})});vi.stubGlobal('fetch',fetcher);
+  const view=render(<EarningsCalendar startDate="2026-10-01" endDate="2026-10-31"/>);
+  const button=await screen.findByRole('link',{name:/INTC · Q3 2026/});
+--- a/frontend/src/navigation/lazyLoading.test.tsx
++++ b/frontend/src/navigation/lazyLoading.test.tsx
+@@ -1,109 +1,110 @@
+-import { lazy, Suspense } from "react";
+-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+-import { afterEach, beforeEach, expect, test, vi } from "vitest";
+-import type { EconomyBriefResponse } from "../api/macrolens";
+-import App from "../App";
+-import { ChunkBoundary } from "./ChunkBoundary";
+-import { setLanguage, tText } from "../i18n/language";
+-
+-const gate = vi.hoisted(() => {
+-  let release!: () => void;
+-  const promise = new Promise<void>(resolve => { release = resolve; });
+-  return { promise, release, imports: 0 };
+-});
+-vi.mock("../brief/EconomyBrief", async () => {
+-  gate.imports++;
+-  await gate.promise;
+-  return vi.importActual("../brief/EconomyBrief");
+-});
+-
+-function brief(revision = "saved"): EconomyBriefResponse {
+-  const unavailable = { status: "unavailable" as const, data: null, error: "Synthetic absence" };
+-  return { data_revision: revision, automatic_refresh_supported: true,
+-    refresh: { status: "complete", publication_id: revision, next_check_at: new Date(Date.now() + 120_000).toISOString(), results: [] },
+-    assembled_at: new Date().toISOString(), timezone: "Europe/Warsaw", history_type: "current_vintage",
+-    snapshot: unavailable, state: unavailable, changes: unavailable, calendar: unavailable,
+-    calendar_start_date: "2026-10-26", calendar_end_date: "2026-11-02" };
+-}
+-async function navigate(hash: string) {
+-  await act(async () => { window.location.hash = hash; window.dispatchEvent(new HashChangeEvent("hashchange")); });
+-}
+-const settle = async () => { await act(async () => { for (let n = 0; n < 8; n++) await Promise.resolve(); }); };
+-beforeEach(() => { localStorage.clear(); setLanguage("en"); window.location.hash = "#/"; });
+-afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+-
+-test("cold Calendar does not import Overview; suspended rapid navigation never mounts an abandoned Overview or duplicates refresh", async () => {
+-  const api = vi.fn(async (input: string) => ({ ok: true, json: async () => input.includes("/calendar")
+-    ? { start_date: "2026-10-26", end_date: "2026-11-01", events: [], automatic_refresh_supported: false }
+-    : brief() }));
+-  vi.stubGlobal("fetch", api); window.location.hash = "#/calendar"; render(<App />);
+-  await screen.findByRole("heading", { name: "Calendar" }); expect(gate.imports).toBe(0);
+-  await navigate("#/"); expect(await screen.findByRole("status")).toHaveTextContent("Loading section...");
+-  expect(gate.imports).toBe(1);
+-  await navigate("#/calendar"); await screen.findByRole("heading", { name: "Calendar" });
+-  await act(async () => { gate.release(); await gate.promise; });
+-  expect(api.mock.calls.filter(([url]) => url.endsWith("/brief"))).toHaveLength(0);
+-  await navigate("#/"); await screen.findByRole("heading", { name: "Labor" });
+-  expect(document.querySelectorAll(".overview-domain")).toHaveLength(6);
+-  await navigate("#/calendar"); await screen.findByRole("heading", { name: "Calendar" });
+-  await navigate("#/"); await screen.findByRole("heading", { name: "Labor" });
+-  expect(api.mock.calls.filter(([url]) => url.endsWith("/brief"))).toHaveLength(2);
+-  expect(api.mock.calls.some(([url]) => url.includes("/refresh"))).toBe(false);
+-});
+-
+-test("lazy Overview retains API error and Retry without re-importing the route", async () => {
+-  const api = vi.fn().mockRejectedValueOnce(new Error("Synthetic API failure"))
+-    .mockResolvedValue({ ok: true, json: async () => brief() });
+-  vi.stubGlobal("fetch", api); render(<App />);
+-  expect(await screen.findByRole("alert")).toHaveTextContent("Economy Brief is unavailable");
+-  fireEvent.click(screen.getByRole("button", { name: "Retry brief" }));
+-  await screen.findByRole("heading", { name: "Labor" }); expect(api).toHaveBeenCalledTimes(2);
+-  expect(gate.imports).toBe(1);
+-});
+-
+-test("lazy Overview remount preserves the R3 deadline once, reloads the committed generation and cancels its timer on unmount", async () => {
+-  vi.useFakeTimers(); vi.setSystemTime(new Date("2026-10-30T12:00:00Z"));
+-  let reads = 0;
+-  const api = vi.fn(async (input: string, init?: RequestInit) => {
+-    if (input.includes("/calendar")) return { ok: true, json: async () => ({
+-      start_date: "2026-10-26", end_date: "2026-11-01", events: [], automatic_refresh_supported: false,
+-    }) };
+-    if (input.includes("/refresh")) {
+-      expect(init?.method).toBe("POST");
+-      return { ok: true, json: async () => ({ ...brief("published").refresh, refresh_mode: "bea_release_aware" }) };
+-    }
+-    reads++;
+-    const data = brief(reads <= 2 ? "saved" : "published");
+-    if (reads <= 2) data.refresh!.next_check_at = "2026-10-30T12:02:00Z";
+-    if (reads > 2) data.calendar = { status: "ready", error: null, data: {
+-      start_date: "2026-10-30", end_date: "2026-11-06", category: null,
+-      events: [{ release_id: 53, release_name: "Gross Domestic Product", release_date: "2026-10-31",
+-        release_time: "08:30:00", source_timezone: "America/New_York", release_datetime_utc: "2026-10-31T12:30:00Z",
+-        importance: "high", source_link: null, date_precision: "date", series: [] }] } };
+-    return { ok: true, json: async () => data };
+-  });
+-  vi.stubGlobal("fetch", api); const view = render(<App />); await settle();
+-  expect(document.querySelectorAll(".overview-domain")).toHaveLength(6);
+-  await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
+-  await navigate("#/calendar"); await settle();
+-  expect(screen.getByRole("heading", { name: "Calendar" })).toBeInTheDocument();
+-  await navigate("#/"); await settle();
+-  expect(reads).toBe(2);
+-  await act(async () => { await vi.advanceTimersByTimeAsync(60_000); }); await settle();
+-  expect(reads).toBe(3); expect(api.mock.calls.filter(([url]) => url.includes("/refresh"))).toHaveLength(1);
+-  expect(screen.getByText("Gross Domestic Product")).toBeInTheDocument();
+-  view.unmount(); await act(async () => { await vi.advanceTimersByTimeAsync(900_000); });
+-  expect(api).toHaveBeenCalledTimes(5);
+-});
+-
+-test.each(["en", "pl"] as const)("chunk rejection has an accessible error and recovers on navigation in %s", async language => {
+-  setLanguage(language);
+-  const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+-  const Broken = lazy(() => Promise.reject(new Error("Synthetic chunk failure")));
+-  const view = render(<ChunkBoundary resetKey="broken"><Suspense fallback={<p role="status">Loading</p>}><Broken /></Suspense></ChunkBoundary>);
+-  expect(await screen.findByRole("alert")).toHaveTextContent(tText("Unable to load this section. Reload the page to retry."));
+-  expect(screen.getByRole("button", { name: tText("Retry") })).toBeInTheDocument();
+-  expect(error.mock.calls.some(call => call.some(value => String(value).includes("Synthetic chunk failure")))).toBe(true);
+-  view.rerender(<ChunkBoundary resetKey="recovered"><p>Recovered route</p></ChunkBoundary>);
+-  expect(await screen.findByText("Recovered route")).toBeInTheDocument();
+-});
++import { lazy, Suspense } from "react";
++import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
++import { afterEach, beforeEach, expect, test, vi } from "vitest";
++import type { EconomyBriefResponse } from "../api/macrolens";
++import App from "../App";
++import { ChunkBoundary } from "./ChunkBoundary";
++import { setLanguage, tText } from "../i18n/language";
++
++const gate = vi.hoisted(() => {
++  let release!: () => void;
++  const promise = new Promise<void>(resolve => { release = resolve; });
++  return { promise, release, imports: 0 };
++});
++vi.mock("../brief/EconomyBrief", async () => {
++  gate.imports++;
++  await gate.promise;
++  return vi.importActual("../brief/EconomyBrief");
++});
++
++function brief(revision = "saved"): EconomyBriefResponse {
++  const unavailable = { status: "unavailable" as const, data: null, error: "Synthetic absence" };
++  return { data_revision: revision, automatic_refresh_supported: true,
++    refresh: { status: "complete", publication_id: revision, next_check_at: new Date(Date.now() + 120_000).toISOString(), results: [] },
++    assembled_at: new Date().toISOString(), timezone: "Europe/Warsaw", history_type: "current_vintage",
++    snapshot: unavailable, state: unavailable, changes: unavailable, calendar: unavailable,
++    calendar_start_date: "2026-10-26", calendar_end_date: "2026-11-02" };
++}
++async function navigate(hash: string) {
++  await act(async () => { window.location.hash = hash; window.dispatchEvent(new HashChangeEvent("hashchange")); });
++}
++const settle = async () => { await act(async () => { for (let n = 0; n < 8; n++) await Promise.resolve(); }); };
++beforeEach(() => { localStorage.clear(); setLanguage("en"); window.location.hash = "#/"; });
++afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
++
++test("cold Calendar does not import Overview; suspended rapid navigation never mounts an abandoned Overview or duplicates refresh", async () => {
++  const api = vi.fn(async (input: string) => ({ ok: true, json: async () => input.includes("/calendar")
++    ? { start_date: "2026-10-26", end_date: "2026-11-01", events: [], automatic_refresh_supported: false }
++    : brief() }));
++  vi.stubGlobal("fetch", api); window.location.hash = "#/calendar"; render(<App />);
++  await screen.findByRole("heading", { name: "Calendar" }); expect(gate.imports).toBe(0);
++  await navigate("#/"); expect(await screen.findByRole("status")).toHaveTextContent("Loading section...");
++  expect(gate.imports).toBe(1);
++  await navigate("#/calendar"); await screen.findByRole("heading", { name: "Calendar" });
++  await act(async () => { gate.release(); await gate.promise; });
++  expect(api.mock.calls.filter(([url]) => url.endsWith("/brief"))).toHaveLength(0);
++  await navigate("#/"); await screen.findByRole("heading", { name: "Labor" });
++  expect(document.querySelectorAll(".overview-domain")).toHaveLength(6);
++  await navigate("#/calendar"); await screen.findByRole("heading", { name: "Calendar" });
++  await navigate("#/"); await screen.findByRole("heading", { name: "Labor" });
++  expect(api.mock.calls.filter(([url]) => url.endsWith("/brief"))).toHaveLength(2);
++  expect(api.mock.calls.some(([url]) => url.includes("/refresh"))).toBe(false);
++});
++
++test("lazy Overview retains API error and Retry without re-importing the route", async () => {
++  const api = vi.fn().mockRejectedValueOnce(new Error("Synthetic API failure"))
++    .mockResolvedValue({ ok: true, json: async () => brief() });
++  vi.stubGlobal("fetch", api); render(<App />);
++  expect(await screen.findByRole("alert")).toHaveTextContent("Economy Brief is unavailable");
++  fireEvent.click(screen.getByRole("button", { name: "Retry brief" }));
++  await screen.findByRole("heading", { name: "Labor" }); expect(api).toHaveBeenCalledTimes(2);
++  expect(gate.imports).toBe(1);
++});
++
++test("lazy Overview remount preserves the R3 deadline once, reloads the committed generation and cancels its timer on unmount", async () => {
++  vi.useFakeTimers(); vi.setSystemTime(new Date("2026-10-30T12:00:00Z"));
++  let reads = 0;
++  const api = vi.fn(async (input: string, init?: RequestInit) => {
++    if (input.includes("/calendar")) return { ok: true, json: async () => ({
++      start_date: "2026-10-26", end_date: "2026-11-01", events: [], automatic_refresh_supported: false,
++    }) };
++    if (input.includes("/refresh")) {
++      expect(init?.method).toBe("POST");
++      return { ok: true, json: async () => ({ ...brief("published").refresh, refresh_mode: "bea_release_aware" }) };
++    }
++    reads++;
++    const data = brief(reads <= 2 ? "saved" : "published");
++    if (reads <= 2) data.refresh!.next_check_at = "2026-10-30T12:02:00Z";
++    if (reads > 2) data.calendar = { status: "ready", error: null, data: {
++      start_date: "2026-10-30", end_date: "2026-11-06", category: null,
++      events: [{ release_id: 53, release_name: "Gross Domestic Product", release_date: "2026-10-31",
++        release_time: "08:30:00", source_timezone: "America/New_York", release_datetime_utc: "2026-10-31T12:30:00Z",
++        importance: "high", source_link: null, date_precision: "date", series: [] }] } };
++    return { ok: true, json: async () => data };
++  });
++  vi.stubGlobal("fetch", api); const view = render(<App />); await settle();
++  expect(document.querySelectorAll(".overview-domain")).toHaveLength(6);
++  await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
++  await navigate("#/calendar"); await settle();
++  expect(screen.getByRole("heading", { name: "Calendar" })).toBeInTheDocument();
++  await navigate("#/"); await settle();
++  expect(reads).toBe(2);
++  await act(async () => { await vi.advanceTimersByTimeAsync(60_000); }); await settle();
++  expect(reads).toBe(3); expect(api.mock.calls.filter(([url]) => url.includes("/refresh"))).toHaveLength(1);
++  expect(screen.getByText("Gross Domestic Product")).toBeInTheDocument();
++  view.unmount(); await act(async () => { await vi.advanceTimersByTimeAsync(900_000); });
++  expect(api.mock.calls.filter(([url])=>url.includes("/calendar/events"))).toHaveLength(1);
++  expect(api).toHaveBeenCalledTimes(6);
++});
++
++test.each(["en", "pl"] as const)("chunk rejection has an accessible error and recovers on navigation in %s", async language => {
++  setLanguage(language);
++  const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
++  const Broken = lazy(() => Promise.reject(new Error("Synthetic chunk failure")));
++  const view = render(<ChunkBoundary resetKey="broken"><Suspense fallback={<p role="status">Loading</p>}><Broken /></Suspense></ChunkBoundary>);
++  expect(await screen.findByRole("alert")).toHaveTextContent(tText("Unable to load this section. Reload the page to retry."));
++  expect(screen.getByRole("button", { name: tText("Retry") })).toBeInTheDocument();
++  expect(error.mock.calls.some(call => call.some(value => String(value).includes("Synthetic chunk failure")))).toBe(true);
++  view.rerender(<ChunkBoundary resetKey="recovered"><p>Recovered route</p></ChunkBoundary>);
++  expect(await screen.findByText("Recovered route")).toBeInTheDocument();
++});

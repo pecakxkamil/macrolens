@@ -93,7 +93,8 @@ test("lazy Overview remount preserves the R3 deadline once, reloads the committe
   expect(reads).toBe(3); expect(api.mock.calls.filter(([url]) => url.includes("/refresh"))).toHaveLength(1);
   expect(screen.getByText("Gross Domestic Product")).toBeInTheDocument();
   view.unmount(); await act(async () => { await vi.advanceTimersByTimeAsync(900_000); });
-  expect(api).toHaveBeenCalledTimes(5);
+  expect(api.mock.calls.filter(([url])=>url.includes("/calendar/events"))).toHaveLength(1);
+  expect(api).toHaveBeenCalledTimes(6);
 });
 
 test.each(["en", "pl"] as const)("chunk rejection has an accessible error and recovers on navigation in %s", async language => {

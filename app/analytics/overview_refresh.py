@@ -84,8 +84,16 @@ def refresh_fred(series_id, previous, local, connection, now):
         validate_employment_metadata(series_id, metadata)
         changed = (previous.get('last_updated') != metadata['last_updated']
             or previous.get('local_signature') != local.get('signature') or previous.get('transformations') != spec)
+        release_probe = False
+        if series_id in ('PAYEMS','UNRATE','CES0500000003','CIVPART','U6RATE','AWHAETP'):
+            from app.ingestion.bls_employment import events,complete
+            pending=[e for e in events(now) if not complete(connection,e)]
+            if pending:
+                latest=connection.execute('SELECT max(observation_date) FROM observation_vintages WHERE series_id=%s',(series_id,)).fetchone()[0]
+                release_probe=latest is None or str(latest)<pending[0]['reference_period']
+        changed=changed or release_probe
         details = {'last_updated':metadata['last_updated'], 'observation_end':metadata.get('observation_end'),
-                   'observation_fetch_status':'fetched' if changed else 'metadata_unchanged'}
+                   'observation_fetch_status':'fetched' if changed else 'metadata_unchanged', 'release_observation_probe':release_probe}
         if changed:
             payload = fetch_series_observations(series_id, observation_start=local.get('start'))
             # Full CURRENT snapshot over the stored history catches older revisions;

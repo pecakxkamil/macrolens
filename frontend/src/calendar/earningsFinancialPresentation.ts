@@ -2,6 +2,14 @@ import {getLanguage} from '../i18n/language';
 import type {EarningsItem,FinancialObservation} from './earningsTypes';
 import {earningsAnchor,earningsDay,et} from './earningsPresentation';
 
+export type EarningsActualKey='current_eps'|'previous_eps'|'current_revenue'|'previous_revenue';
+/** The same explicit-null and legacy-field rules in both Calendar views. */
+export function earningsActual(e:EarningsItem,key:EarningsActualKey):FinancialObservation|null|undefined {
+ if(key==='current_eps')return e.current_eps_actual===undefined?e.reported_eps_actual??e.gaap_diluted_eps_actual:e.current_eps_actual;
+ if(key==='current_revenue')return e.current_revenue_actual===undefined?e.revenue_actual:e.current_revenue_actual;
+ return e[`${key}_actual`];
+}
+
 export function financialValue(value:FinancialObservation|null|undefined):string {
  if(!value)return '—';
  const n=Number(value.actual);if(!Number.isFinite(n))return '—';

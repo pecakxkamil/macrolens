@@ -35,7 +35,8 @@ describe("Charts v1", () => {
   test("navigation opens Charts and browser history returns to Overview", async () => {
     mockHistory();
     openCharts();
-    expect(await screen.findByRole("heading", { name: "Historical Charts" })).toBeInTheDocument();
+    expect(await screen.findByRole("region", { name: "Curated charts" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Historical Charts" })).toBeNull();
     expect(screen.getByRole("link", { name: "Explore Data" })).toHaveAttribute("aria-current", "page");
     vi.stubGlobal("fetch", vi.fn(() => new Promise(() => undefined)));
     fireEvent.click(screen.getByRole("link", { name: "Overview" }));
@@ -43,15 +44,16 @@ describe("Charts v1", () => {
     expect(screen.getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
   });
 
-  test("Labor and 3Y are defaults, with methodology notice and no overview fetch", async () => {
+  test("Labor and 3Y are defaults without introductory notices or overview fetch", async () => {
     const fetchMock = mockHistory();
     openCharts();
     expect(await screen.findByRole("heading", { name: "Unemployment Rate" })).toBeInTheDocument();
     expect(within(screen.getByRole("group", { name: "Chart domain" })).getByRole("button", { name: "Labor" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.queryByRole("heading", { name: "CPI Inflation YoY" })).not.toBeInTheDocument();
     expect(within(screen.getByRole("group", { name: "Time range" })).getByRole("button", { name: "3Y" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByText(/Current-vintage history/).parentElement).toHaveTextContent("This is not point-in-time historical reconstruction.");
-    expect(screen.getByText("No trading signals.")).toBeInTheDocument();
+    expect(screen.queryByText(/Current-vintage history/)).toBeNull();
+    expect(screen.queryByText("No trading signals.")).toBeNull();
+    expect(screen.queryByText("Explore how key US macroeconomic indicators have evolved over time.")).toBeNull();
     expect(screen.queryByText(/macro score/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/trading signal:/i)).not.toBeInTheDocument();
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
@@ -62,7 +64,7 @@ describe("Charts v1", () => {
   test("financial spread uses the backend synchronized history endpoint", async () => {
     const fetchMock = mockHistory();
     openCharts();
-    await screen.findByRole("heading", { name: "Historical Charts" });
+    await screen.findByRole("region", { name: "Curated charts" });
     fireEvent.click(within(screen.getByRole("group", { name: "Chart domain" })).getByRole("button", { name: "Financial Conditions" }));
     expect(screen.getByRole("heading", { name: "2s10s Yield Curve Spread" })).toBeInTheDocument();
     await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/api/v1/analytics/yield-curve/2s10s/history?start_date="))).toBe(true));
@@ -71,7 +73,7 @@ describe("Charts v1", () => {
   test("changing domain fetches only its series; changing range updates start_date", async () => {
     const fetchMock = mockHistory();
     openCharts();
-    await screen.findByRole("heading", { name: "Historical Charts" });
+    await screen.findByRole("region", { name: "Curated charts" });
     fireEvent.click(within(screen.getByRole("group", { name: "Chart domain" })).getByRole("button", { name: "Inflation" }));
     expect(screen.getByRole("heading", { name: "CPI Inflation YoY" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Unemployment Rate" })).not.toBeInTheDocument();

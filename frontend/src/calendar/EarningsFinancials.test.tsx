@@ -10,7 +10,7 @@ const event:EarningsItem={domain:'earnings',event_id:'earnings:intc',company_id:
 afterEach(()=>{cleanup();vi.unstubAllGlobals();setLanguage('en');});
 it.each(['en','pl'] as const)('shows every company, financial values, null forecasts and official evidence in %s',async language=>{
  setLanguage(language);
- const fourth={...event,event_id:'earnings:four',ticker:'FOUR',name:'Synthetic fourth company',financial_data_status:'partial' as const,gaap_diluted_eps_actual:null};
+ const fourth={...event,event_id:'earnings:four',ticker:'FOUR',company_id:'synthetic-four',cik:'9999999999',name:'Synthetic fourth company',financial_data_status:'partial' as const,gaap_diluted_eps_actual:null};
  const fetcher=vi.fn().mockResolvedValue({ok:true,json:async()=>({events:[event,fourth],undated:[]})});vi.stubGlobal('fetch',fetcher);
  const view=render(<EarningsCalendar startDate="2026-10-01" endDate="2026-10-31"/>);
  const button=await screen.findByRole('link',{name:/INTC · Q3 2026/});
@@ -37,4 +37,23 @@ it('sorts by actual date/time, ticker and stable ID without inventing unknown da
  const early={...late,event_id:'a',release:{...late.release,scheduled_at_utc:'2026-10-29T20:00:00Z'}};
  expect([event,late,early].sort(compareEarnings).map(x=>x.event_id)).toEqual(['a','z',event.event_id]);
  expect(compareEarnings({...event,event_id:'a'},{...event,event_id:'b'})).toBeLessThan(0);
+});
+
+
+it.each(['en','pl'] as const)('colors detailed current EPS and revenue independently against comparable previous in %s',async language=>{
+ setLanguage(language);
+ const eps={...observation,metric:'reported_diluted_eps',unit:'USD/share',actual:'0.12',methodology:'reported_diluted_total_eps'} as FinancialObservation;
+ const item:EarningsItem={...event,release:{...unknown,date_status:'confirmed',source_local_date:'2026-10-29',poland_date:'2026-10-29'},current_eps_actual:eps,previous_eps_actual:{...eps,actual:'0.25'},current_revenue_actual:{...observation,actual:'1443000000'},previous_revenue_actual:{...observation,actual:'1289000000'},previous_period:{fiscal_year:2026,fiscal_quarter:2,period_label:'Q2 2026',period_end:null}};
+ const state={data:{events:[item],undated:[]},error:null,retry:vi.fn()} as never;
+ const view=render(<EarningsCalendar startDate="2026-10-01" endDate="2026-10-31" state={state}/>);
+ const cells=()=>document.querySelectorAll('.earnings-row .earnings-number');
+ expect(cells()[0].firstChild).toHaveClass('earnings-actual--negative');expect(cells()[2].firstChild).toHaveClass('earnings-actual--positive');
+ expect(cells()[1].querySelector('[class*="earnings-actual--"]')).toBeNull();expect(cells()[0].querySelector('small')).not.toHaveClass('earnings-actual--negative');
+ item.current_eps_actual={...eps,actual:'0.50'};item.current_revenue_actual={...observation,actual:'1200000000'};
+ view.rerender(<EarningsCalendar startDate="2026-10-01" endDate="2026-10-31" state={state}/>);
+ expect(cells()[0].firstChild).toHaveClass('earnings-actual--positive');expect(cells()[2].firstChild).toHaveClass('earnings-actual--negative');
+ item.previous_eps_actual=null;item.current_revenue_actual=item.previous_revenue_actual;
+ view.rerender(<EarningsCalendar startDate="2026-10-01" endDate="2026-10-31" state={state}/>);
+ expect(cells()[0].firstChild).toHaveClass('earnings-actual--neutral');expect(cells()[2].firstChild).toHaveClass('earnings-actual--neutral');
+ expect(document.querySelectorAll('thead th')).toHaveLength(7);
 });

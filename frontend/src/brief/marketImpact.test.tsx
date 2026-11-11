@@ -1,3 +1,4 @@
+vi.mock('../calendar/earningsTypes',async original=>({...await original<typeof import('../calendar/earningsTypes')>(),fetchEarnings:vi.fn(async()=>({events:[],undated:[]}))}));
 import {afterEach, expect, test, vi} from 'vitest';
 import {cleanup, render, screen, fireEvent, within} from '@testing-library/react';
 import type {CalendarEvent, EconomyBriefResponse} from '../api/macrolens';
