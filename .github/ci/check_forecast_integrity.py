@@ -1,4 +1,4 @@
-"""Verify the approved F1 V3 checkout without importing app code or accessing SQL."""
+"""Verify approved F1 V3/V4 checkouts without importing app code or accessing SQL."""
 import argparse
 import hashlib
 from importlib import metadata
@@ -9,10 +9,15 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parents[2]
-BASELINE = Path(__file__).with_name("forecast_f1_v3_baseline.json")
+BASELINES = {v: Path(__file__).with_name(f"forecast_f1_v{v}_baseline.json") for v in (3, 4)}
+BASELINE = BASELINES[4]
 SPEC = "config/forecast_f1_runtime_manifest_v2.json"
-PLAN_SHA256 = "374e93e3c7f21cf232db989e0532045c073328f71b2e4c3e5b3da3265499e2ad"
-ARTIFACTS_SHA256 = "541d41bf1a7156f1f9d3e90d9f037428118e0c19790309c9309f60be38823fb8"
+APPROVALS = {
+    3: ("374e93e3c7f21cf232db989e0532045c073328f71b2e4c3e5b3da3265499e2ad",
+        "541d41bf1a7156f1f9d3e90d9f037428118e0c19790309c9309f60be38823fb8", 156),
+    4: ("ebfe454621a598db1745690e1d94b0d35227add8916f2823a35f9595280e689c",
+        "90af2f8758569aa1ac0667855827b0b67167313ea21ec0f4cc05073cf0c23cbb", 161),
+}
 LIBRARIES = ("httpx", "psycopg", "pypdf")
 SUFFIXES = {".py", ".sql", ".json", ".yaml", ".yml"}
 
@@ -36,17 +41,20 @@ def read_json(path):
     return json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=unique_object)
 
 
-def load_baseline(path=BASELINE):
-    value = read_json(path)
+def load_baseline(path=None, authorization_version=4):
+    if authorization_version not in APPROVALS:
+        raise ValueError("Unapproved authorization version")
+    plan_sha, artifacts_sha, file_count = APPROVALS[authorization_version]
+    value = read_json(path if path is not None else BASELINES[authorization_version])
     keys = {"format_version", "authorization_version", "approved_plan_sha256",
             "approved_artifacts_sha256", "files", "libraries"}
-    if set(value) != keys or value["format_version"] != 1 or value["authorization_version"] != 3:
+    if set(value) != keys or value["format_version"] != 1 or value["authorization_version"] != authorization_version:
         raise ValueError("Unknown baseline format or authorization version")
-    if value["approved_plan_sha256"] != PLAN_SHA256:
-        raise ValueError("Baseline is not tied to the approved BLS deployment plan")
+    if value["approved_plan_sha256"] != plan_sha:
+        raise ValueError("Baseline is not tied to the explicitly approved deployment plan")
     files, libraries = value["files"], value["libraries"]
-    if not isinstance(files, dict) or len(files) != 156 or SPEC not in files:
-        raise ValueError("Baseline must contain exactly 156 approved source paths")
+    if not isinstance(files, dict) or len(files) != file_count or SPEC not in files:
+        raise ValueError(f"Baseline must contain exactly {file_count} approved source paths")
     if not isinstance(libraries, dict) or set(libraries) != set(LIBRARIES):
         raise ValueError("Baseline must contain exactly three approved libraries")
     for name, checksum in files.items():
@@ -57,7 +65,7 @@ def load_baseline(path=BASELINE):
         if not isinstance(checksum, str) or not re.fullmatch(r"[0-9a-f]{64}", checksum):
             raise ValueError("Invalid SHA-256 for: " + name)
     artifacts = {**files, **{name + "_version": libraries[name] for name in LIBRARIES}}
-    if value["approved_artifacts_sha256"] != ARTIFACTS_SHA256 or digest(artifacts) != ARTIFACTS_SHA256:
+    if value["approved_artifacts_sha256"] != artifacts_sha or digest(artifacts) != artifacts_sha:
         raise ValueError("Baseline artifact map differs from the previously approved map")
     return value
 
@@ -95,7 +103,7 @@ def verify(root, baseline, version_reader=None):
             errors.append("Unknown protected runtime manifest format")
         paths = spec["paths"]
         if paths != sorted(expected) or len(paths) != len(set(paths)):
-            errors.append("Runtime manifest path list differs from the approved 156 paths")
+            errors.append(f"Runtime manifest path list differs from the approved {len(expected)} paths")
         if spec["versions"] != list(LIBRARIES):
             errors.append("Runtime manifest library list differs from the approved three libraries")
     except (OSError, ValueError, KeyError, TypeError):
@@ -116,17 +124,22 @@ def verify(root, baseline, version_reader=None):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=ROOT, help="Checkout to verify; baseline stays fixed")
+    parser.add_argument("--authorization-version", type=int, choices=(3, 4), default=4,
+                        help="Explicit historical V3 verification; CI always selects V4")
     args = parser.parse_args(argv)
+    label = f"F1 V{args.authorization_version} integrity"
     try:
-        errors = verify(args.root, load_baseline())
+        baseline = load_baseline(authorization_version=args.authorization_version)
+        errors = verify(args.root, baseline)
     except (OSError, ValueError, KeyError, TypeError) as error:
-        print("F1 V3 integrity ERROR: " + str(error), file=sys.stderr)
+        print(label + " ERROR: " + str(error), file=sys.stderr)
         return 1
     if errors:
         for error in errors:
-            print("F1 V3 integrity ERROR: " + error, file=sys.stderr)
+            print(label + " ERROR: " + error, file=sys.stderr)
         return 1
-    print("F1 V3 integrity OK: 156/156 exact file hashes, 3/3 library versions (159/159).")
+    count = len(baseline["files"])
+    print(f"{label} OK: {count}/{count} exact file hashes, 3/3 library versions ({count+3}/{count+3}).")
     return 0
 
 
