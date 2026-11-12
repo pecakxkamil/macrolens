@@ -91,6 +91,9 @@ def prepare(c,delivery,backup,seed):
 
 
 def authorized(c,t,check_schema=True):
+    if t.get('version')==4:
+        from app.database.forecast_f1_authorization_cpi import authorized as cpi_authorized
+        return cpi_authorized(c,t,check_schema)
     if set(t)!={'version','plan_sha256','target','artifacts'} or t['version']!=3:raise ValueError('BLS requires separately approved version-3 token')
     rows=revision(c)
     if len(rows)!=1:raise ValueError('One complete BLS authorization revision required')

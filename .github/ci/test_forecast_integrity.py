@@ -67,7 +67,7 @@ class IntegrityTests(unittest.TestCase):
         path.write_text(json.dumps(spec), encoding="utf-8")
         errors = self.errors()
         self.assertTrue(any("SHA-256 mismatch" in e and guard.SPEC in e for e in errors))
-        self.assertIn("Runtime manifest path list differs from the approved 156 paths", errors)
+        self.assertIn("Runtime manifest path list differs from the approved 161 paths", errors)
 
     def test_invalid_runtime_manifest(self):
         (self.root / guard.SPEC).write_text("not JSON")
@@ -100,6 +100,40 @@ class IntegrityTests(unittest.TestCase):
         path.write_text('{"format_version": 1, "format_version": 1}')
         with self.assertRaisesRegex(ValueError, "Duplicate JSON key"):
             guard.load_baseline(path)
+
+
+    def test_historical_v3_baseline_remains_explicit_and_pinned(self):
+        historical = guard.load_baseline(authorization_version=3)
+        self.assertEqual(len(historical["files"]), 156)
+        self.assertEqual(historical["approved_plan_sha256"], guard.APPROVALS[3][0])
+        self.assertEqual(self.baseline["authorization_version"], 4)
+        with self.assertRaisesRegex(ValueError, "authorization version"):
+            guard.load_baseline(guard.BASELINES[3])
+
+    def test_explicit_v3_cannot_accept_v4_checkout(self):
+        with redirect_stderr(io.StringIO()):
+            self.assertEqual(guard.main(["--root", str(self.root), "--authorization-version", "3"]), 1)
+
+    def test_all_three_mixed_files_reject_eol_normalization(self):
+        for name in ("app/analytics/overview_refresh_store.py", "app/database/overview_refresh.sql", "app/ingestion/request_budget.py"):
+            with self.subTest(path=name):
+                path = self.root / name
+                raw = path.read_bytes()
+                self.assertIn(b"\r\n", raw)
+                self.assertNotEqual(raw.count(b"\r\n"), raw.count(b"\n"))
+                path.write_bytes(raw.replace(b"\r\n", b"\n"))
+                self.assertTrue(any("SHA-256 mismatch: " + name in e for e in self.errors()))
+                path.write_bytes(raw)
+
+    def test_baseline_cannot_switch_approved_plan_or_version(self):
+        for key, value in (("approved_plan_sha256", "0" * 64), ("authorization_version", 3)):
+            with self.subTest(field=key):
+                changed = copy.deepcopy(self.baseline)
+                changed[key] = value
+                path = self.root / "foreign-baseline.json"
+                path.write_text(json.dumps(changed), encoding="utf-8")
+                with self.assertRaises(ValueError):
+                    guard.load_baseline(path)
 
 
 if __name__ == "__main__":

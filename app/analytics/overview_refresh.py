@@ -91,6 +91,12 @@ def refresh_fred(series_id, previous, local, connection, now):
             if pending:
                 latest=connection.execute('SELECT max(observation_date) FROM observation_vintages WHERE series_id=%s',(series_id,)).fetchone()[0]
                 release_probe=latest is None or str(latest)<pending[0]['reference_period']
+        if series_id in ('CPIAUCSL','CPILFESL'):
+            from app.ingestion.bls_cpi import events as cpi_events,complete as cpi_complete
+            pending=[e for e in cpi_events(now) if not cpi_complete(connection,e)]
+            if pending:
+                latest=connection.execute('SELECT max(observation_date) FROM observation_vintages WHERE series_id=%s AND value IS NOT NULL',(series_id,)).fetchone()[0]
+                release_probe=latest is None or str(latest)<pending[0]['reference_period']
         changed=changed or release_probe
         details = {'last_updated':metadata['last_updated'], 'observation_end':metadata.get('observation_end'),
                    'observation_fetch_status':'fetched' if changed else 'metadata_unchanged', 'release_observation_probe':release_probe}

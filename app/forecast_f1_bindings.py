@@ -14,6 +14,10 @@ def publication_events(c):
  with shared_connection(c):
   macro=release_calendar.list_calendar_events(START,END)['events']
   macro=load_results(macro,START,END,datetime.now(timezone.utc),c)
+  # SA model identities remain unchanged; NSA Actual is not SA freeze evidence.
+  for event in macro:
+   for measure in event.get('measures',[]):
+    if measure.get('selected_source')=='bls:cpi' and measure.get('seasonal_adjustment')=='NSA':measure['actual']=None
   equity=earnings.load_events(c)
  return macro,equity
 

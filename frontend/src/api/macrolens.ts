@@ -422,9 +422,10 @@ export interface PublisherUsageRights {
  source:string;copyright:string;terms_url:string;original_url:string;modifications:string;redistribution_conditions:string;
 }
 export interface CalendarMeasure {
+  cpi_history?:Record<string,string>;cpi_rate_kind?:string;cpi_contract_id?:string;cpi_missing_base_period?:string|null;cpi_missing_proof?:Record<string,unknown>|null;
  annual_context_source?:'fred';
- bls_history?:Record<string,string>;bls_method?:string;selected_source?:'bls:employment'|'bea_official'|'fred_fallback'|'not_available';published_precision?:number;previous_precision?:number|null;
- source_comparison?:'conflict'|'consistent_with_rounding'|'bea_only';comparison_status?:'same_bls_capture'|'mixed_sources'|'same_bea_document'|'previous_unavailable';
+ bls_history?:Record<string,string>;bls_method?:string;selected_source?:'bls:employment'|'bls:cpi'|'bea_official'|'fred_fallback'|'not_available';published_precision?:number;previous_precision?:number|null;
+ source_comparison?:'conflict'|'consistent_with_rounding'|'bea_only';comparison_status?:'same_cpi_capture'|'same_bls_capture'|'mixed_sources'|'same_bea_document'|'previous_unavailable';
  fred_alternative?:{actual:number|null;previous:number|null;source_url?:string;data_version?:string;actual_provenance?:Record<string,unknown>|null};
  source_value_millions?:string|null;previous_source_value_millions?:string|null;
  usage_rights?:PublisherUsageRights;report_current?:number|null;
@@ -438,8 +439,8 @@ export interface CalendarMeasure {
  reference_period:string|null;previous_period:string|null;previous_kind:"previous_period"|"previous_estimate"|"previous_decision";
  forecast_details?:ForecastDetail|null;forecast_status?:string;
  actual:number|null;previous:number|null;forecast:number|null;consensus_status:"not_integrated"|"available";
- previous_data_version?:"stored_date_vintage"|"current_vintage"|"official_release"|null;data_version:"stored_date_vintage"|"current_vintage"|"official_release"|null;revision_confirmed:boolean;binding_method:string|null;
- vintage_date:string|null;realtime_end:string|null;result_status:"available"|"scheduled"|"awaiting_data";mapping_status:string;source_url:string;
+ previous_data_version?:"derived_bls_snapshot"|"stored_date_vintage"|"current_vintage"|"official_release"|null;data_version:"derived_bls_snapshot"|"stored_date_vintage"|"current_vintage"|"official_release"|null;revision_confirmed:boolean;binding_method:string|null;
+ vintage_date:string|null;realtime_end:string|null;result_status:"publisher_unavailable"|"available"|"scheduled"|"awaiting_data";mapping_status:string;source_url:string;
  actual_range?:[number,number]|null;previous_range?:[number,number]|null;
  effective_date?:string|null;previous_effective_date?:string|null;
  period_provenance?:{source_url:string;reference_period:string;binding_method:string;retrieved_at?:string;estimate_stage?:string;report_url?:string;source_check?:{status:string;source_url:string;error_code?:string}|null}|null;

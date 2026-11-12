@@ -17,6 +17,7 @@ export function macroMissingReason(event:CalendarEvent,measure:CalendarMeasure|u
  }
  if(!measure)return et('No verified numerical reading for this event.','Brak zweryfikowanego odczytu liczbowego dla tego wydarzenia.');
  const reason=measure?.missing_reason?.[kind];
+ if(kind==='actual'&&reason==='publisher_base_unavailable'&&measure.selected_source==='bls:cpi'&&measure.cpi_missing_proof&&measure.cpi_missing_base_period)return et(`Year-over-year reading unavailable: missing base data for ${measure.cpi_missing_base_period.slice(0,7)}.`,`Odczyt r/r niedostępny: brak danych bazowych za ${measure.cpi_missing_base_period.slice(0,7)}.`);
  if(reason==='reference_period_unconfirmed'||measure?.mapping_status!=='confirmed')return et('The reference period has not been confirmed.','Okres odczytu nie został potwierdzony.');
  if(kind==='actual'&&(reason==='not_yet_published'||measure?.result_status==='scheduled'))return et('Awaiting publication.','Oczekiwanie na publikację.');
  if(kind==='previous')return et('No verified previous reading for this measure and period.','Brak zweryfikowanego poprzedniego odczytu tej miary i okresu.');

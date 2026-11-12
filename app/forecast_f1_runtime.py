@@ -26,7 +26,7 @@ def tick(cancelled=lambda:False):
  def work():
   try:
    token=json.loads(TOKEN.read_text(encoding='utf-8'))
-   loaded=IMPORTED_BACKEND_ARTIFACTS if token.get('version') in (2,3) else IMPORTED_ARTIFACTS
+   loaded=IMPORTED_BACKEND_ARTIFACTS if token.get('version') in (2,3,4) else IMPORTED_ARTIFACTS
    if token['artifacts']!=loaded:raise ValueError('Loaded F1 code changed')
    if cancelled():return
    from app.forecast_f1_bindings import publication_events
@@ -49,12 +49,16 @@ async def lifespan(app):
  remove=coordinator.register_launch_listener('app.earnings_monitor_runtime',lambda:tick(stopped.is_set))
  from app import bls_employment_runtime as bls_runtime
  remove_bls=coordinator.register_launch_listener('app.earnings_monitor_runtime',lambda:bls_runtime.tick(TOKEN,activation.ROOT/'data/raw/bls-employment',stopped.is_set))
+ from app import cpi_runtime
+ remove_cpi=coordinator.register_launch_listener('app.earnings_monitor_runtime',lambda:cpi_runtime.tick(TOKEN,activation.ROOT/'data/raw/bls-cpi',stopped.is_set))
+ cpi_runtime.STATE['registered']=True
  bls_runtime.STATE['registered']=True
  STATE['registered']=True
  try:
   async with earnings_lifespan(app):
    bls_runtime.tick(TOKEN,activation.ROOT/'data/raw/bls-employment',stopped.is_set)
+   cpi_runtime.tick(TOKEN,activation.ROOT/'data/raw/bls-cpi',stopped.is_set)
    tick(stopped.is_set)  # one controlled startup check; no additional timer
    yield
  finally:
-  stopped.set();remove();remove_bls();bls_runtime.STATE['registered']=False;STATE['registered']=False
+  stopped.set();remove();remove_bls();remove_cpi();cpi_runtime.STATE['registered']=False;bls_runtime.STATE['registered']=False;STATE['registered']=False
