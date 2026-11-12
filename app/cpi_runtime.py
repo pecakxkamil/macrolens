@@ -15,7 +15,7 @@ def tick(token_path,directory,cancelled=lambda:False):
   try:
    if cancelled():return
    token=json.loads(token_path.read_text(encoding='utf-8'))
-   if token.get('version')!=4:return
+   if token.get('version') not in (4,5):return
    STATE['last_tick']=datetime.now(timezone.utc).isoformat()
    result=bls_cpi.run(get_independent_connection,token,directory)
    STATE.update(status=result['status'],last_result=result)

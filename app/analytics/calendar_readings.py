@@ -127,6 +127,9 @@ def bind_events(events,panel,current,now,evidence=None,provider_updates=None,ism
         event['expects_numeric_result']=bool(specs)
         event['measures']=[]
         for sid,feature,label,unit in specs:
+            if (rid==18 and sid in ('DFF','DGS2','DGS10','DFII10')) or (rid==190 and sid=='MORTGAGE30US'):
+                event['measures'].append(financial_measure(event,(sid,feature,label,unit),metadata[sid],panel,current,now,evidence))
+                continue
             frequency=metadata[sid]['frequency'];period=links.get(sid)
             binding='alfred_release_date' if period else None
             if not period and len(shared)==1 and frequency=='monthly':period=next(iter(shared));binding='shared_report_month'
@@ -226,6 +229,70 @@ def bind_events(events,panel,current,now,evidence=None,provider_updates=None,ism
             event['expects_numeric_result']=True
             event['measures']=[policy_measure(event,evidence.get('decisions',[]),now)]
     return events
+
+
+def financial_measure(event, spec, metadata, panel, current, now, evidence):
+    """Bind only reviewed, series-specific publisher table columns, never latest.
+
+    These proofs are bounded to individual publications. They do not extrapolate
+    business-day lags, holidays or PMMS dates. Values still come from stored SQL;
+    the publisher pair validates their definition/version, not a replacement feed.
+    """
+    sid,feature,label,unit=spec
+    day=str(event['release_date']);rid=event['release_id']
+    frequency='weekly' if sid=='MORTGAGE30US' else 'daily'
+    source='https://www.freddiemac.com/pmms/archive' if rid==190 else 'https://www.federalreserve.gov/releases/h15/'
+    proof=period_evidence(evidence,rid,day,sid)
+    valid=bool(proof and proof.get('binding_method')=='reviewed_financial_table'
+        and proof.get('source_url')==source and proof.get('frequency')==frequency
+        and proof.get('publication_confirmed') is True
+        and len(proof.get('evidence_sha256',''))==64)
+    period=proof.get('reference_period') if valid else None
+    previous_period=proof.get('previous_period') if valid else None
+    try:
+        if period:date.fromisoformat(period)
+        if previous_period:date.fromisoformat(previous_period)
+        valid=valid and period<=day and (not previous_period or previous_period<period)
+        if frequency=='daily':valid=valid and date.fromisoformat(period).weekday()<5 and (not previous_period or date.fromisoformat(previous_period).weekday()<5)
+    except (ValueError,TypeError):valid=False
+    if not valid:proof=None;period=None;previous_period=None
+    clock=proof.get('announced_at') if proof else None
+    # A date-only publisher record cannot establish intraday availability.
+    future=(datetime.fromisoformat(clock.replace('Z','+00:00'))>now) if clock else day>=str(now.astimezone(ZoneInfo('America/New_York')).date())
+    actual=previous=None;version=None;ap=pp=None
+    reason='reference_period_unconfirmed' if not period else 'not_yet_published' if future else 'observation_missing'
+    if period and not future:
+        known=select_as_of(panel.get(sid,[]),date.fromisoformat(day))
+        ap=next((p for p in known if str(p['observation_date'])==period and finite(p['value']) is not None),None)
+        points=known if ap else current.get(sid,[])
+        version='stored_date_vintage' if ap else 'current_vintage'
+        if not ap:ap=next((p for p in points if str(p['observation_date'])==period and finite(p['value']) is not None),None)
+        pp=next((p for p in points if str(p['observation_date'])==previous_period and finite(p['value']) is not None),None)
+        actual=finite(ap['value']) if ap else None
+        previous=finite(pp['value']) if pp else None
+        # No pairing an old FRED value with a different publisher revision.
+        if actual is not None and actual!=finite(proof.get('reported_value')):
+            actual=None;reason='publisher_version_mismatch'
+        elif actual is not None:reason=None
+        if previous is not None and previous!=finite(proof.get('previous_reported_value')):previous=None
+    pv=version if previous is not None else None
+    return dict(series_id=sid,feature_name=feature,label=label,frequency=frequency,unit=unit,
+        definition='Stored level at the publisher-confirmed observation date; Previous is the preceding comparable publisher observation, not a calendar-day offset.',
+        reference_period=period,previous_period=previous_period,previous_kind='previous_period',
+        actual=actual,previous=previous,forecast=None,consensus_status='not_integrated',
+        data_version=version if actual is not None else None,previous_data_version=pv,
+        revision_confirmed=False,binding_method=proof['binding_method'] if proof else None,
+        vintage_date=str(ap['vintage_date']) if actual is not None and ap and ap.get('vintage_date') else None,
+        realtime_end=str(ap['realtime_end']) if actual is not None and ap and ap.get('realtime_end') else None,
+        result_status='available' if actual is not None else 'scheduled' if future else 'awaiting_data',
+        mapping_status='confirmed' if period else 'reference_period_unconfirmed',
+        period_status_reason=None if period else 'publisher_schedule_no_matching_period',
+        period_provenance=proof,result_provenance=proof if actual is not None else None,
+        actual_provenance=provenance(sid,period,version,ap,str(now.date()) if version=='current_vintage' else day) if actual is not None else None,
+        previous_provenance=provenance(sid,previous_period,pv,pp,str(now.date()) if pv=='current_vintage' else day) if previous is not None else None,
+        missing_reason=dict(actual=reason,previous=None if previous is not None else 'reference_period_unconfirmed' if not previous_period else 'publisher_version_mismatch' if pp else 'observation_missing'),
+        comparison_status='publisher_confirmed_pair' if actual is not None and previous is not None else 'unavailable',
+        source_url=f'https://fred.stlouisfed.org/series/{sid}')
 
 
 def provenance(sid,period,version,point,as_of):

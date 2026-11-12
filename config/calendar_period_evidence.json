@@ -622,6 +622,113 @@
       "retrieved_at": "2026-10-28T15:16:26.271638+00:00",
       "confirmation_type": "one_time_official_review",
       "retrieval_method": "Official BLS release header and reference month reviewed with web tool. Direct HTTP returned 403; no successful automatic BLS retrieval or RAW/hash is claimed."
+    },
+    {
+      "release_id": 18,
+      "release_date": "2026-11-10",
+      "reference_period": "2026-11-09",
+      "previous_period": "2026-11-06",
+      "series_ids": [
+        "DFF"
+      ],
+      "frequency": "daily",
+      "reported_value": 3.88,
+      "previous_reported_value": 3.88,
+      "binding_method": "reviewed_financial_table",
+      "source_url": "https://www.federalreserve.gov/releases/h15/",
+      "retrieved_at": "2026-11-12T12:38:39.681788+00:00",
+      "publication_confirmed": true,
+      "evidence_sha256": "b738cc967520f85a5c216dc2d31d5ab1de57a2a9310a3b2ca65defabaa671651",
+      "evidence_kind": "reviewed official web text; not full original HTML",
+      "announced_at": "2026-11-10T21:15:00Z",
+      "release_time": "16:15:00",
+      "source_timezone": "America/New_York",
+      "contract": "H.15 publisher table columns for this series and this release only; no inference from NY Fed EFFR timing or Treasury availability."
+    },
+    {
+      "release_id": 18,
+      "release_date": "2026-11-10",
+      "reference_period": "2026-11-09",
+      "previous_period": "2026-11-06",
+      "series_ids": [
+        "DGS2"
+      ],
+      "frequency": "daily",
+      "reported_value": 4.56,
+      "previous_reported_value": 4.51,
+      "binding_method": "reviewed_financial_table",
+      "source_url": "https://www.federalreserve.gov/releases/h15/",
+      "retrieved_at": "2026-11-12T12:38:39.681788+00:00",
+      "publication_confirmed": true,
+      "evidence_sha256": "b738cc967520f85a5c216dc2d31d5ab1de57a2a9310a3b2ca65defabaa671651",
+      "evidence_kind": "reviewed official web text; not full original HTML",
+      "announced_at": "2026-11-10T21:15:00Z",
+      "release_time": "16:15:00",
+      "source_timezone": "America/New_York",
+      "contract": "H.15 publisher table columns for this series and this release only; no inference from NY Fed EFFR timing or Treasury availability."
+    },
+    {
+      "release_id": 18,
+      "release_date": "2026-11-10",
+      "reference_period": "2026-11-09",
+      "previous_period": "2026-11-06",
+      "series_ids": [
+        "DGS10"
+      ],
+      "frequency": "daily",
+      "reported_value": 4.88,
+      "previous_reported_value": 4.86,
+      "binding_method": "reviewed_financial_table",
+      "source_url": "https://www.federalreserve.gov/releases/h15/",
+      "retrieved_at": "2026-11-12T12:38:39.681788+00:00",
+      "publication_confirmed": true,
+      "evidence_sha256": "b738cc967520f85a5c216dc2d31d5ab1de57a2a9310a3b2ca65defabaa671651",
+      "evidence_kind": "reviewed official web text; not full original HTML",
+      "announced_at": "2026-11-10T21:15:00Z",
+      "release_time": "16:15:00",
+      "source_timezone": "America/New_York",
+      "contract": "H.15 publisher table columns for this series and this release only; no inference from NY Fed EFFR timing or Treasury availability."
+    },
+    {
+      "release_id": 18,
+      "release_date": "2026-11-10",
+      "reference_period": "2026-11-09",
+      "previous_period": "2026-11-06",
+      "series_ids": [
+        "DFII10"
+      ],
+      "frequency": "daily",
+      "reported_value": 2.66,
+      "previous_reported_value": 2.63,
+      "binding_method": "reviewed_financial_table",
+      "source_url": "https://www.federalreserve.gov/releases/h15/",
+      "retrieved_at": "2026-11-12T12:38:39.681788+00:00",
+      "publication_confirmed": true,
+      "evidence_sha256": "b738cc967520f85a5c216dc2d31d5ab1de57a2a9310a3b2ca65defabaa671651",
+      "evidence_kind": "reviewed official web text; not full original HTML",
+      "announced_at": "2026-11-10T21:15:00Z",
+      "release_time": "16:15:00",
+      "source_timezone": "America/New_York",
+      "contract": "H.15 publisher table columns for this series and this release only; no inference from NY Fed EFFR timing or Treasury availability."
+    },
+    {
+      "release_id": 190,
+      "release_date": "2026-11-05",
+      "reference_period": "2026-11-05",
+      "previous_period": "2026-10-29",
+      "series_ids": [
+        "MORTGAGE30US"
+      ],
+      "frequency": "weekly",
+      "reported_value": 7.18,
+      "previous_reported_value": 7.24,
+      "binding_method": "reviewed_financial_table",
+      "source_url": "https://www.freddiemac.com/pmms/archive",
+      "retrieved_at": "2026-11-12T12:38:39.681788+00:00",
+      "publication_confirmed": true,
+      "evidence_sha256": "b738cc967520f85a5c216dc2d31d5ab1de57a2a9310a3b2ca65defabaa671651",
+      "evidence_kind": "reviewed official web text; not full original HTML",
+      "contract": "Freddie Mac PMMS dated weekly rows; no assumed Thursday rule or publication hour."
     }
   ],
   "rules": [

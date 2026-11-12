@@ -26,7 +26,7 @@ def tick(cancelled=lambda:False):
  def work():
   try:
    token=json.loads(TOKEN.read_text(encoding='utf-8'))
-   loaded=IMPORTED_BACKEND_ARTIFACTS if token.get('version') in (2,3,4) else IMPORTED_ARTIFACTS
+   loaded=IMPORTED_BACKEND_ARTIFACTS if token.get('version') in (2,3,4,5) else IMPORTED_ARTIFACTS
    if token['artifacts']!=loaded:raise ValueError('Loaded F1 code changed')
    if cancelled():return
    from app.forecast_f1_bindings import publication_events

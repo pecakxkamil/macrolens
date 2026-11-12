@@ -23,6 +23,12 @@ function confirmedMeasure(m:CalendarMeasure){
 }
 function priorPeriod(m:CalendarMeasure){
  if(!m.reference_period)return null;
+ const proof=m.period_provenance;
+ if(['DFF','DGS2','DGS10','DFII10','MORTGAGE30US'].includes(m.series_id)&&m.feature_name==='raw'&&proof?.binding_method==='reviewed_financial_table'){
+  const source=m.series_id==='MORTGAGE30US'?'https://www.freddiemac.com/pmms/archive':'https://www.federalreserve.gov/releases/h15/';
+  const previous=proof.previous_period;
+  return proof.source_url===source&&proof.publication_confirmed===true&&proof.frequency===m.frequency&&proof.reference_period===m.reference_period&&m.previous_period===previous&&!!previous&&/^\d{4}-\d{2}-\d{2}$/.test(previous)&&previous<m.reference_period&&/^[a-f0-9]{64}$/.test(proof.evidence_sha256??'')&&m.data_version===m.previous_data_version?previous:null;
+ }
  const date=new Date(m.reference_period+'T00:00:00Z');
  if(!Number.isFinite(date.getTime()))return null;
  if(m.frequency==='monthly')date.setUTCMonth(date.getUTCMonth()-1);

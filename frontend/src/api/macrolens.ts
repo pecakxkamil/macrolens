@@ -425,7 +425,7 @@ export interface CalendarMeasure {
   cpi_history?:Record<string,string>;cpi_rate_kind?:string;cpi_contract_id?:string;cpi_missing_base_period?:string|null;cpi_missing_proof?:Record<string,unknown>|null;
  annual_context_source?:'fred';
  bls_history?:Record<string,string>;bls_method?:string;selected_source?:'bls:employment'|'bls:cpi'|'bea_official'|'fred_fallback'|'not_available';published_precision?:number;previous_precision?:number|null;
- source_comparison?:'conflict'|'consistent_with_rounding'|'bea_only';comparison_status?:'same_cpi_capture'|'same_bls_capture'|'mixed_sources'|'same_bea_document'|'previous_unavailable';
+ source_comparison?:'conflict'|'consistent_with_rounding'|'bea_only';comparison_status?:'publisher_confirmed_pair'|'unavailable'|'same_cpi_capture'|'same_bls_capture'|'mixed_sources'|'same_bea_document'|'previous_unavailable';
  fred_alternative?:{actual:number|null;previous:number|null;source_url?:string;data_version?:string;actual_provenance?:Record<string,unknown>|null};
  source_value_millions?:string|null;previous_source_value_millions?:string|null;
  usage_rights?:PublisherUsageRights;report_current?:number|null;
@@ -443,7 +443,7 @@ export interface CalendarMeasure {
  vintage_date:string|null;realtime_end:string|null;result_status:"publisher_unavailable"|"available"|"scheduled"|"awaiting_data";mapping_status:string;source_url:string;
  actual_range?:[number,number]|null;previous_range?:[number,number]|null;
  effective_date?:string|null;previous_effective_date?:string|null;
- period_provenance?:{source_url:string;reference_period:string;binding_method:string;retrieved_at?:string;estimate_stage?:string;report_url?:string;source_check?:{status:string;source_url:string;error_code?:string}|null}|null;
+ period_provenance?:{source_url:string;reference_period:string;binding_method:string;previous_period?:string;frequency?:string;publication_confirmed?:boolean;evidence_sha256?:string;retrieved_at?:string;estimate_stage?:string;report_url?:string;source_check?:{status:string;source_url:string;error_code?:string}|null}|null;
  actual_provenance?:Record<string,unknown>|null;previous_provenance?:Record<string,unknown>|null;
  result_provenance?:{source_url:string;release_date:string;reference_period:string;estimate_stage?:string;retrieved_at?:string}|null;
  publication_provenance?:{source_url:string;release_date:string;reference_period:string;estimate_stage?:string;retrieved_at?:string}|null;

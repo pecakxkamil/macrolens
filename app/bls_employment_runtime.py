@@ -15,7 +15,7 @@ def tick(token_path,directory,cancelled=lambda:False):
         try:
             if cancelled():return
             token=json.loads(token_path.read_text(encoding='utf-8'))
-            if token.get('version') not in (3,4):return
+            if token.get('version') not in (3,4,5):return
             result=source.run(get_independent_connection,token,directory)
             STATE.update(status=result['status'],last_result=result)
         except Exception as error:STATE.update(status='stopped',last_result=dict(error_type=type(error).__name__))
