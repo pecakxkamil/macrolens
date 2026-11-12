@@ -165,13 +165,18 @@ def run(factory, token, directory, now=None, client=None, events_loader=events, 
         try:
             event=candidates[0]; key=event['release_date']+':'+event['reference_period']
             if complete(c,event): return dict(status='complete',added=0)
-            # The independent durable row counts errors/interrupted calls too.
-            rows=c.execute("SELECT attempted_at,scope FROM source_check_runs WHERE resource=%s AND (attempted_at>%s OR (scope->>'retry_at')::timestamptz>%s) ORDER BY attempted_at DESC",(SOURCE,now-timedelta(days=1),now)).fetchall()
-            deadlines=[instant(r[1]['retry_at']) for r in rows if r[1].get('retry_at')]
-            if sum(r[0]>now-timedelta(days=1) for r in rows)>=POLICY['rolling_daily_calls']: return dict(status='daily_limit',added=0)
-            if deadlines and max(deadlines)>now: return dict(status='cooldown',added=0)
-            claim=uuid4(); scope=dict(event=event,key=key,retry_at=(now+timedelta(minutes=15)).isoformat(),phase='claimed_before_http')
-            c.execute("INSERT INTO source_check_runs(id,resource,attempted_at,status,scope) VALUES(%s,%s,%s,'running',%s)",(claim,SOURCE,now,Jsonb(scope)))
+            if token.get('version')==4:
+                from app.ingestion.bls_budget import claim as shared_claim
+                claim,scope,blocked=shared_claim(c,SOURCE,event,now)
+                if blocked:return dict(status=blocked,added=0)
+            else:
+                # The independent durable row counts errors/interrupted calls too.
+                rows=c.execute("SELECT attempted_at,scope FROM source_check_runs WHERE resource=%s AND (attempted_at>%s OR (scope->>'retry_at')::timestamptz>%s) ORDER BY attempted_at DESC",(SOURCE,now-timedelta(days=1),now)).fetchall()
+                deadlines=[instant(r[1]['retry_at']) for r in rows if r[1].get('retry_at')]
+                if sum(r[0]>now-timedelta(days=1) for r in rows)>=POLICY['rolling_daily_calls']: return dict(status='daily_limit',added=0)
+                if deadlines and max(deadlines)>now: return dict(status='cooldown',added=0)
+                claim=uuid4(); scope=dict(event=event,key=key,retry_at=(now+timedelta(minutes=15)).isoformat(),phase='claimed_before_http')
+                c.execute("INSERT INTO source_check_runs(id,resource,attempted_at,status,scope) VALUES(%s,%s,%s,'running',%s)",(claim,SOURCE,now,Jsonb(scope)))
             if crash_after_claim: raise RuntimeError('Injected crash after durable claim')
             owned=client is None
             if owned: client=httpx.Client(timeout=25,follow_redirects=False)

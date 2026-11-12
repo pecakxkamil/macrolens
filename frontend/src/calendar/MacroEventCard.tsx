@@ -1,3 +1,4 @@
+import {macroMissingReason} from './MissingValue';
 import type {ReactNode} from 'react';
 import type {CalendarEvent,CalendarMeasure} from '../api/macrolens';
 import {formatObservationDate} from '../format';
@@ -29,7 +30,7 @@ export function MacroEventCard({event,measure,children}:{event:CalendarEvent;mea
  <p>{et('USA','USA')}{period?` · ${formatObservationDate(period,measure?.frequency??'monthly')}`:''}{mode?` · ${mode}`:''}{seasonality?` · ${seasonality}`:''}</p>
  <p>{et('Publication: ','Publikacja: ')}{formatCalendarDate(event.release_date)} · {eventInstant(event)!==null?formatPolandTime(event.release_datetime_utc):et('Time unconfirmed','Godzina niepotwierdzona')}</p></header>
  {available&&measure?<dl className="macro-insight-values"><div><dt>{et('Actual','Aktualny')}</dt><dd>{calendarReadingValue(measure,'actual')}</dd></div><div><dt>{et('Change vs previous','Zmiana vs poprzednio')}</dt><dd className={`macro-insight-change--${comparison?.direction??'neutral'}`}>{comparison?.text??'—'}</dd></div><div><dt>{et('Previous','Poprzednio')}</dt><dd>{calendarReadingValue(measure,'previous')}</dd></div></dl>
- :<p className="macro-insight-state">{restricted?(documentAvailable?et('Data available in the source report','Dane dostępne w raporcie źródłowym'):et('Numerical results are not integrated. Check the publisher’s reports.','Odczyty liczbowe nie są zintegrowane. Sprawdź raporty wydawcy.')):nonnumeric?et('This event has no numerical reading.','To wydarzenie nie ma odczytu liczbowego.'):et('Awaiting publication','Oczekiwanie na publikację')}{(restricted||nonnumeric)&&report?<> · <a href={report} target="_blank" rel="noreferrer">{et('Source report','Raport źródłowy')}</a></>:null}</p>}
+ :<p className="macro-insight-state">{restricted?(documentAvailable?et('Data available in the source report','Dane dostępne w raporcie źródłowym'):et('Numerical results are not integrated. Check the publisher’s reports.','Odczyty liczbowe nie są zintegrowane. Sprawdź raporty wydawcy.')):nonnumeric?et('This event has no numerical reading.','To wydarzenie nie ma odczytu liczbowego.'):measure?.result_status==='publisher_unavailable'?macroMissingReason(event,measure,'actual'):et('Awaiting publication','Oczekiwanie na publikację')}{(restricted||nonnumeric)&&report?<> · <a href={report} target="_blank" rel="noreferrer">{et('Source report','Raport źródłowy')}</a></>:null}</p>}
  {insightWarnings(event,measure).map(warning=><p className="macro-insight-warning" key={warning}>{warning}</p>)}
  <div className="macro-insight-body"><div className="macro-insight-copy">
  {family?<section><h4>{et('What does this indicator measure?','Co pokazuje ten wskaźnik?')}</h4><p>{familyText(family.description)}</p></section>:null}

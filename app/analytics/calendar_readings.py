@@ -286,4 +286,9 @@ def load_results(events,start,end,now,connection):
     if any(e.get("release_id")==50 for e in events):
         from app.ingestion.bls_employment import project
         bound=project(bound,connection,now)
+    if any(e.get('release_id')==10 for e in events):
+        from app.ingestion.bls_cpi import project as cpi_project
+        bound=cpi_project(bound,connection,now)
+        from app.ingestion.bls_cpi import published_overlay
+        bound=published_overlay(bound,connection,now)
     return bound

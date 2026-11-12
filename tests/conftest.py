@@ -7,6 +7,15 @@ import psycopg
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def isolate_unrelated_cpi(request,monkeypatch):
+    if request.node.module.__name__.endswith('test_bls_cpi'):return
+    from app.ingestion import bls_cpi
+    monkeypatch.setattr(bls_cpi,'events',lambda *a:[])
+    monkeypatch.setattr(bls_cpi,'documents',lambda *a:[])
+    monkeypatch.setattr(bls_cpi,'published_overlay',lambda events,*a:events)
+
+
 _guard = None
 _attempts = []
 

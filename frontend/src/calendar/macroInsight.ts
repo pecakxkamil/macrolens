@@ -34,6 +34,10 @@ export function insightWarnings(event:CalendarEvent,measure?:CalendarMeasure):st
  if(measure.mapping_status!=='confirmed')warnings.push(et('The observation period or measure mapping is unconfirmed.','Okres odczytu lub przypisanie miary nie są potwierdzone.'));
  if(measure.source_comparison==='conflict')warnings.push(et('Available sources disagree; the selected reading is shown.','Dostępne źródła podają rozbieżne wartości; pokazano wybrany odczyt.'));
  if(measure.comparison_status==='mixed_sources')warnings.push(et('Actual and Previous use different sources; no change is calculated.','Aktualny i Poprzednio pochodzą z różnych źródeł; zmiana nie jest obliczana.'));
+ if(measure.selected_source==='bls:cpi'){
+  warnings.push(measure.cpi_rate_kind==='published_report_rate'?et('Published rates from one verified BLS report.','Opublikowane stopy z jednego zweryfikowanego raportu BLS.'):et('Derived from BLS index levels, rounded to one decimal; may differ from published rates. History uses the same captured response and may include revisions.','Wyliczone z poziomów indeksu BLS, zaokrąglone do jednego miejsca; mogą różnić się od opublikowanych stóp. Historia z tej samej odpowiedzi może zawierać rewizje.'));
+  return warnings;
+ }
  if(measure.selected_source==='bls:employment'){
   warnings.push(et('Current and Previous come from one captured BLS response. Previous may include revisions.','Aktualny i Poprzednio pochodz\u0105 z jednej pobranej odpowiedzi BLS. Poprzednio mo\u017ce zawiera\u0107 rewizje.'));
   const earlier=measure.fred_alternative?.previous;

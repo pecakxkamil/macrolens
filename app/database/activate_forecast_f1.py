@@ -85,6 +85,9 @@ def policy_row(c):
  return rows[0][0]
 
 def authorized(c,token,check_schema=True):
+ if token.get("version")==4:
+  from app.database.forecast_f1_authorization_cpi import authorized as cpi_authorized
+  return cpi_authorized(c,token,check_schema)
  if token.get("version")==3:
   from app.database.forecast_f1_authorization_bls import authorized as authorize_bls
   return authorize_bls(c,token,check_schema)

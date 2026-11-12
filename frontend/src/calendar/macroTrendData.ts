@@ -14,6 +14,10 @@ const rules:Record<string,Rule>={
 for(const series of ['CPIAUCSL','CPILFESL','PCEPI','PCEPILFE'])for(const feature of ['mom','yoy'])rules[`${series}:${feature}`]={frequency:'monthly',unit:'percent',sourceUnit:'index',feature};
 
 export function blsTrend(m:CalendarMeasure):TrendPoint[]{
+ if(m.selected_source==='bls:cpi'){
+  if(!m.cpi_history||!m.actual_provenance?.raw_hash||m.cpi_rate_kind!=='derived_index_rate')return [];
+  return Object.entries(m.cpi_history).filter(([period,value])=>validDate(period)&&period<=(m.reference_period??'')&&Number.isFinite(Number(value))).sort(([a],[b])=>a.localeCompare(b)).slice(-12).map(([period,value])=>({period,value:Number(value)}));
+ }
  if(m.selected_source!=='bls:employment'||!m.bls_history||!m.actual_provenance?.raw_hash)return [];
  return Object.entries(m.bls_history).filter(([period,value])=>validDate(period)&&period<=(m.reference_period??'')&&Number.isFinite(Number(value))).sort(([a],[b])=>a.localeCompare(b)).slice(-12).map(([period,value])=>({period,value:Number(value)}));
 }
