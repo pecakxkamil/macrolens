@@ -91,6 +91,9 @@ def prepare(c,delivery,backup,seed):
 
 
 def authorized(c,t,check_schema=True):
+    if t.get("version")==5:
+        from app.database.forecast_f1_authorization_financial import authorized as financial_authorized
+        return financial_authorized(c,t,check_schema)
     if t.get('version')==4:
         from app.database.forecast_f1_authorization_cpi import authorized as cpi_authorized
         return cpi_authorized(c,t,check_schema)

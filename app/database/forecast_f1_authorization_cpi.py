@@ -93,6 +93,9 @@ def prepare(c,delivery,backup,seed,test_only=False):
 
 
 def authorized(c,t,check_schema=True):
+ if t.get("version")==5:
+  from app.database.forecast_f1_authorization_financial import authorized as financial_authorized
+  return financial_authorized(c,t,check_schema)
  if set(t)!={'version','plan_sha256','target','artifacts'} or t['version']!=4:raise ValueError('CPI requires separate V4 authorization')
  rows=c.execute('SELECT check_id,outcome,detail FROM forecast_refresh_checks WHERE source_id=%s',(SOURCE,)).fetchall()
  if len(rows)!=1:raise ValueError('Exactly one CPI revision required')

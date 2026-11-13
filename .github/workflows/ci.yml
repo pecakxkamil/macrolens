@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   forecast-f1-integrity:
-    name: Forecast F1 V4 integrity
+    name: Forecast F1 V5 integrity
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     env:
@@ -29,13 +29,13 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: .github/ci/forecast_f1_v4_baseline.json
+          cache-dependency-path: .github/ci/forecast_f1_v5_baseline.json
       - name: Install the three approved library versions
         run: python -m pip install httpx==0.28.1 "psycopg[binary]==3.2.13" pypdf==6.21.2
       - name: Test integrity failures in disposable copies
         run: python -m unittest discover -s .github/ci -p test_forecast_integrity.py -v
-      - name: Verify all 164 approved artifacts after checkout
-        run: python .github/ci/check_forecast_integrity.py --authorization-version 4
+      - name: Verify all 166 approved artifacts after checkout
+        run: python .github/ci/check_forecast_integrity.py --authorization-version 5
 
   backend:
     name: Backend tests

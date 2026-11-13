@@ -68,6 +68,10 @@ def release_time_metadata(name: str, release_date: date, evidence=None) -> dict:
         proof=period_evidence(evidence,95,str(release_date),'DGORDER')
         if proof and proof.get('estimate_stage') in ('advance','full'):
             documented=dict(time=proof.get('release_time') or ('08:30:00' if proof['estimate_stage']=='advance' else '10:00:00'),source_url=proof['source_url'],valid_from=str(release_date),valid_through=str(release_date))
+    if name=='H.15 Selected Interest Rates':
+        proof=period_evidence(evidence,18,str(release_date),'DFF')
+        if proof and proof.get('binding_method')=='reviewed_financial_table' and proof.get('release_time'):
+            documented=dict(time=proof['release_time'],source_url=proof['source_url'],valid_from=str(release_date),valid_through=str(release_date))
     if documented:
         source_time=time.fromisoformat(documented['time'])
         instant=datetime.combine(release_date,source_time,tzinfo=EASTERN).astimezone(timezone.utc)

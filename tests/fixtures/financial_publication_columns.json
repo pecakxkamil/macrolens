@@ -1,0 +1,43 @@
+{
+  "capture_kind": "reviewed official web text; not full original HTML",
+  "h15": {
+    "columns": [
+      "2026-11-06",
+      "2026-11-09"
+    ],
+    "release_date": "2026-11-10",
+    "release_time": "16:15:00 America/New_York",
+    "url": "https://www.federalreserve.gov/releases/h15/",
+    "values": {
+      "DFF": [
+        3.88,
+        3.88
+      ],
+      "DFII10": [
+        2.63,
+        2.66
+      ],
+      "DGS10": [
+        4.86,
+        4.88
+      ],
+      "DGS2": [
+        4.51,
+        4.56
+      ]
+    }
+  },
+  "pmms": {
+    "columns": [
+      "2026-10-29",
+      "2026-11-05"
+    ],
+    "release_time": null,
+    "url": "https://www.freddiemac.com/pmms/archive",
+    "values": [
+      7.24,
+      7.18
+    ]
+  },
+  "retrieved_at": "2026-11-12T12:38:39.681788+00:00"
+}

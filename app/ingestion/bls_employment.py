@@ -165,7 +165,7 @@ def run(factory, token, directory, now=None, client=None, events_loader=events, 
         try:
             event=candidates[0]; key=event['release_date']+':'+event['reference_period']
             if complete(c,event): return dict(status='complete',added=0)
-            if token.get('version')==4:
+            if token.get('version') in (4,5):
                 from app.ingestion.bls_budget import claim as shared_claim
                 claim,scope,blocked=shared_claim(c,SOURCE,event,now)
                 if blocked:return dict(status=blocked,added=0)

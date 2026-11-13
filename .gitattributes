@@ -161,3 +161,6 @@ app/ingestion/bls_cpi.py text eol=lf
 app/database/forecast_f1_authorization_cpi.py text eol=lf
 app/cpi_runtime.py text eol=lf
 app/database/install_cpi_reviewed.py text eol=lf
+app/database/forecast_f1_authorization_financial.py text eol=crlf
+app/database/install_financial_reviewed.py text eol=crlf
+tests/fixtures/financial_publication_columns.json text eol=lf

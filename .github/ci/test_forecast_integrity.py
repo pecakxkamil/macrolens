@@ -67,7 +67,7 @@ class IntegrityTests(unittest.TestCase):
         path.write_text(json.dumps(spec), encoding="utf-8")
         errors = self.errors()
         self.assertTrue(any("SHA-256 mismatch" in e and guard.SPEC in e for e in errors))
-        self.assertIn("Runtime manifest path list differs from the approved 161 paths", errors)
+        self.assertIn("Runtime manifest path list differs from the approved 163 paths", errors)
 
     def test_invalid_runtime_manifest(self):
         (self.root / guard.SPEC).write_text("not JSON")
@@ -106,7 +106,7 @@ class IntegrityTests(unittest.TestCase):
         historical = guard.load_baseline(authorization_version=3)
         self.assertEqual(len(historical["files"]), 156)
         self.assertEqual(historical["approved_plan_sha256"], guard.APPROVALS[3][0])
-        self.assertEqual(self.baseline["authorization_version"], 4)
+        self.assertEqual(self.baseline["authorization_version"], 5)
         with self.assertRaisesRegex(ValueError, "authorization version"):
             guard.load_baseline(guard.BASELINES[3])
 
@@ -134,6 +134,38 @@ class IntegrityTests(unittest.TestCase):
                 path.write_text(json.dumps(changed), encoding="utf-8")
                 with self.assertRaises(ValueError):
                     guard.load_baseline(path)
+
+
+
+    def test_historical_v4_baseline_remains_explicit_and_pinned(self):
+        historical = guard.load_baseline(authorization_version=4)
+        self.assertEqual(len(historical["files"]), 161)
+        self.assertEqual(historical["approved_plan_sha256"], guard.APPROVALS[4][0])
+        with self.assertRaisesRegex(ValueError, "authorization version"):
+            guard.load_baseline(guard.BASELINES[4])
+
+    def test_explicit_v4_cannot_approve_v5_checkout(self):
+        with redirect_stderr(io.StringIO()):
+            self.assertEqual(guard.main(["--root", str(self.root), "--authorization-version", "4"]), 1)
+
+    def test_rehashed_counterfeit_v5_map_cannot_replace_approval_anchor(self):
+        value = copy.deepcopy(self.baseline)
+        value["files"]["app/database/forecast_f1_authorization_financial.py"] = "0" * 64
+        value["approved_artifacts_sha256"] = guard.digest({**value["files"], **{name + "_version": version for name, version in value["libraries"].items()}})
+        path = self.root / "counterfeit-v5.json"
+        path.write_text(json.dumps(value), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "previously approved map"):
+            guard.load_baseline(path)
+
+    def test_v5_modules_preserve_exact_crlf_after_checkout(self):
+        for name in ("app/database/forecast_f1_authorization_financial.py", "app/database/install_financial_reviewed.py"):
+            with self.subTest(path=name):
+                path = self.root / name
+                raw = path.read_bytes()
+                self.assertIn(b"\r\n", raw)
+                path.write_bytes(raw.replace(b"\r\n", b"\n"))
+                self.assertTrue(any("SHA-256 mismatch: " + name in e for e in self.errors()))
+                path.write_bytes(raw)
 
 
 if __name__ == "__main__":
