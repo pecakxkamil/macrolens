@@ -7,27 +7,45 @@
 MacroLens pokazuje aktualne i poprzednie odczyty, ich historię oraz źródła.
 Łączy kalendarz publikacji, prognozy i analizy w dwujęzycznym interfejsie.
 
+![Przegląd MacroLens: sześć obszarów gospodarki, odczyty i ich historia](docs/screenshots/overview.png)
+
+**Python · FastAPI · PostgreSQL · React · TypeScript · Docker**
+
+[Uruchomienie lokalne](#uruchomienie-lokalne) · [Dokumentacja techniczna](docs/architecture.md) · [Testy i CI](docs/ci.md)
+
 ## Możliwości aplikacji
 
-- **Przegląd:** sześć obszarów gospodarki, wykresy i raport do pobrania.
-- **Kalendarz:** publikacje makro i wyniki spółek z wartościami aktualnymi i poprzednimi.
-- **Forecast F1:** nowcasty i prognozy zarządów z zachowaną historią sprzed publikacji.
+- **Kalendarz makro:** publikacje, potwierdzone okresy i porównania Actual/Previous.
+- **Inflacja i rynek pracy:** CPI, Core CPI oraz sześć odczytów Employment, w tym NFP.
 - **Wyniki spółek:** EPS, przychody i porównania okresów fiskalnych.
-- **Eksploracja danych:** historia wskaźników, definicje i gotowe zestawy wykresów.
-- **Integralność:** wersjonowanie danych, kontrola źródeł i bezpieczne odświeżanie.
+- **Forecast F1:** nowcasty i prognozy zarządów z historią zachowaną sprzed publikacji.
+- **Eksploracja danych:** sześć obszarów gospodarki, wykresy, definicje i raport do pobrania.
+- **Integracje i testy:** wersjonowanie danych źródłowych, testy automatyczne i kontrola integralności w CI.
 
-## Zrzuty ekranu
+## Pozostałe widoki aplikacji
 
-Rzeczywiste widoki lokalnej aplikacji z załadowanymi danymi, wykonane
-16 listopada 2026 r. Widoczne okresy i stany kontroli źródeł dotyczą zapisanych
-lokalnie danych. Zrzuty nie są transmisją na żywo ani zbiorem danych
-udostępnianym razem z repozytorium.
+Wszystkie cztery zrzuty pochodzą z działającej lokalnej aplikacji z 16 listopada
+2026 r. Pokazują zapisane dane i rzeczywiste stany kontroli źródeł, również
+częściowe wyniki. Nie są transmisją na żywo ani dołączonym zbiorem danych.
+Overview i Calendar mogą korzystać z różnych wersji źródłowych lub transformacji.
+[Pochodzenie zrzutów](docs/screenshots/README.md).
 
-| Przegląd | Kalendarz |
-|---|---|
-| ![Przegląd MacroLens z odczytami makro i ich historią](docs/screenshots/overview.png) | ![Kalendarz z aktualnymi i poprzednimi odczytami makro](docs/screenshots/calendar.png) |
-| Szczegóły wskaźnika | Wyniki spółek |
-| ![Rozwinięta publikacja makro ze źródłem i okresem obserwacji](docs/screenshots/macro-detail.png) | ![Wyniki spółek z porównaniem okresów fiskalnych](docs/screenshots/earnings.png) |
+<details>
+<summary>Kalendarz, szczegóły publikacji i wyniki spółek — zobacz trzy widoki</summary>
+
+### Kalendarz publikacji
+
+![Kalendarz z aktualnymi i poprzednimi odczytami makro](docs/screenshots/calendar.png)
+
+### Szczegóły wskaźnika
+
+![Rozwinięta publikacja CPI ze źródłem, okresem obserwacji i wykresem](docs/screenshots/macro-detail.png)
+
+### Wyniki spółek
+
+![Wyniki spółek z porównaniem okresów fiskalnych](docs/screenshots/earnings.png)
+
+</details>
 
 ## Technologie i architektura
 
@@ -186,13 +204,17 @@ zatwierdzony zakres F1 V6: **165 dokładnych hashy plików + 3 wersje bibliotek 
 
 ## Roadmapa
 
-**Wydanie portfolio V6 jest ukończone:** obejmuje ochronę harmonogramu BEA,
-integralność 168/168, dokumentację i rzeczywiste widoki aplikacji.
-Kolejne kierunki rozwoju to raporty COT (CFTC), alerty, dalsza automatyzacja
-danych, dodatkowe analizy i publiczny dostęp online. To plany, bez deklaracji
-gotowości tych funkcji ani terminów wdrożenia.
+**Ukończone:** kalendarz makro, CPI/Core CPI, Employment/NFP, wyniki spółek,
+historia prognoz, ochrona harmonogramu BEA oraz dokumentacja portfolio.
+Aktualna rewizja autoryzacji F1 to **V6**, z kontrolą 168/168 artefaktów.
 
-![MacroLens — mapa rozwoju: fundament, dane makro, inflacja i rynek pracy, warstwa finansowa, wydanie portfolio oraz planowane funkcje](docs/roadmap/macrolens-roadmap.png)
+**Planowane:** raporty COT (CFTC), automatyzacja kolejnych publikacji H.15/PMMS,
+alerty, dodatkowe analizy i ewentualny publiczny dostęp online. Nie deklarujemy
+terminów; automatyzacja H.15/PMMS pozostaje niewdrożonym kandydatem.
 
-Grafika przedstawia poglądową mapę etapów i kierunków rozwoju projektu.
-Aktualny stan wydania V6 i ograniczenia opisano powyżej.
+![MacroLens — poglądowa mapa rozwoju i planowanych funkcji](docs/roadmap/macrolens-roadmap.png)
+
+Grafika zachowuje pierwotną stylistykę i ma charakter poglądowy.
+Oznaczenia V1–V6 dotyczą kolejnych rewizji mechanizmu autoryzacji Forecast F1,
+nie sześciu wydań całej aplikacji. Kolory i skrótowe podpisy na grafice nie są
+wiążącym statusem wdrożeń — aktualny podział na ukończone i planowane podano powyżej.

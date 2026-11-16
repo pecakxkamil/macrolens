@@ -36,6 +36,15 @@ placeholders. Set `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` and
 the core walkthrough and does not activate market-cap ingestion. Never put
 provider keys in `VITE_*`: those variables are exposed to the browser.
 
+**Development exposure:** the current Compose mapping `5432:5432` publishes
+PostgreSQL on all host interfaces unless restricted by the host firewall.
+`macrolens_dev` is a public development placeholder, not a production secret.
+Do not use this setup on an untrusted network or public server. A separate
+hardening change should bind `127.0.0.1:5432:5432`, introduce a deliberately
+configured password and document fresh-volume setup. Editing an environment
+variable does not rotate the password of an existing PostgreSQL volume; never
+recreate or delete a populated volume to apply documentation changes.
+
 Compose creates a persistent development volume. If you already have a service
 named `macrolens_postgres` or a database on port 5432, inspect/reuse the intended
 development service or configure a separate one; do not replace an existing
