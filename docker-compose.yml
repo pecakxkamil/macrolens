@@ -10,7 +10,8 @@ services:
       POSTGRES_PASSWORD: macrolens_dev
 
     ports:
-      - "5432:5432"
+      # Development database: accept connections only from this machine.
+      - "127.0.0.1:5432:5432"
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
