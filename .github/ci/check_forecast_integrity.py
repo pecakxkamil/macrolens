@@ -1,4 +1,4 @@
-"""Verify approved F1 V3/V4/V5 checkouts without importing app code or accessing SQL."""
+"""Verify approved F1 V3/V4/V5/V6 checkouts without importing app code or accessing SQL."""
 import argparse
 import hashlib
 from importlib import metadata
@@ -9,8 +9,8 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parents[2]
-BASELINES = {v: Path(__file__).with_name(f"forecast_f1_v{v}_baseline.json") for v in (3, 4, 5)}
-BASELINE = BASELINES[5]
+BASELINES = {v: Path(__file__).with_name(f"forecast_f1_v{v}_baseline.json") for v in (3, 4, 5, 6)}
+BASELINE = BASELINES[6]
 SPEC = "config/forecast_f1_runtime_manifest_v2.json"
 APPROVALS = {
     3: ("374e93e3c7f21cf232db989e0532045c073328f71b2e4c3e5b3da3265499e2ad",
@@ -19,6 +19,8 @@ APPROVALS = {
         "90af2f8758569aa1ac0667855827b0b67167313ea21ec0f4cc05073cf0c23cbb", 161),
     5: ("9b2265be70c2efc13845ed3c38c7aea1f8481b08c569726aaf4cb736164b51a4",
         "386fb5b3c266e6faa90dca2c748a0cef6969e7666b15d272635415e87c904dad", 163),
+    6: ("0f014dde39198ade782bfb4fd43a89b67361d480990e53435bbfe2d86eb4409e",
+        "8b2224cab5436aa73cdcd6d04f4427a2b3927d4eb36a2eac39027eb7cf80e63c", 165),
 }
 LIBRARIES = ("httpx", "psycopg", "pypdf")
 SUFFIXES = {".py", ".sql", ".json", ".yaml", ".yml"}
@@ -43,7 +45,7 @@ def read_json(path):
     return json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=unique_object)
 
 
-def load_baseline(path=None, authorization_version=5):
+def load_baseline(path=None, authorization_version=6):
     if authorization_version not in APPROVALS:
         raise ValueError("Unapproved authorization version")
     plan_sha, artifacts_sha, file_count = APPROVALS[authorization_version]
@@ -126,8 +128,8 @@ def verify(root, baseline, version_reader=None):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=ROOT, help="Checkout to verify; baseline stays fixed")
-    parser.add_argument("--authorization-version", type=int, choices=(3, 4, 5), default=5,
-                        help="Explicit historical V3/V4 verification; CI always selects V5")
+    parser.add_argument("--authorization-version", type=int, choices=(3, 4, 5, 6), default=6,
+                        help="Explicit historical V3/V4 verification; CI always selects V6")
     args = parser.parse_args(argv)
     label = f"F1 V{args.authorization_version} integrity"
     try:

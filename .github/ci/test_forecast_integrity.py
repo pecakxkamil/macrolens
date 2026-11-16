@@ -67,7 +67,7 @@ class IntegrityTests(unittest.TestCase):
         path.write_text(json.dumps(spec), encoding="utf-8")
         errors = self.errors()
         self.assertTrue(any("SHA-256 mismatch" in e and guard.SPEC in e for e in errors))
-        self.assertIn("Runtime manifest path list differs from the approved 163 paths", errors)
+        self.assertIn("Runtime manifest path list differs from the approved 165 paths", errors)
 
     def test_invalid_runtime_manifest(self):
         (self.root / guard.SPEC).write_text("not JSON")
@@ -106,7 +106,7 @@ class IntegrityTests(unittest.TestCase):
         historical = guard.load_baseline(authorization_version=3)
         self.assertEqual(len(historical["files"]), 156)
         self.assertEqual(historical["approved_plan_sha256"], guard.APPROVALS[3][0])
-        self.assertEqual(self.baseline["authorization_version"], 5)
+        self.assertEqual(self.baseline["authorization_version"], 6)
         with self.assertRaisesRegex(ValueError, "authorization version"):
             guard.load_baseline(guard.BASELINES[3])
 
@@ -165,6 +165,25 @@ class IntegrityTests(unittest.TestCase):
                 self.assertIn(b"\r\n", raw)
                 path.write_bytes(raw.replace(b"\r\n", b"\n"))
                 self.assertTrue(any("SHA-256 mismatch: " + name in e for e in self.errors()))
+                path.write_bytes(raw)
+
+
+
+    def test_historical_v5_is_pinned_and_cannot_approve_v6(self):
+        historical = guard.load_baseline(authorization_version=5)
+        self.assertEqual(len(historical["files"]), 163)
+        self.assertEqual(historical["approved_plan_sha256"], guard.APPROVALS[5][0])
+        with redirect_stderr(io.StringIO()):
+            self.assertEqual(guard.main(["--root", str(self.root), "--authorization-version", "5"]), 1)
+
+    def test_v6_lf_modules_reject_crlf_conversion(self):
+        for name in ("app/database/forecast_f1_authorization_bea.py", "app/database/install_bea_reviewed.py"):
+            with self.subTest(path=name):
+                path = self.root / name
+                raw = path.read_bytes()
+                self.assertNotIn(b"\r\n", raw)
+                path.write_bytes(raw.replace(b"\n", b"\r\n"))
+                self.assertTrue(any("SHA-256 mismatch: " + name in error for error in self.errors()))
                 path.write_bytes(raw)
 
 

@@ -154,3 +154,12 @@ authoritative remote result; the local checks above do not establish its status.
 GitHub runner provisioning, action/cache downloads and repository permissions
 remain to be confirmed by that first remote run. Local Docker validation is a
 Linux compatibility/offline check, not an emulator of the GitHub control plane.
+
+
+## Current portfolio release: F1 V6
+
+The integrity job selects V6 (168/168). Historical V3/V4/V5 maps remain pinned.
+See [the integrity contract](../.github/ci/forecast-integrity.md) for approval
+anchors and commands. Backend, frontend/TypeScript/build and all existing
+PostgreSQL integration steps remain enabled. Production authorization and
+imports are never run by the integrity job.
