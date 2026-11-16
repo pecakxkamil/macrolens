@@ -1,5 +1,43 @@
 # MacroLens continuous integration
 
+## Current CI on main
+
+The source of truth is [the workflow](../.github/workflows/ci.yml) and the
+[run for the exact commit](https://github.com/pecakxkamil/macrolens/actions/workflows/ci.yml).
+It runs on pushes to `main`, pull requests targeting `main`, and manual dispatch.
+Four independent jobs must finish successfully; queued or running checks are not passes.
+
+| Job | Runtime | Checks |
+|---|---|---|
+| Backend tests | Ubuntu 24.04, Python 3.12 | Full pytest suite with external HTTP/SQL guards |
+| Frontend tests and build | Ubuntu 24.04, Node 22 | Locked npm install, full Vitest suite with network guard, TypeScript and Vite build |
+| PostgreSQL integration tests | Ubuntu 24.04, disposable PostgreSQL 17 | 20 validation stages, including revisions, rollback, Earnings and F1 activation/recovery |
+| Forecast F1 V6 integrity | Ubuntu 24.04, Python 3.12 | 22 checker tests and 165 exact file hashes + 3 pinned library versions = 168 artifacts |
+
+Integrity checking uses the independently approved static V6 baseline, not a
+freshly generated hash map. Historical V3/V4/V5 maps remain available.
+See [the integrity contract](../.github/ci/forecast-integrity.md) for provenance,
+checkout line endings and commands. A passing functional suite alone does not
+prove byte integrity or authorize a production instance.
+
+Unit tests use fixtures/mocks. The PostgreSQL job creates its own disposable
+databases on a loopback-only runner service; activation tests operate there,
+never on the normal MacroLens database. CI needs no production token, provider
+credentials or `data/raw`. It does not deploy, import live provider data, or
+perform production APPLY. The integrity job only needs the checkout and
+`httpx==0.28.1`, `psycopg[binary]==3.2.13`, `pypdf==6.21.2`.
+
+For local commands see [README](../README.md#testy-i-ci) and
+[local development](local-development.md#validation-without-real-providers).
+Do not aim the PostgreSQL validation scripts at an existing personal database.
+No local full-suite rerun is required for documentation-only changes.
+
+## Historical setup record — 27 October 2026
+
+The sections below describe the initial two-job implementation and its original
+validation. Their package versions, case counts, lack of a PostgreSQL service,
+and first-run instructions are historical, not the current CI contract above.
+
 ## Audit before implementation — 27 October 2026
 
 The starting checkout was clean at `8e8a490`, synchronized with `origin/main`.
@@ -154,12 +192,3 @@ authoritative remote result; the local checks above do not establish its status.
 GitHub runner provisioning, action/cache downloads and repository permissions
 remain to be confirmed by that first remote run. Local Docker validation is a
 Linux compatibility/offline check, not an emulator of the GitHub control plane.
-
-
-## Current portfolio release: F1 V6
-
-The integrity job selects V6 (168/168). Historical V3/V4/V5 maps remain pinned.
-See [the integrity contract](../.github/ci/forecast-integrity.md) for approval
-anchors and commands. Backend, frontend/TypeScript/build and all existing
-PostgreSQL integration steps remain enabled. Production authorization and
-imports are never run by the integrity job.
