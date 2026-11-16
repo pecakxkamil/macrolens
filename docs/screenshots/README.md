@@ -17,3 +17,8 @@ Partial-source checks and unavailable readings remain visible. Some Overview
 readings and Calendar readings use different source versions or transformations;
 these screenshots are not evidence of equal precision, current completeness or
 future release coverage. They are a recorded walkthrough, not a hosted demo.
+
+The macro-detail screenshot was recaptured on 16 November 2026 after enlarging
+the responsive trend chart and centering its heading. It uses the same real
+API/Vite, desktop viewport and read-only capture conditions described above.
+The other three screenshots are unchanged.
