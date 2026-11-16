@@ -18,7 +18,7 @@
 .macro-insight-trend { width: 100%; min-width: 0; }
 .macro-insight-trend h4 { text-align: center; }
 @media(min-width: 1000px) {
- .macro-insight-body:has(> .macro-insight-trend) { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.3fr); gap: 24px; align-items: start; }
+ .macro-insight-body:has(> .macro-insight-trend) { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.3fr); gap: 24px; align-items: center; }
 }
 .macro-insight-trend svg { display: block; width: 100%; height: auto; }
 .macro-trend-axis text { fill: #91a5bd; font-size: 11px; }

@@ -26,13 +26,13 @@ export function MacroEventCard({event,measure,children}:{event:CalendarEvent;mea
  const mode=measure?({mom:et('Month-on-month','Miesiąc do miesiąca'),yoy:et('Year-on-year','Rok do roku'),qoq_annualized:et('Quarter-on-quarter, annualized','Kwartał do kwartału, annualizowane')} as Record<string,string>)[measure.feature_name]:null;
  const seasonality=measure?.seasonal_adjustment?tText(measure.seasonal_adjustment):family?.seasonality==='SA'?et('Seasonally adjusted (SA)','Odsezonowane (SA)'):null;
  return <section className="macro-event-card" aria-label={et('Event insight','Analiza wydarzenia')}>
+ <div className="macro-insight-body"><div className="macro-insight-copy">
  <header><h3>{measure?compactMeasureName(measure):tText(event.release_name)}</h3>
  <p>{et('USA','USA')}{period?` · ${formatObservationDate(period,measure?.frequency??'monthly')}`:''}{mode?` · ${mode}`:''}{seasonality?` · ${seasonality}`:''}</p>
  <p>{et('Publication: ','Publikacja: ')}{formatCalendarDate(event.release_date)} · {eventInstant(event)!==null?formatPolandTime(event.release_datetime_utc):et('Time unconfirmed','Godzina niepotwierdzona')}</p></header>
  {available&&measure?<dl className="macro-insight-values"><div><dt>{et('Actual','Aktualny')}</dt><dd>{calendarReadingValue(measure,'actual')}</dd></div><div><dt>{et('Change vs previous','Zmiana vs poprzednio')}</dt><dd className={`macro-insight-change--${comparison?.direction??'neutral'}`}>{comparison?.text??'—'}</dd></div><div><dt>{et('Previous','Poprzednio')}</dt><dd>{calendarReadingValue(measure,'previous')}</dd></div></dl>
  :<p className="macro-insight-state">{restricted?(documentAvailable?et('Data available in the source report','Dane dostępne w raporcie źródłowym'):et('Numerical results are not integrated. Check the publisher’s reports.','Odczyty liczbowe nie są zintegrowane. Sprawdź raporty wydawcy.')):nonnumeric?et('This event has no numerical reading.','To wydarzenie nie ma odczytu liczbowego.'):measure?.result_status==='publisher_unavailable'?macroMissingReason(event,measure,'actual'):et('Awaiting publication','Oczekiwanie na publikację')}{(restricted||nonnumeric)&&report?<> · <a href={report} target="_blank" rel="noreferrer">{et('Source report','Raport źródłowy')}</a></>:null}</p>}
  {insightWarnings(event,measure).map(warning=><p className="macro-insight-warning" key={warning}>{warning}</p>)}
- <div className="macro-insight-body"><div className="macro-insight-copy">
  {family?<section><h4>{et('What does this indicator measure?','Co pokazuje ten wskaźnik?')}</h4><p>{familyText(family.description)}</p></section>:null}
  {interpretation?<section><h4>{et('What does this reading show?','Co oznacza aktualny odczyt?')}</h4><p>{interpretation}</p></section>:null}
  <MacroMarketContext event={event} measure={measure} hasDefinition={!!family}/>

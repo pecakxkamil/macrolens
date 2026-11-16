@@ -19,6 +19,7 @@ these screenshots are not evidence of equal precision, current completeness or
 future release coverage. They are a recorded walkthrough, not a hosted demo.
 
 The macro-detail screenshot was recaptured on 16 November 2026 after enlarging
-the responsive trend chart and centering its heading. It uses the same real
+the responsive trend chart, centering its heading, and vertically centering
+the chart against the full event description. It uses the same real
 API/Vite, desktop viewport and read-only capture conditions described above.
 The other three screenshots are unchanged.
