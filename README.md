@@ -2,40 +2,19 @@
 
 [![MacroLens CI](https://github.com/pecakxkamil/macrolens/actions/workflows/ci.yml/badge.svg)](https://github.com/pecakxkamil/macrolens/actions/workflows/ci.yml)
 
-**Lokalna aplikacja do analizy amerykańskich publikacji makroekonomicznych i wyników spółek.**
+**Dane makro USA i wyniki spółek w jednym panelu.**
 
-MacroLens łączy obserwacje źródłowe, kalendarze publikacji i historyczne wersje
-danych w dwujęzycznym interfejsie analitycznym. Pokazuje, co mierzy dany wskaźnik,
-jakiego okresu dotyczy odczyt, jak wypada na tle poprzedniej publikacji i skąd
-pochodzi. Repozytorium jest projektem portfolio; aplikacja nie ma obecnie
-publicznie dostępnej wersji demonstracyjnej online.
+MacroLens pokazuje aktualne i poprzednie odczyty, ich historię oraz źródła.
+Łączy kalendarz publikacji, prognozy i analizy w dwujęzycznym interfejsie.
 
 ## Możliwości aplikacji
 
-- **Przegląd:** aktualne i poprzednie odczyty makro w sześciu obszarach,
-  wykresy historyczne, informacje o kontroli źródeł, objaśnienia oraz raport
-  do pobrania w formacie Markdown.
-- **Wspólny kalendarz:** publikacje makro i wyniki spółek z wartościami
-  aktualnymi i poprzednimi (Actual/Previous), potwierdzonymi okresami,
-  godzinami publikacji i pochodzeniem danych. Braki są jawnie oznaczane;
-  kolejne szacunki PKB i rewizje pozostają rozróżnialne.
-- **Forecast F1:** wersjonowane bieżące szacunki dostawców (nowcasty)
-  i prognozy zarządów spółek, oddzielone od konsensusu rynkowego. Granice
-  czasowe i niezmienne zapisy sprzed publikacji zachowują prognozę dostępną
-  przed wydarzeniem, zamiast zastępować ją późniejszą wersją.
-- **Wyniki spółek:** porównania okresów fiskalnych, raportowany zysk na akcję
-  (EPS), przychody, poprzednie wyniki i prognozy zarządów tam, gdzie dostępne
-  są zweryfikowane dane. Zakres obsługiwanych spółek jest ograniczony.
-- **Eksploracja danych:** historia wskaźników, jednostki, przekształcenia
-  i definicje źródeł; gotowe zestawy wykresów oraz eksperymentalna sekcja analiz.
-- **Integralność danych:** zachowane wersje obserwacji i potwierdzenia pobrania
-  źródeł, ograniczone ponowienia prób, utrzymywanie ostatnich poprawnych danych
-  oraz jawna autoryzacja procesów działających w tle.
-
-Zabezpieczenie harmonogramu BEA odrzuca publikację datowaną przed końcem okresu
-obserwacji i zachowuje wcześniejsze poprawne dowody. CI niezależnie sprawdza
-zatwierdzony zakres F1 V6: **165 dokładnych hashy plików + 3 wersje bibliotek =
-168 artefaktów**. Historyczne mapy autoryzacji V3/V4/V5 pozostają dostępne.
+- **Przegląd:** sześć obszarów gospodarki, wykresy i raport do pobrania.
+- **Kalendarz:** publikacje makro i wyniki spółek z wartościami aktualnymi i poprzednimi.
+- **Forecast F1:** nowcasty i prognozy zarządów z zachowaną historią sprzed publikacji.
+- **Wyniki spółek:** EPS, przychody i porównania okresów fiskalnych.
+- **Eksploracja danych:** historia wskaźników, definicje i gotowe zestawy wykresów.
+- **Integralność:** wersjonowanie danych, kontrola źródeł i bezpieczne odświeżanie.
 
 ## Zrzuty ekranu
 
@@ -95,6 +74,15 @@ Nowcasty dostawców nie są konsensusem rynkowym, a wyniki analiz opisowych
 nie stanowią rekomendacji inwestycyjnych. Obowiązują warunki dostępu
 i redystrybucji poszczególnych źródeł; publiczna dostępność nie oznacza
 nieograniczonego prawa do ponownego rozpowszechniania.
+
+Kalendarz zachowuje potwierdzone okresy, godziny i pochodzenie odczytów;
+rozróżnia kolejne szacunki PKB oraz rewizje. Forecast F1 stosuje granice
+czasowe i niezmienne zapisy prognoz sprzed publikacji, aby późniejsza wersja
+nie zastępowała tej dostępnej przed wydarzeniem.
+
+Wyniki spółek obejmują prognozy zarządów tam, gdzie dostępne są zweryfikowane
+dane. Kontrola źródeł korzysta z potwierdzeń pobrania, ograniczonych ponowień
+prób i ostatnich poprawnych danych; procesy w tle wymagają jawnej autoryzacji.
 
 ## Uruchomienie lokalne
 
@@ -170,6 +158,11 @@ testowych i blokują rzeczywiste zewnętrzne połączenia HTTP/SQL. Testy
 integracyjne PostgreSQL działają na tymczasowej usłudze runnera — nie aktywują
 instancji produkcyjnej. Szczegóły: [dokumentacja CI](docs/ci.md)
 i [zasady kontroli integralności](.github/ci/forecast-integrity.md).
+
+Zabezpieczenie harmonogramu BEA odrzuca publikację datowaną przed końcem okresu
+obserwacji i zachowuje wcześniejsze poprawne dowody. CI niezależnie sprawdza
+zatwierdzony zakres F1 V6: **165 dokładnych hashy plików + 3 wersje bibliotek =
+168 artefaktów**. Historyczne mapy autoryzacji V3/V4/V5 pozostają dostępne.
 
 ## Znane ograniczenia i dalsze prace
 
