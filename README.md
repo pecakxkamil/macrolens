@@ -2,93 +2,105 @@
 
 [![MacroLens CI](https://github.com/pecakxkamil/macrolens/actions/workflows/ci.yml/badge.svg)](https://github.com/pecakxkamil/macrolens/actions/workflows/ci.yml)
 
-**A local-first dashboard for understanding US macroeconomic releases and company earnings.**
+**Lokalna aplikacja do analizy amerykańskich publikacji makroekonomicznych i wyników spółek.**
 
-MacroLens connects source observations, release calendars and historical versions
-to a bilingual analytical interface. It shows what a reading measures, which
-period it describes, how it compares with the previous release and where it
-came from. This repository is a portfolio project; there is no public hosted demo.
+MacroLens łączy obserwacje źródłowe, kalendarze publikacji i historyczne wersje
+danych w dwujęzycznym interfejsie analitycznym. Pokazuje, co mierzy dany wskaźnik,
+jakiego okresu dotyczy odczyt, jak wypada na tle poprzedniej publikacji i skąd
+pochodzi. Repozytorium jest projektem portfolio; aplikacja nie ma obecnie
+publicznie dostępnej wersji demonstracyjnej online.
 
-## What it does
+## Możliwości aplikacji
 
-- **Overview:** current/previous macro readings across six domains, history
-  charts, source checks, explanations and a downloadable Markdown report.
-- **Unified Calendar:** macro releases and earnings with Actual/Previous,
-  confirmed periods, publication times, source provenance and explicit missing
-  values. GDP estimate stages and revised values remain distinguishable.
-- **Forecast F1:** versioned publisher nowcasts and issuer guidance, separate
-  from market consensus. Pre-release cutoffs and immutable freezes retain
-  the forecast available before an event rather than substituting a later one.
-- **Earnings:** fiscal-period comparisons, reported EPS/revenue, previous
-  results and guidance where reviewed data is available. Coverage is selective.
-- **Explore Data:** indicator histories, units, transformations and source
-  definitions; curated charts and an experimental research section.
-- **Data integrity:** retained vintages and source receipts, bounded retries,
-  last-good-data retention, and explicit authorization of background workers.
+- **Przegląd:** aktualne i poprzednie odczyty makro w sześciu obszarach,
+  wykresy historyczne, informacje o kontroli źródeł, objaśnienia oraz raport
+  do pobrania w formacie Markdown.
+- **Wspólny kalendarz:** publikacje makro i wyniki spółek z wartościami
+  aktualnymi i poprzednimi (Actual/Previous), potwierdzonymi okresami,
+  godzinami publikacji i pochodzeniem danych. Braki są jawnie oznaczane;
+  kolejne szacunki PKB i rewizje pozostają rozróżnialne.
+- **Forecast F1:** wersjonowane bieżące szacunki dostawców (nowcasty)
+  i prognozy zarządów spółek, oddzielone od konsensusu rynkowego. Granice
+  czasowe i niezmienne zapisy sprzed publikacji zachowują prognozę dostępną
+  przed wydarzeniem, zamiast zastępować ją późniejszą wersją.
+- **Wyniki spółek:** porównania okresów fiskalnych, raportowany zysk na akcję
+  (EPS), przychody, poprzednie wyniki i prognozy zarządów tam, gdzie dostępne
+  są zweryfikowane dane. Zakres obsługiwanych spółek jest ograniczony.
+- **Eksploracja danych:** historia wskaźników, jednostki, przekształcenia
+  i definicje źródeł; gotowe zestawy wykresów oraz eksperymentalna sekcja analiz.
+- **Integralność danych:** zachowane wersje obserwacji i potwierdzenia pobrania
+  źródeł, ograniczone ponowienia prób, utrzymywanie ostatnich poprawnych danych
+  oraz jawna autoryzacja procesów działających w tle.
 
-The BEA schedule guard rejects a publication dated before the end of its
-observation period, preserving earlier valid evidence. CI independently checks
-the approved F1 V6 boundary: **165 exact file hashes + 3 library versions =
-168 artifacts**. Historical V3/V4/V5 approval maps remain available.
+Zabezpieczenie harmonogramu BEA odrzuca publikację datowaną przed końcem okresu
+obserwacji i zachowuje wcześniejsze poprawne dowody. CI niezależnie sprawdza
+zatwierdzony zakres F1 V6: **165 dokładnych hashy plików + 3 wersje bibliotek =
+168 artefaktów**. Historyczne mapy autoryzacji V3/V4/V5 pozostają dostępne.
 
-## Screenshots
+## Zrzuty ekranu
 
-Real captures of the populated local application, taken on 16 November 2026.
-Displayed periods and source-check states describe that saved local data;
-screenshots are not a live feed or a dataset distributed with the repository.
+Rzeczywiste widoki lokalnej aplikacji z załadowanymi danymi, wykonane
+16 listopada 2026 r. Widoczne okresy i stany kontroli źródeł dotyczą zapisanych
+lokalnie danych. Zrzuty nie są transmisją na żywo ani zbiorem danych
+udostępnianym razem z repozytorium.
 
-| Overview | Calendar |
+| Przegląd | Kalendarz |
 |---|---|
-| ![MacroLens Overview with macro readings and history](docs/screenshots/overview.png) | ![Calendar showing actual and previous macro readings](docs/screenshots/calendar.png) |
-| Macro detail | Earnings |
-| ![Expanded macro release with source and period details](docs/screenshots/macro-detail.png) | ![Company earnings with fiscal-period comparisons](docs/screenshots/earnings.png) |
+| ![Przegląd MacroLens z odczytami makro i ich historią](docs/screenshots/overview.png) | ![Kalendarz z aktualnymi i poprzednimi odczytami makro](docs/screenshots/calendar.png) |
+| Szczegóły wskaźnika | Wyniki spółek |
+| ![Rozwinięta publikacja makro ze źródłem i okresem obserwacji](docs/screenshots/macro-detail.png) | ![Wyniki spółek z porównaniem okresów fiskalnych](docs/screenshots/earnings.png) |
 
-## Technology and architecture
+## Technologie i architektura
 
-| Layer | Technology |
+| Warstwa | Technologie |
 |---|---|
-| Data ingestion and validation | Python, HTTPX, pandas, source-specific adapters |
+| Pobieranie i walidacja danych | Python, HTTPX, pandas, adaptery poszczególnych źródeł |
 | API | FastAPI, Uvicorn |
-| Storage | PostgreSQL 17, psycopg, versioned observations and documents |
-| Frontend | React, TypeScript, Vite, Recharts |
-| Tests | pytest, Vitest, Testing Library, disposable PostgreSQL integration tests |
-| Development and CI | Docker Compose, GitHub Actions |
+| Przechowywanie danych | PostgreSQL 17, psycopg, wersjonowane obserwacje i dokumenty |
+| Interfejs | React, TypeScript, Vite, Recharts |
+| Testy | pytest, Vitest, Testing Library, testy integracyjne na tymczasowym PostgreSQL |
+| Środowisko programistyczne i CI | Docker Compose, GitHub Actions |
 
 ```mermaid
 flowchart LR
-    S[Publishers / FRED / ALFRED] --> I[Bounded ingestion and validation]
-    I --> D[(PostgreSQL: observations, vintages, forecasts)]
-    I --> R[Local source captures and receipts]
-    D --> P[Read models and release-period evidence]
+    S["Wydawcy / FRED / ALFRED"] --> I["Pobieranie z limitami i walidacja"]
+    I --> D[("PostgreSQL: obserwacje, wersje, prognozy")]
+    I --> R["Lokalne kopie źródeł i potwierdzenia pobrania"]
+    D --> P["Modele odczytu i powiązanie publikacji z okresem"]
     R --> P
     P --> A[FastAPI]
-    A --> U[React dashboard and Calendar]
+    A --> U["Interfejs React i kalendarz"]
 ```
 
-Rendering reads stored data. A metadata check, an observations download and an
-accepted publication are separate events. A calendar date alone does not prove
-that a value belongs to that release. See [architecture](docs/architecture.md)
-and [methodology](docs/methodology.md).
+Wyświetlanie korzysta z zapisanych danych. Kontrola metadanych, pobranie
+obserwacji i zaakceptowanie publikacji to odrębne zdarzenia. Sama data
+w kalendarzu nie potwierdza, że wartość należy do danej publikacji.
+Więcej informacji: [architektura](docs/architecture.md)
+i [metodologia](docs/methodology.md).
 
-## Data sources and interpretation
+## Źródła danych i interpretacja
 
-MacroLens uses [FRED](https://fred.stlouisfed.org/) and
-[ALFRED](https://alfred.stlouisfed.org/) alongside reviewed official documents
-from BLS, BEA, the Federal Reserve, Census and other publishers. Employment and
-CPI have direct BLS paths; GDP/PIO reuse the existing BEA document integration.
-Earnings rely on reviewed company reports and fiscal-period identities.
+MacroLens korzysta z [FRED](https://fred.stlouisfed.org/)
+i [ALFRED](https://alfred.stlouisfed.org/) oraz zweryfikowanych oficjalnych
+dokumentów BLS, BEA, Rezerwy Federalnej, Census i innych wydawców.
+Dane o zatrudnieniu i CPI mają bezpośrednie ścieżki BLS; PKB oraz dochody
+i wydatki osobiste (PIO) korzystają z istniejącej integracji dokumentów BEA.
+Wyniki spółek opierają się na zweryfikowanych raportach i tożsamości okresów
+fiskalnych.
 
-Current-vintage observations, archived first observations and official published
-rates have different meanings. The UI retains those distinctions, including
-SA/NSA, revisions and missing comparison bases. Publisher nowcasts are not
-market consensus, and descriptive research outputs are not trading advice.
-Source access and redistribution conditions still apply; public availability
-does not imply unrestricted redistribution.
+Obserwacje w bieżącej wersji, zarchiwizowane pierwsze obserwacje i oficjalnie
+publikowane stopy zmian mają różne znaczenie. Interfejs zachowuje te
+rozróżnienia, w tym SA/NSA, rewizje i brakujące podstawy porównania.
+Nowcasty dostawców nie są konsensusem rynkowym, a wyniki analiz opisowych
+nie stanowią rekomendacji inwestycyjnych. Obowiązują warunki dostępu
+i redystrybucji poszczególnych źródeł; publiczna dostępność nie oznacza
+nieograniczonego prawa do ponownego rozpowszechniania.
 
-## Run locally
+## Uruchomienie lokalne
 
-Requirements: **Python 3.12**, **Node.js 22/npm**, and **Docker Compose with
-PostgreSQL 17**. Start with a fresh development database and your own FRED key.
+Wymagania: **Python 3.12**, **Node.js 22/npm** i **Docker Compose
+z PostgreSQL 17**. Rozpocznij od nowej bazy programistycznej i własnego
+klucza FRED.
 
 ```powershell
 git clone https://github.com/pecakxkamil/macrolens.git
@@ -97,24 +109,25 @@ python -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements.txt
 .venv\Scripts\python.exe -m pip install httpx==0.28.1 "psycopg[binary]==3.2.13" pypdf==6.21.2
 Copy-Item .env.example .env
-# Edit .env: set FRED_API_KEY and your DB_* values.
+# Uzupełnij w .env wartości FRED_API_KEY i DB_*.
 docker compose up -d postgres
 .venv\Scripts\python.exe -m app.database.init_db
 .venv\Scripts\python.exe -m app.database.sync_series
 ```
 
-This initializes the **core schema and series catalog**, not a copy of the
-populated instance shown above. Data ingestion is an explicit additional step.
-See [local development](docs/local-development.md) for a small-data walkthrough,
-Unix commands, initialization boundaries and troubleshooting.
+Te polecenia inicjalizują **podstawowy schemat i katalog serii**, a nie kopię
+instancji z danymi widocznej powyżej. Pobranie danych jest osobnym, jawnym
+krokiem. [Instrukcja środowiska lokalnego](docs/local-development.md) zawiera
+przykład dla niewielkiego zakresu danych, polecenia dla systemów Unix,
+ograniczenia inicjalizacji i wskazówki rozwiązywania problemów.
 
-Start the backend from the repository root:
+Uruchom backend z głównego katalogu repozytorium:
 
 ```powershell
 .venv\Scripts\python.exe -m uvicorn app.api.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-In another terminal:
+W drugim terminalu:
 
 ```powershell
 cd frontend
@@ -122,22 +135,25 @@ npm ci
 npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
-Open [the UI](http://127.0.0.1:5173/), [API docs](http://127.0.0.1:8000/docs)
-or [health](http://127.0.0.1:8000/health). The frontend uses API port 8000;
-`VITE_API_BASE_URL` can override it.
+Otwórz [interfejs aplikacji](http://127.0.0.1:5173/),
+[dokumentację API](http://127.0.0.1:8000/docs)
+lub [kontrolę dostępności](http://127.0.0.1:8000/health).
+Frontend domyślnie korzysta z API na porcie 8000;
+`VITE_API_BASE_URL` pozwala zmienić ten adres.
 
-**A fresh checkout does not reproduce the fully activated instance.** Runtime
-tokens, target-bound plans, RAW captures, snapshots, private receipts and the
-database are excluded. F1/Earnings workers require their separately reviewed
-schemas, data and authorization. Missing activation must remain visible; do
-not copy someone else's token or run APPLY commands to bypass it.
+**Samo pobranie repozytorium nie odtwarza w pełni aktywnej instancji.**
+Repozytorium nie zawiera tokenów wykonawczych, planów przypisanych do
+konkretnej bazy, kopii źródeł RAW, snapshotów, prywatnych potwierdzeń ani
+bazy danych. Procesy F1 i Earnings wymagają osobno zweryfikowanych schematów,
+danych oraz autoryzacji. Brak aktywacji musi pozostać jawny; nie kopiuj cudzego
+tokenu ani nie uruchamiaj poleceń APPLY w celu obejścia tego warunku.
 
-For a credential-free portfolio review, use the screenshots and fixture-backed
-test suites. For a small interactive data demonstration, follow the documented
-single-series walkthrough. No synthetic production feed or bundled database is
-silently enabled.
+Do przeglądu portfolio bez poświadczeń służą zrzuty ekranu i testy oparte na
+danych testowych. Niewielką interaktywną demonstrację danych można uruchomić
+według opisanego przykładu dla jednej serii. Żadne sztuczne źródło danych
+produkcyjnych ani dołączona baza nie są włączane automatycznie.
 
-## Tests and CI
+## Testy i CI
 
 ```powershell
 .venv\Scripts\python.exe -m pytest -q
@@ -147,24 +163,43 @@ npm test -- --maxWorkers=2 --minWorkers=2
 npm run build
 ```
 
-GitHub Actions runs the complete backend and frontend suites, TypeScript/build,
-all existing PostgreSQL integration stages, and the V6 byte-integrity checker.
-Unit tests use fixtures and reject real external HTTP/SQL. PostgreSQL integration
-tests run against a disposable runner service; they do not activate a production
-instance. See [CI documentation](docs/ci.md) and the
-[integrity contract](.github/ci/forecast-integrity.md).
+GitHub Actions uruchamia pełne zestawy testów backendu i frontendu,
+kontrolę TypeScript, build, wszystkie istniejące etapy integracji PostgreSQL
+oraz kontrolę integralności bajtów V6. Testy jednostkowe korzystają z danych
+testowych i blokują rzeczywiste zewnętrzne połączenia HTTP/SQL. Testy
+integracyjne PostgreSQL działają na tymczasowej usłudze runnera — nie aktywują
+instancji produkcyjnej. Szczegóły: [dokumentacja CI](docs/ci.md)
+i [zasady kontroli integralności](.github/ci/forecast-integrity.md).
 
-## Known limitations and future work
+## Znane ograniczenia i dalsze prace
 
-- No public hosted deployment or one-click replica of the populated database.
-- Data freshness depends on source availability, backend uptime and the relevant
-  refresh lifecycle. Some macro refreshes are initiated by a visible frontend.
-- H.15/PMMS currently expose reviewed **historical** bindings. Automatic future
-  publication ingestion is an isolated candidate, **not deployed in this release**.
-- Forecast and earnings coverage is bounded. Unavailable consensus, market cap,
-  missing year-on-year bases and unconfirmed publication periods remain explicit.
-- Publisher changes, access restrictions and stale/malformed source documents
-  can leave partial checks while retaining last-good data. No universal SLA is claimed.
-- Experimental correlations and Macro Conditions Index outputs have documented
-  methodological limits. Future work includes a separately reviewed portable demo
-  dataset, broader automated release evidence and deployment packaging.
+- Brak publicznej wersji online i możliwości odtworzenia całej bazy jednym poleceniem.
+- Aktualność danych zależy od dostępności źródeł, działania backendu
+  i odpowiedniego mechanizmu odświeżania. Część odświeżeń makro inicjuje
+  widoczna karta interfejsu.
+- H.15/PMMS udostępniają obecnie zweryfikowane powiązania **historyczne**.
+  Automatyczne pobieranie kolejnych publikacji jest odizolowanym kandydatem,
+  **niewdrożonym w tym wydaniu**.
+- Zakres prognoz i wyników spółek jest ograniczony. Niedostępny konsensus,
+  kapitalizacja, brak podstawy porównania r/r i niepotwierdzone okresy
+  publikacji pozostają jawnie oznaczone.
+- Zmiany u wydawców, ograniczenia dostępu oraz nieaktualne lub błędne
+  dokumenty mogą pozostawiać częściowy wynik kontroli przy zachowaniu
+  ostatnich poprawnych danych. Projekt nie deklaruje wspólnego SLA dla źródeł.
+- Eksperymentalne korelacje i wskaźnik Macro Conditions Index mają opisane
+  ograniczenia metodologiczne. Dalsze prace obejmują osobno zweryfikowany,
+  przenośny zestaw danych demonstracyjnych, szerszą automatyzację dowodów
+  publikacji i przygotowanie środowiska wdrożeniowego.
+
+## Roadmapa
+
+**Wydanie portfolio V6 jest ukończone:** obejmuje ochronę harmonogramu BEA,
+integralność 168/168, dokumentację i rzeczywiste widoki aplikacji.
+Kolejne kierunki rozwoju to raporty COT (CFTC), alerty, dalsza automatyzacja
+danych, dodatkowe analizy i publiczny dostęp online. To plany, bez deklaracji
+gotowości tych funkcji ani terminów wdrożenia.
+
+![MacroLens — mapa rozwoju: fundament, dane makro, inflacja i rynek pracy, warstwa finansowa, wydanie portfolio oraz planowane funkcje](docs/roadmap/macrolens-roadmap.png)
+
+Grafika przedstawia poglądową mapę etapów i kierunków rozwoju projektu.
+Aktualny stan wydania V6 i ograniczenia opisano powyżej.
