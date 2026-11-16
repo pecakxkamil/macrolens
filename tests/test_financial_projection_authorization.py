@@ -33,6 +33,9 @@ def test_v5_preserves_existing_listener_path_without_a_new_timer(runtime,source_
 
 def test_backend_inventory_has_two_explicit_new_runtime_files():
  from app.database.forecast_f1_authorization_v2 import spec,artifacts
- m=spec();assert len(m['paths'])==163 and len(artifacts())==166
+ m=spec();assert len(m['paths'])==165 and len(artifacts())==168
+ from pathlib import Path
+ baseline=json.loads((Path(__file__).resolve().parents[1]/'.github/ci/forecast_f1_v5_baseline.json').read_text())
+ assert len(baseline['files'])==163 and set(m['paths'])==set(baseline['files'])|{'app/database/forecast_f1_authorization_bea.py','app/database/install_bea_reviewed.py'}
  assert 'app/database/forecast_f1_authorization_financial.py' in m['paths']
  assert 'app/database/install_financial_reviewed.py' in m['paths']
