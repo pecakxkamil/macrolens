@@ -60,8 +60,19 @@ def parse_schedule(kind, html, url, retrieved):
     records = []
     def add(rid, sids, day, period, stage=None, clock=None):
         try:
-            records.append(dict(release_id=rid,series_ids=sids,release_date=parsed_date(day),
-                reference_period=parsed_date(period),estimate_stage=stage,source_url=url,
+            published, observed = parsed_date(day), parsed_date(period)
+        except ValueError:
+            return  # Ambiguous source row cannot become a publication proof.
+        if kind == 'bea':
+            start = date.fromisoformat(observed)
+            end_month = start.month + 2 if rid == 53 else start.month
+            period_end = date(start.year, end_month, calendar.monthrange(start.year, end_month)[1])
+            if date.fromisoformat(published) < period_end:
+                # Reject the response before merge; retain prior proofs and the raw capture.
+                raise ValueError('BEA publication precedes observation period end')
+        try:
+            records.append(dict(release_id=rid,series_ids=sids,release_date=published,
+                reference_period=observed,estimate_stage=stage,source_url=url,
                 retrieved_at=retrieved,binding_method='official_schedule'))
             if clock:records[-1].update(release_time=clock,source_timezone='America/New_York')
         except ValueError:

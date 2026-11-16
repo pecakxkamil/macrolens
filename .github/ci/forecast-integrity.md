@@ -1,3 +1,26 @@
+# Forecast F1 integrity in CI
+
+CI defaults to the approved V6 baseline: **165 exact file hashes + 3 library
+versions = 168 artifacts**. It runs without PostgreSQL, RAW captures or runtime
+tokens. The baseline is extracted from the separately approved immutable V6
+deployment plan, never generated from files being tested.
+
+Approved plan SHA-256: `0f014dde39198ade782bfb4fd43a89b67361d480990e53435bbfe2d86eb4409e`.
+Approved artifact-map SHA-256: `8b2224cab5436aa73cdcd6d04f4427a2b3927d4eb36a2eac39027eb7cf80e63c`.
+
+The private target-bound plan, backups and execution receipts are intentionally
+excluded from Git. The public baseline contains only source paths, SHA-256
+checksums and library versions. The checker pins both approval anchors.
+
+Historical V3, V4 and V5 baseline files and approval anchors are unchanged;
+verify them explicitly using `--authorization-version 3`, `4` or `5` against
+the corresponding historical checkout. They intentionally reject V6 bytes.
+
+Mutations test missing/unexpected files, manifest changes, library mismatches,
+LF/CRLF and mixed endings, counterfeit maps and CLI failures in disposable
+copies. A functional test pass cannot substitute for byte-level verification.
+Changing protected code requires a separate reviewed authorization and baseline.
+
 # Forecast F1 V3 integrity check
 
 `forecast_f1_v3_baseline.json` is a static projection of the previously
