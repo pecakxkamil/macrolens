@@ -1,112 +1,173 @@
 # MacroLens
 
+**Autorski projekt do analizy danych makroekonomicznych i rynków finansowych.**
+
+Rozwijam MacroLens z zainteresowania gospodarką, rynkami i analizą danych.
+To samodzielnie stworzone narzędzie do porównywania wskaźników, badania historii
+gospodarki USA oraz śledzenia publikacji makro i wyników spółek.
+
+Python · FastAPI · PostgreSQL · React · TypeScript · Docker
+
 [![MacroLens CI](https://github.com/pecakxkamil/macrolens/actions/workflows/ci.yml/badge.svg)](https://github.com/pecakxkamil/macrolens/actions/workflows/ci.yml)
 
-**Dane makro USA i wyniki spółek w jednym panelu.**
+[Research](#research) · [Explore Data](#explore-data) · [Galeria](#galeria) · [Roadmapa](#roadmapa) · [Dokumentacja](docs/architecture.md) · [Uruchomienie](#uruchomienie-lokalne)
 
-MacroLens pokazuje aktualne i poprzednie odczyty, ich historię oraz źródła.
-Łączy kalendarz publikacji, prognozy i analizy w dwujęzycznym interfejsie.
+![Overview — przekrojowy obraz gospodarki USA w sześciu obszarach](docs/screenshots/overview.png)
 
-![Przegląd MacroLens: sześć obszarów gospodarki, odczyty i ich historia](docs/screenshots/overview.png)
+*Overview: rynek pracy, inflacja, wzrost, konsument, mieszkalnictwo i warunki finansowe — odczyty, poprzednie wartości i kontekst.*
 
-**Python · FastAPI · PostgreSQL · React · TypeScript · Docker**
+## Najciekawsze możliwości analityczne
 
-[Uruchomienie lokalne](#uruchomienie-lokalne) · [Dokumentacja techniczna](docs/architecture.md) · [Testy i CI](docs/ci.md)
+- **Zestawianie danych:** dwie lub trzy serie na jednym wykresie, wspólne okresy i osie dopasowane do jednostek.
+- **Analiza dynamiki:** poziomy, zmiany m/m i r/r, średnie kroczące oraz inne transformacje dostępne dla wybranego wskaźnika.
+- **Badanie zależności:** korelacja Pearsona, wielkość próby, porównania lead/lag i stabilność korelacji w czasie.
+- **Syntetyczny obraz gospodarki:** eksperymentalny Macro Conditions Index (MCI) z sześcioma subindeksami i jawnym rozkładem składników.
+- **Kontekst publikacji:** Actual/Previous, okres obserwacji, pochodzenie danych, rewizje i zachowane prognozy sprzed wydarzenia.
 
-## Możliwości aplikacji
+## Research
 
-- **Kalendarz makro:** publikacje, potwierdzone okresy i porównania Actual/Previous.
-- **Inflacja i rynek pracy:** CPI, Core CPI oraz sześć odczytów Employment, w tym NFP.
-- **Wyniki spółek:** EPS, przychody i porównania okresów fiskalnych.
-- **Forecast F1:** nowcasty i prognozy zarządów z historią zachowaną sprzed publikacji.
-- **Eksploracja danych:** sześć obszarów gospodarki, wykresy, definicje i raport do pobrania.
-- **Integracje i testy:** wersjonowanie danych źródłowych, testy automatyczne i kontrola integralności w CI.
+### Compare Data — własne zestawienia wskaźników
 
-## Pozostałe widoki aplikacji
+Porównanie **dwóch lub trzech serii** makro lub zapisanych cen Nasdaq i Bitcoina,
+z osobnym wyborem miary i zakresu 1–10 lat albo całej historii.
 
-Wszystkie cztery zrzuty pochodzą z działającej lokalnej aplikacji z 16 listopada
-2026 r. Pokazują zapisane dane i rzeczywiste stany kontroli źródeł, również
-częściowe wyniki. Nie są transmisją na żywo ani dołączonym zbiorem danych.
-Overview i Calendar mogą korzystać z różnych wersji źródłowych lub transformacji.
-[Pochodzenie zrzutów](docs/screenshots/README.md).
+Wspólny wykres pokazuje wartości w ich jednostkach lub **indeks 100** dla
+kwalifikujących się dodatnich poziomów. Każda para ma **korelację Pearsona,
+liczbę obserwacji i zakres próby**. Częstotliwości są wyrównywane bez interpolacji;
+indeksowanie nie zmienia danych użytych do korelacji.
+
+### MCI i MCI vs Markets — gospodarka w kontekście rynku
+
+- **MCI Index:** opisowy indeks 0–100, sześć obszarów gospodarki, wagi i wkłady poszczególnych składników oraz historia z opcjonalnymi liniami subindeksów.
+- **Dwie perspektywy historii:** bieżące zapisane wersje danych oraz odrębna rekonstrukcja point-in-time z wersji ALFRED dostępnych na historyczny koniec miesiąca.
+- **MCI vs Markets:** zestawienie poziomu i miesięcznej zmiany MCI z miesięcznymi stopami zwrotu Nasdaq lub Bitcoina.
+- **Lead/lag:** korelacje dla przesunięć od −6 do +6 miesięcy, okna kroczące 24 lub 36 miesięcy i wykres rozrzutu z datami oraz wartościami poszczególnych par.
+
+**Korelacja nie oznacza przyczynowości ani zdolności przewidywania rynku.**
+MCI jest eksperymentalnym wskaźnikiem opisowym, nie modelem recesji ani sygnałem inwestycyjnym.
+
+## Explore Data
+
+**Data sets:** wyszukiwarka i filtry wskaźników, historia pojedynczego szeregu,
+aktualna i poprzednia wartość z datami, jednostki, definicja i źródło.
+Do wyboru są dostępne transformacje i zakresy 1–10 lat.
+
+**Curated charts** zawiera gotowe porównania: CPI i Core CPI, PCE i Core PCE,
+realną konsumpcję i dochód, rozpoczęte budowy i pozwolenia oraz rentowności
+obligacji 2Y/10Y. Są też m.in. momentum CPI i spread krzywej dochodowości.
+Interaktywne legendy pozwalają ukrywać serie, a tooltipy odczytywać wartości
+i daty. Własny dobór wielu serii jest dostępny w Research → Compare Data.
+
+### Co można analizować w MacroLens?
+
+- Jak zmienia się dynamika CPI i Core CPI, a jak krótsze momentum inflacji na tle zmian r/r?
+- Jak przebiegały bezrobocie i stopa Fed w wybranym okresie oraz jak zmienia się ich opisowe porównanie po zmianie zakresu próby?
+- Czy współzmienność zmian MCI i stóp zwrotu Nasdaq lub Bitcoina jest stabilna w różnych oknach i przesunięciach czasowych?
+
+Pytania służą samodzielnej analizie, bez z góry przypisanych wyników.
+Overview oferuje **raport Markdown**; Research i Explore Data nie mają eksportu CSV.
+
+## Kalendarz publikacji i Earnings
+
+**Calendar:** Actual/Previous, potwierdzone okresy i godziny, CPI/Core CPI,
+sześć odczytów Employment z NFP oraz szczegóły z interpretacją i trendem.
+
+**Earnings:** EPS, przychody, poprzednie okresy fiskalne i dostępne prognozy
+zarządów. Historia zachowuje wcześniejsze prognozy, dostępne pierwsze odczyty
+i rewizje. Nowcasty i guidance pozostają odrębne od konsensusu rynkowego.
+
+## Galeria
+
+Prawdziwe widoki lokalnej aplikacji z zapisanymi danymi. Obrazy są duże i ułożone
+pojedynczo; [pochodzenie i warunki wykonania](docs/screenshots/README.md).
+
+### Research — porównanie dwóch serii
+
+![Research: bezrobocie i stopa Fed, dziesięcioletnia historia oraz statystyka korelacji](docs/screenshots/research.png)
+
+*Wspólny wykres UNRATE i DFF, wybór zakresu, liczba sparowanych obserwacji i korelacja Pearsona. To opis zapisanej próby, nie wniosek o przyczynowości.*
+
+### Explore Data — inflacja i jej dynamika
+
+![Explore Data: porównania CPI i Core CPI, PCE i Core PCE oraz momentum inflacji](docs/screenshots/explore-data.png)
+
+*Pięcioletnie wykresy bieżącej zapisanej historii i pochodnych. Ich definicje i wersje nie muszą odpowiadać odczytom przypisanym do publikacji w Calendar.*
+
+### Calendar — publikacje i odczyty
+
+![Kalendarz publikacji makro z wartościami Actual i Previous](docs/screenshots/calendar.png)
+
+*Employment i CPI: okresy, godziny, aktualne i poprzednie odczyty oraz jawne braki.*
+
+### Earnings — wyniki spółek
+
+![Wyniki spółek: EPS, przychody i porównania okresów fiskalnych](docs/screenshots/earnings.png)
+
+*Raportowane wyniki i ich porównanie z poprzednimi okresami fiskalnymi.*
 
 <details>
-<summary>Kalendarz, szczegóły publikacji i wyniki spółek — zobacz trzy widoki</summary>
+<summary>Szczegóły publikacji makro — dodatkowy widok</summary>
 
-### Kalendarz publikacji
+![Szczegóły CPI: interpretacja, źródło, okres i wykres trendu](docs/screenshots/macro-detail.png)
 
-![Kalendarz z aktualnymi i poprzednimi odczytami makro](docs/screenshots/calendar.png)
-
-### Szczegóły wskaźnika
-
-![Rozwinięta publikacja CPI ze źródłem, okresem obserwacji i wykresem](docs/screenshots/macro-detail.png)
-
-### Wyniki spółek
-
-![Wyniki spółek z porównaniem okresów fiskalnych](docs/screenshots/earnings.png)
+*Rozwinięta publikacja CPI z wyjaśnieniem metody, porównaniem i historią.*
 
 </details>
 
-## Technologie i architektura
+## Roadmapa
 
-| Warstwa | Technologie |
-|---|---|
-| Pobieranie i walidacja danych | Python, HTTPX, pandas, adaptery poszczególnych źródeł |
-| API | FastAPI, Uvicorn |
-| Przechowywanie danych | PostgreSQL 17, psycopg, wersjonowane obserwacje i dokumenty |
-| Interfejs | React, TypeScript, Vite, Recharts |
-| Testy | pytest, Vitest, Testing Library, testy integracyjne na tymczasowym PostgreSQL |
-| Środowisko programistyczne i CI | Docker Compose, GitHub Actions |
+**Ukończone:** dashboard, porównania i eksploracja danych, opisowe narzędzia
+Research, kalendarz, CPI/Employment, Earnings oraz wersjonowanie historii.
 
-```mermaid
-flowchart LR
-    S["Wydawcy / FRED / ALFRED"] --> I["Pobieranie z limitami i walidacja"]
-    I --> D[("PostgreSQL: obserwacje, wersje, prognozy")]
-    I --> R["Lokalne kopie źródeł i potwierdzenia pobrania"]
-    D --> P["Modele odczytu i powiązanie publikacji z okresem"]
-    R --> P
-    P --> A[FastAPI]
-    A --> U["Interfejs React i kalendarz"]
-```
+**Planowane:** raporty COT (CFTC), automatyzacja kolejnych publikacji H.15/PMMS,
+kolejne narzędzia Research, szersze analizy i porównania, alerty oraz opcjonalny
+publiczny dostęp online. Bez deklaracji terminów i gotowości tych funkcji.
 
-Wyświetlanie korzysta z zapisanych danych. Kontrola metadanych, pobranie
-obserwacji i zaakceptowanie publikacji to odrębne zdarzenia. Sama data
-w kalendarzu nie potwierdza, że wartość należy do danej publikacji.
-Więcej informacji: [architektura](docs/architecture.md)
-i [metodologia](docs/methodology.md).
+![MacroLens — poglądowa mapa rozwoju](docs/roadmap/macrolens-roadmap.png)
 
-## Źródła danych i interpretacja
+Oznaczenia V1–V6 na grafice dotyczą rewizji autoryzacji Forecast F1,
+nie sześciu oficjalnych wydań całej aplikacji. Aktualny podział na ukończone
+i planowane opisano powyżej.
 
-MacroLens korzysta z [FRED](https://fred.stlouisfed.org/)
-i [ALFRED](https://alfred.stlouisfed.org/) oraz zweryfikowanych oficjalnych
-dokumentów BLS, BEA, Rezerwy Federalnej, Census i innych wydawców.
-Dane o zatrudnieniu i CPI mają bezpośrednie ścieżki BLS; PKB oraz dochody
-i wydatki osobiste (PIO) korzystają z istniejącej integracji dokumentów BEA.
-Wyniki spółek opierają się na zweryfikowanych raportach i tożsamości okresów
-fiskalnych.
+## Architektura i źródła
 
-Obserwacje w bieżącej wersji, zarchiwizowane pierwsze obserwacje i oficjalnie
-publikowane stopy zmian mają różne znaczenie. Interfejs zachowuje te
-rozróżnienia, w tym SA/NSA, rewizje i brakujące podstawy porównania.
-Nowcasty dostawców nie są konsensusem rynkowym, a wyniki analiz opisowych
-nie stanowią rekomendacji inwestycyjnych. Obowiązują warunki dostępu
-i redystrybucji poszczególnych źródeł; publiczna dostępność nie oznacza
-nieograniczonego prawa do ponownego rozpowszechniania.
+Źródła → adaptery i walidacja → PostgreSQL → FastAPI → React.
+Dane: FRED/ALFRED, zweryfikowane dokumenty BLS, BEA, Fed, Census i raporty spółek.
+Obowiązują warunki dostępu i redystrybucji wydawców.
 
-Kalendarz zachowuje potwierdzone okresy, godziny i pochodzenie odczytów;
-rozróżnia kolejne szacunki PKB oraz rewizje. Forecast F1 stosuje granice
-czasowe i niezmienne zapisy prognoz sprzed publikacji, aby późniejsza wersja
-nie zastępowała tej dostępnej przed wydarzeniem.
+[Architektura](docs/architecture.md) · [Metodologia](docs/methodology.md)
 
-Wyniki spółek obejmują prognozy zarządów tam, gdzie dostępne są zweryfikowane
-dane. Kontrola źródeł korzysta z potwierdzeń pobrania, ograniczonych ponowień
-prób i ostatnich poprawnych danych; procesy w tle wymagają jawnej autoryzacji.
+## Metodologia i jakość danych
+
+- **Okres obserwacji to nie data publikacji.** Calendar wymaga potwierdzenia powiązania; sama obecność liczby w bazie go nie zastępuje.
+- **Historia może zawierać rewizje.** Explore Data i Compare Data korzystają z bieżących zapisanych wersji. Osobny tryb PIT MCI używa dostępności na poziomie dnia, nie dokładnej godziny publikacji.
+- **Definicje i jednostki mają znaczenie:** SA/NSA, poziomy, pochodne oraz oficjalnie publikowane stopy zmian nie są zamienne. Braki danych nie są zastępowane zerem.
+- **Statystyka ma ograniczenia.** Korelacje poziomów mogą odzwierciedlać wspólne trendy; próby, braki i daty par pozostają widoczne. Brak podstaw do wniosków przyczynowych lub rekomendacji inwestycyjnych.
+
+[Pełne zasady, historia i wzory](docs/methodology.md).
+
+## Testy i CI
+
+GitHub Actions sprawdza backend pytest, frontend Vitest, TypeScript/build,
+20 etapów integracji na odrębnym PostgreSQL 17 oraz integralność F1 V6
+**168/168** (165 plików i 3 wersje bibliotek). Historyczne wzorce pozostają
+zachowane; zielone testy funkcjonalne nie zastępują kontroli bajtów.
+
+[Aktualne CI i polecenia lokalne](docs/ci.md) · [Zasady integralności](.github/ci/forecast-integrity.md)
+
+## Ograniczenia
+
+- Projekt działa lokalnie; nie ma publicznie hostowanego demo ani dołączonej pełnej bazy.
+- Aktualność zależy od źródeł i uruchomionego backendu; część odświeżeń makro inicjuje widoczna karta. Brak wspólnego SLA, a dłuższe obliczenia mogą wymagać oczekiwania.
+- H.15/PMMS mają potwierdzone powiązania historyczne. Kandydat automatyzacji przyszłych publikacji nie jest wdrożony.
+- Pokrycie Earnings, prognoz i danych PIT jest ograniczone. Niepotwierdzone okresy, brak konsensusu, kapitalizacji lub podstawy porównania pozostają jawne.
+- MCI i analizy zależności są eksperymentalne i opisowe. Nie odtwarzają strategii inwestycyjnej ani pełnej wiedzy intraday z przeszłości.
 
 ## Uruchomienie lokalne
 
-Wymagania: **Python 3.12**, **Node.js 22/npm** i **Docker Compose
-z PostgreSQL 17**. Rozpocznij od nowej bazy programistycznej i własnego
-klucza FRED.
+Wymagania: **Python 3.12**, **Node.js 22/npm**, **Docker Compose/PostgreSQL 17**
+oraz własny klucz FRED do pobierania danych. Polecenia poniżej są przeznaczone
+dla **nowego środowiska developerskiego**, nie istniejącej bazy z danymi.
 
 ```powershell
 git clone https://github.com/pecakxkamil/macrolens.git
@@ -119,21 +180,10 @@ Copy-Item .env.example .env
 docker compose up -d postgres
 .venv\Scripts\python.exe -m app.database.init_db
 .venv\Scripts\python.exe -m app.database.sync_series
-```
-
-Te polecenia inicjalizują **podstawowy schemat i katalog serii**, a nie kopię
-instancji z danymi widocznej powyżej. Pobranie danych jest osobnym, jawnym
-krokiem. [Instrukcja środowiska lokalnego](docs/local-development.md) zawiera
-przykład dla niewielkiego zakresu danych, polecenia dla systemów Unix,
-ograniczenia inicjalizacji i wskazówki rozwiązywania problemów.
-
-Uruchom backend z głównego katalogu repozytorium:
-
-```powershell
 .venv\Scripts\python.exe -m uvicorn app.api.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-W drugim terminalu:
+W drugim terminalu, z głównego katalogu repozytorium:
 
 ```powershell
 cd frontend
@@ -141,80 +191,14 @@ npm ci
 npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
-Otwórz [interfejs aplikacji](http://127.0.0.1:5173/),
-[dokumentację API](http://127.0.0.1:8000/docs)
-lub [kontrolę dostępności](http://127.0.0.1:8000/health).
-Frontend domyślnie korzysta z API na porcie 8000;
-`VITE_API_BASE_URL` pozwala zmienić ten adres.
+Interfejs: [localhost:5173](http://127.0.0.1:5173/).
+API: [dokumentacja](http://127.0.0.1:8000/docs) i [health](http://127.0.0.1:8000/health).
 
-**Samo pobranie repozytorium nie odtwarza w pełni aktywnej instancji.**
-Repozytorium nie zawiera tokenów wykonawczych, planów przypisanych do
-konkretnej bazy, kopii źródeł RAW, snapshotów, prywatnych potwierdzeń ani
-bazy danych. Procesy F1 i Earnings wymagają osobno zweryfikowanych schematów,
-danych oraz autoryzacji. Brak aktywacji musi pozostać jawny; nie kopiuj cudzego
-tokenu ani nie uruchamiaj poleceń APPLY w celu obejścia tego warunku.
+Inicjalizacja tworzy podstawowy schemat i katalog, **nie odtwarza pełnej
+instancji ze screenshotów ani autoryzacji Forecast/Earnings**. Repozytorium
+nie zawiera tokenów, prywatnych planów, danych RAW ani bazy. Nie kopiuj cudzych
+tokenów i nie używaj APPLY jako skrótu do aktywacji.
 
-Do przeglądu portfolio bez poświadczeń służą zrzuty ekranu i testy oparte na
-danych testowych. Niewielką interaktywną demonstrację danych można uruchomić
-według opisanego przykładu dla jednej serii. Żadne sztuczne źródło danych
-produkcyjnych ani dołączona baza nie są włączane automatycznie.
-
-## Testy i CI
-
-```powershell
-.venv\Scripts\python.exe -m pytest -q
-.venv\Scripts\python.exe .github/ci/check_forecast_integrity.py --authorization-version 6
-cd frontend
-npm test -- --maxWorkers=2 --minWorkers=2
-npm run build
-```
-
-GitHub Actions uruchamia pełne zestawy testów backendu i frontendu,
-kontrolę TypeScript, build, wszystkie istniejące etapy integracji PostgreSQL
-oraz kontrolę integralności bajtów V6. Testy jednostkowe korzystają z danych
-testowych i blokują rzeczywiste zewnętrzne połączenia HTTP/SQL. Testy
-integracyjne PostgreSQL działają na tymczasowej usłudze runnera — nie aktywują
-instancji produkcyjnej. Szczegóły: [dokumentacja CI](docs/ci.md)
-i [zasady kontroli integralności](.github/ci/forecast-integrity.md).
-
-Zabezpieczenie harmonogramu BEA odrzuca publikację datowaną przed końcem okresu
-obserwacji i zachowuje wcześniejsze poprawne dowody. CI niezależnie sprawdza
-zatwierdzony zakres F1 V6: **165 dokładnych hashy plików + 3 wersje bibliotek =
-168 artefaktów**. Historyczne mapy autoryzacji V3/V4/V5 pozostają dostępne.
-
-## Znane ograniczenia i dalsze prace
-
-- Brak publicznej wersji online i możliwości odtworzenia całej bazy jednym poleceniem.
-- Aktualność danych zależy od dostępności źródeł, działania backendu
-  i odpowiedniego mechanizmu odświeżania. Część odświeżeń makro inicjuje
-  widoczna karta interfejsu.
-- H.15/PMMS udostępniają obecnie zweryfikowane powiązania **historyczne**.
-  Automatyczne pobieranie kolejnych publikacji jest odizolowanym kandydatem,
-  **niewdrożonym w tym wydaniu**.
-- Zakres prognoz i wyników spółek jest ograniczony. Niedostępny konsensus,
-  kapitalizacja, brak podstawy porównania r/r i niepotwierdzone okresy
-  publikacji pozostają jawnie oznaczone.
-- Zmiany u wydawców, ograniczenia dostępu oraz nieaktualne lub błędne
-  dokumenty mogą pozostawiać częściowy wynik kontroli przy zachowaniu
-  ostatnich poprawnych danych. Projekt nie deklaruje wspólnego SLA dla źródeł.
-- Eksperymentalne korelacje i wskaźnik Macro Conditions Index mają opisane
-  ograniczenia metodologiczne. Dalsze prace obejmują osobno zweryfikowany,
-  przenośny zestaw danych demonstracyjnych, szerszą automatyzację dowodów
-  publikacji i przygotowanie środowiska wdrożeniowego.
-
-## Roadmapa
-
-**Ukończone:** kalendarz makro, CPI/Core CPI, Employment/NFP, wyniki spółek,
-historia prognoz, ochrona harmonogramu BEA oraz dokumentacja portfolio.
-Aktualna rewizja autoryzacji F1 to **V6**, z kontrolą 168/168 artefaktów.
-
-**Planowane:** raporty COT (CFTC), automatyzacja kolejnych publikacji H.15/PMMS,
-alerty, dodatkowe analizy i ewentualny publiczny dostęp online. Nie deklarujemy
-terminów; automatyzacja H.15/PMMS pozostaje niewdrożonym kandydatem.
-
-![MacroLens — poglądowa mapa rozwoju i planowanych funkcji](docs/roadmap/macrolens-roadmap.png)
-
-Grafika zachowuje pierwotną stylistykę i ma charakter poglądowy.
-Oznaczenia V1–V6 dotyczą kolejnych rewizji mechanizmu autoryzacji Forecast F1,
-nie sześciu wydań całej aplikacji. Kolory i skrótowe podpisy na grafice nie są
-wiążącym statusem wdrożeń — aktualny podział na ukończone i planowane podano powyżej.
+[Pełna instrukcja lokalna](docs/local-development.md) opisuje bezpieczny przykład
+pobrania jednej serii, wariant Unix, konfigurację API i ograniczenia uruchomienia.
+Do obejrzenia projektu bez poświadczeń służą screenshoty i testy offline.
