@@ -18,6 +18,12 @@ readings and Calendar readings use different source versions or transformations;
 these screenshots are not evidence of equal precision, current completeness or
 future release coverage. They are a recorded walkthrough, not a hosted demo.
 
+The macro-detail screenshot was recaptured on 16 November 2026 after enlarging
+the responsive trend chart, centering its heading, and vertically centering
+the chart against the full event description. It uses the same real
+API/Vite, desktop viewport and read-only capture conditions described above.
+The other three screenshots are unchanged.
+
 ## Analytics portfolio views — 16 November 2026
 
 - `research.png`: real Research / Compare Data view, UNRATE and DFF, 10Y range,
@@ -30,7 +36,8 @@ normal stored dataset and API/Vite. No synthetic values, source refresh or
 authorization change was used. These current-vintage histories can include
 revisions and differ from publication-bound Calendar readings or official
 publisher definitions. They do not establish present-day provider completeness.
-The four earlier screenshots and the roadmap image are byte-identical.
+The analytics additions retain the existing screenshots and roadmap, including
+the macro-detail layout update described above.
 
 The capture tab used hidden document visibility to avoid automatic refresh;
 non-GET and non-local requests were blocked. No such blocked request occurred

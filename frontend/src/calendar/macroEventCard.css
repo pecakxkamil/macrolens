@@ -15,12 +15,12 @@
 .macro-insight-technical > summary { cursor: pointer; color: #a8bcd3; }
 .agenda-technical-content { padding-top: 10px; max-width: 100%; }
 .macro-insight-body,.macro-insight-copy { min-width: 0; }
-.macro-insight-trend { width: 100%; max-width: 540px; min-width: 0; }
+.macro-insight-trend { width: 100%; min-width: 0; }
+.macro-insight-trend h4 { text-align: center; }
 @media(min-width: 1000px) {
- .macro-insight-body:has(> .macro-insight-trend) { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 32px; align-items: start; }
- .macro-insight-body > .macro-insight-trend { justify-self: end; }
+ .macro-insight-body:has(> .macro-insight-trend) { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.3fr); gap: 24px; align-items: center; }
 }
-.macro-insight-trend svg { display: block; width: 100%; height: 198px; }
+.macro-insight-trend svg { display: block; width: 100%; height: auto; }
 .macro-trend-axis text { fill: #91a5bd; font-size: 11px; }
 .macro-trend-axis line { stroke: #293542; stroke-width: 1; }
 .macro-trend-axis .macro-trend-baseline { stroke: #62758b; }
