@@ -57,7 +57,10 @@ test("lazy Overview retains API error and Retry without re-importing the route",
   vi.stubGlobal("fetch", api); render(<App />);
   expect(await screen.findByRole("alert")).toHaveTextContent("Economy Brief is unavailable");
   fireEvent.click(screen.getByRole("button", { name: "Retry brief" }));
-  await screen.findByRole("heading", { name: "Labor" }); expect(api).toHaveBeenCalledTimes(2);
+  await screen.findByRole("heading", { name: "Labor" }); await settle();
+  expect(api.mock.calls.filter(([url]) => String(url).endsWith("/brief"))).toHaveLength(2);
+  expect(api.mock.calls.filter(([url]) => String(url).includes("/api/v1/calendar?"))).toHaveLength(1);
+  expect(api).toHaveBeenCalledTimes(3);
   expect(gate.imports).toBe(1);
 });
 
@@ -94,7 +97,14 @@ test("lazy Overview remount preserves the R3 deadline once, reloads the committe
   expect(screen.getByText("Gross Domestic Product")).toBeInTheDocument();
   view.unmount(); await act(async () => { await vi.advanceTimersByTimeAsync(900_000); });
   expect(api.mock.calls.filter(([url])=>url.includes("/calendar/events"))).toHaveLength(1);
-  expect(api).toHaveBeenCalledTimes(6);
+  const isAnnualRead = (url: string) => url.includes("/api/v1/calendar?") && new URL(url).searchParams.get("end_date") === "2026-10-30";
+  expect(api.mock.calls.filter(([url]) => !isAnnualRead(url))).toHaveLength(6);
+  const annualReads = api.mock.calls.filter(([url]) => isAnnualRead(url));
+  expect(annualReads).toHaveLength(3);
+  for (const [url, init] of annualReads) {
+    expect(new URL(url).searchParams.get("include_readings")).toBe("true");
+    expect(init?.method ?? "GET").toBe("GET");
+  }
 });
 
 test.each(["en", "pl"] as const)("chunk rejection has an accessible error and recovers on navigation in %s", async language => {
