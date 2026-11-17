@@ -42,3 +42,12 @@ the macro-detail layout update described above.
 The capture tab used hidden document visibility to avoid automatic refresh;
 non-GET and non-local requests were blocked. No such blocked request occurred
 during the two captures. New screenshots were visually reviewed before publication.
+
+## Overview framing update ? 17 November 2026
+
+`overview.png` was recaptured from the real local API/Vite at 1366 x 1346.
+The taller viewport retains all six domains and the Upcoming events panel,
+including the three-star Advance Monthly Sales for Retail and Food Services
+event on 17 November at 14:30 PL. No event, date, importance or source value
+was edited. Hidden-page visibility and request guards prevented refresh during
+capture; only normal GET responses were observed. Other images are unchanged.
