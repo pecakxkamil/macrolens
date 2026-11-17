@@ -1,3 +1,4 @@
+import {AnnualCpiReading} from "./AnnualCpiReading";
 import { useOverviewRefresh } from "./useOverviewRefresh";
 import {BeaEvidence} from '../calendar/BeaEvidence';
 import { SourceCheckStatus } from "./SourceCheckStatus";
@@ -63,7 +64,7 @@ function ReadingRow({ reading, onChart, explanations }: { reading: PreparedReadi
   };
   return <tr className={`overview-reading-row${reading.raw?.unit === "index" ? " overview-reading-row--index" : ""}`} aria-label={tLabel(reading.label)}>
     <th scope="row"><div className="overview-reading-heading"><a href={reading.indicatorHref}>{tText(reading.label)}</a><span className="overview-reading-actions"><ChartButton title={reading.label} onClick={onChart} />{explanations ? <span className="overview-explanation"><ExplanationSlot><ReadingExplanation reading={reading} /></ExplanationSlot></span> : null}</span></div><div className="overview-period"><time dateTime={reading.current.date}>{tText(reading.current.period)}</time></div></th>
-    <td className="overview-value--latest"><div className="overview-value"><div className="overview-reading-number">{value(reading.current)}{reading.current.yoy !== undefined ? <small className="overview-yoy">{tText(reading.current.yoy)}{reading.current.yoy === "\u2014" ? "" : "%"} {tText("YoY")}</small> : null}</div><span className={`overview-change overview-change--${reading.tone}`}>
+    <td className="overview-value--latest"><div className="overview-value"><div className="overview-reading-number">{value(reading.current)}{reading.key !== 'headline_cpi' && reading.current.yoy !== undefined ? <small className="overview-yoy">{tText(reading.current.yoy)}{reading.current.yoy === "\u2014" ? "" : "%"} {tText("YoY")}</small> : null}</div><span className={`overview-change overview-change--${reading.tone}`}>
       <InfoTooltip label={`${reading.label}: ${reading.labels.change} - ${directionLabel}`} description={readingHoverText(reading)} trigger={reading.arrow} closable bounded
         content={<div className="reading-change-details">{readingHoverLines(reading).map((line, index) => <span key={index}>{index > 0 ? " " : ""}{tText(line)}</span>)}{reading.raw?.bea_direct?<BeaEvidence measure={reading.raw.bea_direct}/>:null}</div>} />
     </span><InterpretationMarker label={reading.label} interpretation={interpretation} /></div></td>
@@ -119,6 +120,7 @@ export function EconomyBrief({explanations=false}: {explanations?:boolean} = {})
       </div>
       <section aria-label={tLabel("Economy across six domains")}><div className="brief-grid">{model.domains.map((domain) => <article key={domain.key} className="domain-card overview-domain" aria-label={tLabel(`${domain.name} brief`)}>
         <h2>{tText(domain.name)}</h2>{domain.freshnessIssues.map(reading => <p role="status" className="market-note" key={reading.key}>{tText(`${reading.label}: Newer stored period ${reading.raw!.latest_stored_observation_date} has no available reading.`)}</p>)}
+        {domain.key === "inflation" ? <AnnualCpiReading revision={data.data_revision ?? data.assembled_at} now={now}/> : null}
         {domain.key === "financial_conditions" ? <FedTargetBlock explanations={explanations} target={model.fedTarget} onChart={()=>setPreview({chart:fedPreview,title:"Fed target range"})} /> : null}
         <table className="overview-domain-table" aria-label={tLabel(`${domain.name} readings`)}><colgroup><col style={{ width: "41.5%" }} /><col style={{ width: "37%" }} /><col style={{ width: "21.5%" }} /></colgroup>
           <thead><tr><th scope="col">{tText("Indicator")}</th><th scope="col">{tText("Currently")}</th><th scope="col">{tText("Previous")}</th></tr></thead>

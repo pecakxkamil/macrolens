@@ -51,3 +51,10 @@ including the three-star Advance Monthly Sales for Retail and Food Services
 event on 17 November at 14:30 PL. No event, date, importance or source value
 was edited. Hidden-page visibility and request guards prevented refresh during
 capture; only normal GET responses were observed. Other images are unchanged.
+
+## Annual CPI panel ? 17 November 2026
+
+Overview was recaptured at 1366 x 1421 after adding the annual CPI panel.
+The real Calendar API supplies the last available September NSA reading and
+October missing-base explanation; no percentage is hardcoded in production UI.
+The taller frame retains Upcoming events. Other images remain unchanged.

@@ -63,7 +63,7 @@ test("Overview prioritizes 21 numeric readings and a Fed target range across six
   expect(screen.queryByText("Supporting MCI")).not.toBeInTheDocument();
   expect(screen.queryByText("Cross-currents")).not.toBeInTheDocument();
   expect(screen.queryByText("How this is assessed")).not.toBeInTheDocument();
-  expect(fetch).toHaveBeenCalledTimes(1); expect(String(fetch.mock.calls[0][0])).toMatch(/\/brief$/);
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2)); expect(String(fetch.mock.calls[0][0])).toMatch(/\/brief$/);
 });
 
 test("domain tables keep two values and periods with no replacement disclosures", async () => {
@@ -83,7 +83,7 @@ test("domain tables keep two values and periods with no replacement disclosures"
     }
     expect(within(card).queryByText("More comparisons")).not.toBeInTheDocument();
   }
-  expect(fetch).toHaveBeenCalledTimes(1);
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
 });
 
 test.each([
@@ -159,7 +159,7 @@ test("Markdown download uses the loaded aggregate without PIT/history requests o
   Object.defineProperty(URL, "createObjectURL", { configurable: true, value: create }); Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: revoke });
   let filename = ""; vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function(this: HTMLAnchorElement) { filename = this.download; });
   fireEvent.click(screen.getByRole("button", { name: "Download report" }));
-  expect(fetch).toHaveBeenCalledTimes(1); expect(filename).toMatch(/^macrolens-economy-brief-.*\.md$/);
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2)); expect(filename).toMatch(/^macrolens-economy-brief-.*\.md$/);
   const text = await new Promise<string>(resolve => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.readAsText(create.mock.calls[0][0]); });
   expect(text).toContain(readingReportLine(briefModel(data).domains[0].compact[1]));
   expect(text).not.toMatch(/\n{3,}/); expect(text).not.toContain("qoq\\_annualized");
@@ -174,7 +174,7 @@ test("EN/PL translates labels, formats values and exports the same periods witho
   expect(table).toHaveTextContent("4,2"); expect(table).toHaveTextContent("Poprzednio"); expect(screen.queryByText("Wi\u0119cej por\u00f3wna\u0144")).not.toBeInTheDocument();
   const report = briefMarkdown(briefModel(data), data, data.assembled_at);
   expect(report).toContain("4,2"); expect(report).toContain("3 miesi"); expect(report).toContain("https://fred.stlouisfed.org/series/UNRATE");
-  expect(document.documentElement.lang).toBe("pl"); expect(fetch).toHaveBeenCalledTimes(1);
+  expect(document.documentElement.lang).toBe("pl"); await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
 });
 
 test("repeated low releases remain grouped and all dates are kept in the report", async () => {
@@ -254,14 +254,15 @@ test("level differences share the row unit while rate changes retain explicit pe
 });
 
 
-test("eight monthly activity/inflation and wage rows compare MoM and show same-month YoY context", async () => {
+test("monthly rows retain annual context except headline CPI, which has a separate verified NSA panel", async () => {
   const data = fixture(); mockApi(data); render(<EconomyBrief />); await screen.findByRole("heading", { name: "Labor" });
   for (const item of data.reading_comparisons!.data!.filter(row => row.feature_name === "mom" && row.series_id !== "PPIFIS")) {
     const region = screen.getByRole("row", { name: item.label });
     const points = region.querySelectorAll("td");
     expect(points[0].querySelector("strong")).toHaveTextContent("0.3");
     expect(points[1].querySelector("strong")).toHaveTextContent("0.1");
-    expect(points[0].querySelector(".overview-yoy")).toHaveTextContent("3.20% YoY");
+    if(item.component === "headline_cpi") expect(points[0].querySelector(".overview-yoy")).toBeNull();
+    else expect(points[0].querySelector(".overview-yoy")).toHaveTextContent("3.20% YoY");
     expect(region.querySelector(".overview-change")).toHaveTextContent("\u2191");
     expect(points[1].querySelector(".overview-yoy")).toBeNull();
     expect(item.context_yoy!.current!.observation_date).toBe(item.current!.observation_date);
@@ -274,8 +275,7 @@ test("YoY from another month is never shown next to current MoM", async () => {
   const data = fixture(), cpi = data.reading_comparisons!.data!.find(row => row.component === "headline_cpi")!;
   cpi.context_yoy!.current!.observation_date = "2026-08-01";
   mockApi(data); render(<EconomyBrief />); const region = await screen.findByRole("row", { name: "CPI MoM" });
-  expect(region.querySelector(".overview-yoy")).toHaveTextContent("\u2014 YoY");
-  expect(region.querySelector(".overview-yoy")).not.toHaveTextContent("3.2");
+  expect(region.querySelector(".overview-yoy")).toBeNull();
   expect(readingReportLine(briefModel(data).domains[1].compact[0])).toContain("YoY: \u2014");
 });
 
@@ -357,7 +357,8 @@ test("a newer stored missing period shows a domain-specific notice also preserve
   const data = fixture(), item = data.reading_comparisons!.data!.find(row => row.component === "headline_cpi")!;
   item.latest_stored_observation_date = "2026-10-01";
   mockApi(data); render(<EconomyBrief />);
-  const notice = await screen.findByRole("status");
+  const notice = await screen.findByText("CPI MoM: Newer stored period 2026-10-01 has no available reading.");
+  expect(notice).toHaveAttribute("role", "status");
   expect(notice).toHaveTextContent("CPI MoM: Newer stored period 2026-10-01 has no available reading.");
   expect(notice.closest("article")).toHaveAttribute("aria-label", "Inflation brief");
   expect(briefMarkdown(briefModel(data), data, data.assembled_at)).toContain(notice.textContent!);
@@ -473,7 +474,7 @@ test("an elapsed scheduled release is removed locally without fetching or declar
   act(() => { vi.advanceTimersByTime(30_000); });
   expect(document.querySelector(".overview-calendar .overview-event")).toBeNull();
   expect(screen.getByText("No key upcoming events in the stored 7-day window.")).toBeInTheDocument();
-  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(fetch).toHaveBeenCalledTimes(2);
   expect(data.reading_comparisons!.data![0].current!.observation_date).toBe("2026-09-01");
 });
 
@@ -485,7 +486,7 @@ test("all hidden histories, additional readings, sources and exact differences r
     for (const reading of domain.compact) { expect(report).toContain(readingReportLine(reading)); expect(report).toContain(reading.change); for (const source of reading.sources) expect(report).toContain(source.url); }
     for (const reading of domain.readings) expect(report).toContain(reading);
   }
-  expect(fetch).toHaveBeenCalledTimes(1);
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
 });
 
 test("housing uses compact units while annualization remains explicit in details and report", async () => {
@@ -547,7 +548,7 @@ test("five labor rows keep raw claims compact and preserve the average only in t
   expect(report).toContain("CES0500000003, mom"); expect(report).toContain("ICSA, raw");
   fireEvent.click(screen.getByRole("button", {name: "Polski"}));
   expect(screen.getByRole("row", {name: "Wolne miejsca pracy \u2014 JOLTS"}).querySelector("strong")).toHaveTextContent("7,25 mln");
-  expect(fetch).toHaveBeenCalledTimes(1);
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
 });
 
 test("claims average from another week is omitted and never replaces missing raw data", async () => {
@@ -660,7 +661,7 @@ test("optional economic notes toggle below language controls without refetching 
  const toggle=screen.getByRole("button",{name:"Overview explanations"});
  expect(toggle).toHaveAttribute("aria-pressed","false");expect(screen.queryByRole("button",{name:/Economic meaning/})).not.toBeInTheDocument();
  fireEvent.click(toggle);expect(await screen.findAllByRole("button",{name:/Economic meaning/})).toHaveLength(22);
- expect(localStorage.getItem("macrolens.overview.explanations")).toBe("true");expect(fetch).toHaveBeenCalledTimes(1);
+ expect(localStorage.getItem("macrolens.overview.explanations")).toBe("true");await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
  const note=screen.getByRole("button",{name:"CPI MoM: Economic meaning"});
  const heading=note.closest("th")!;
  expect(within(heading).getAllByRole("button").map(button=>button.getAttribute("aria-label"))).toEqual(["View chart: CPI MoM","CPI MoM: Economic meaning"]);
