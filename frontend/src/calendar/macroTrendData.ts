@@ -59,12 +59,12 @@ export function comparableTrend(m:CalendarMeasure,data:unknown):TrendPoint[]{
  return result.length>=3?result:[];
 }
 
-export function trendGeometry(points:TrendPoint[],frequency:string,width=540){
+export function trendGeometry(points:TrendPoint[],frequency:string,width=540,height=198){
  const times=points.map(p=>Date.parse(p.period+'T00:00:00Z')),values=points.map(p=>p.value),min=Math.min(...values),max=Math.max(...values);
  const padding=(max-min||Math.abs(max)*0.1||1)*0.08,span=max-min+2*padding,rough=span/3,power=10**Math.floor(Math.log10(rough));
  const step=([1,2,2.5,5,10].find(n=>n*power>=rough)??10)*power;
  const low=Math.floor((min-padding)/step)*step,high=Math.ceil((max+padding)/step)*step;
- const left=78,right=width-16,top=18,bottom=146,y=(value:number)=>bottom-(value-low)/(high-low)*(bottom-top);
+ const left=78,right=width-16,top=18,bottom=height-52,y=(value:number)=>bottom-(value-low)/(high-low)*(bottom-top);
  const ticks=Array.from({length:Math.round((high-low)/step)+1},(_,i)=>{const value=Number((low+i*step).toPrecision(12));return {value,y:y(value)};});
  const dots=points.map((p,i)=>({...p,x:left+(times[i]-times[0])/(times[times.length-1]-times[0]||1)*(right-left),y:y(p.value)}));
  const path=dots.map((p,i)=>{

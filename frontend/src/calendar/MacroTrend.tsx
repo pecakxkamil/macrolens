@@ -17,13 +17,14 @@ export function MacroTrend({measure}:{measure:CalendarMeasure}){
   return()=>abort.abort();
  },[key]);
  const fromBls=blsTrend(measure);const points=fromBls.length?fromBls:state?.key===key?state.points:[];if(!points.length)return null;
- const geometry=trendGeometry(points,measure.frequency,width),title=et(`Trend · ${points.length} observations`,`Trend · ${points.length} odczytów`);
+ const height=Math.round(Math.max(220,Math.min(340,width*0.46)));
+ const geometry=trendGeometry(points,measure.frequency,width,height),title=et(`Trend · ${points.length} observations`,`Trend · ${points.length} odczytów`);
  return <section ref={container} className="macro-insight-trend" aria-label={title}><h4>{title}</h4>
- <svg viewBox={`0 0 ${width} 198`} role="img" aria-label={title}><title>{title}</title><desc>{(measure.selected_source==='bls:employment'||measure.selected_source==='bls:cpi')?et('BLS history from one captured response; includes revisions.','Historia BLS z jednej pobranej odpowiedzi; obejmuje rewizje.'):request?.documentHash?et('History from the selected report.','Historia z wybranego raportu.'):et('Current-vintage history; may include revisions.','Historia w bieżącej wersji; może zawierać rewizje.')}</desc>
+ <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={title}><title>{title}</title><desc>{(measure.selected_source==='bls:employment'||measure.selected_source==='bls:cpi')?et('BLS history from one captured response; includes revisions.','Historia BLS z jednej pobranej odpowiedzi; obejmuje rewizje.'):request?.documentHash?et('History from the selected report.','Historia z wybranego raportu.'):et('Current-vintage history; may include revisions.','Historia w bieżącej wersji; może zawierać rewizje.')}</desc>
  <g className="macro-trend-axis">{geometry.ticks.map(t=><g key={t.value}><line x1={geometry.left} x2={geometry.right} y1={t.y} y2={t.y}/><text x={geometry.left-8} y={t.y+4} textAnchor="end">{compactMeasureValue(t.value,measure.unit)}</text></g>)}
  <line className="macro-trend-baseline" x1={geometry.left} x2={geometry.left} y1={geometry.top} y2={geometry.bottom}/>
- {geometry.xTicks.map((p,i)=><text key={p.period} x={p.x} y={166} textAnchor={i===0?'start':i===geometry.xTicks.length-1?'end':'middle'}>{formatObservationDate(p.period,measure.frequency)}</text>)}
- <text x={(geometry.left+geometry.right)/2} y={190} textAnchor="middle">{et('Reference period · fitted value scale','Okres odczytu · dopasowana skala wartości')}</text></g>
+ {geometry.xTicks.map((p,i)=><text key={p.period} x={p.x} y={height-32} textAnchor={i===0?'start':i===geometry.xTicks.length-1?'end':'middle'}>{formatObservationDate(p.period,measure.frequency)}</text>)}
+ <text x={(geometry.left+geometry.right)/2} y={height-8} textAnchor="middle">{et('Reference period · fitted value scale','Okres odczytu · dopasowana skala wartości')}</text></g>
  <path d={geometry.path}/>{geometry.dots.map(p=><circle key={p.period} cx={p.x} cy={p.y} r="2.5"><title>{formatObservationDate(p.period,measure.frequency)}: {compactMeasureValue(p.value,measure.unit)}</title></circle>)}</svg>
  <ol className="visually-hidden" aria-label={et('Trend values','Wartości trendu')}>{points.map(p=><li key={p.period}><time dateTime={p.period}>{formatObservationDate(p.period,measure.frequency)}</time>: {compactMeasureValue(p.value,measure.unit)}</li>)}</ol>
  </section>;
