@@ -129,11 +129,31 @@ Oznaczenia V1–V6 na grafice dotyczą rewizji autoryzacji Forecast F1,
 nie sześciu oficjalnych wydań całej aplikacji. Aktualny podział na ukończone
 i planowane opisano powyżej.
 
-## Architektura i źródła
+## Technologie i architektura
 
-Źródła → adaptery i walidacja → PostgreSQL → FastAPI → React.
-Dane: FRED/ALFRED, zweryfikowane dokumenty BLS, BEA, Fed, Census i raporty spółek.
-Obowiązują warunki dostępu i redystrybucji wydawców.
+| Warstwa | Technologie |
+|---|---|
+| Pobieranie, przetwarzanie i walidacja | Python, HTTPX, pandas, adaptery źródeł |
+| Backend i API | FastAPI, Uvicorn |
+| Dane i historia | PostgreSQL 17, psycopg, wersjonowane obserwacje i dokumenty |
+| Interfejs i wizualizacje | React, TypeScript, Vite, Recharts |
+| Testy | pytest, Vitest, Testing Library, integracja na odrębnym PostgreSQL |
+| Środowisko i CI | Docker Compose, GitHub Actions |
+
+```mermaid
+flowchart TB
+    S["Oficjalni wydawcy / FRED / ALFRED"] --> I["Pobieranie i walidacja"]
+    I --> D[("PostgreSQL: dane i historia")]
+    I --> R["RAW i potwierdzenia pobrania"]
+    D --> P["Przetwarzanie i projekcja odczytów"]
+    R --> P
+    P --> A["API FastAPI"]
+    A --> U["Interfejs React"]
+```
+
+Widoki korzystają z zapisanych danych; kontrola źródła, pobranie obserwacji
+i potwierdzenie publikacji są odrębnymi etapami. Obowiązują warunki dostępu
+i redystrybucji wydawców.
 
 [Architektura](docs/architecture.md) · [Metodologia](docs/methodology.md)
 
