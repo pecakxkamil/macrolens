@@ -12,7 +12,7 @@ Python · FastAPI · PostgreSQL · React · TypeScript · Docker
 
 [Badania](#badania) · [Eksploracja danych](#eksploracja-danych) · [Galeria](#galeria) · [Roadmapa](#roadmapa) · [Dokumentacja](docs/architecture.md) · [Uruchomienie](#uruchomienie-lokalne)
 
-![Overview — przekrojowy obraz gospodarki USA w sześciu obszarach](docs/screenshots/overview.png)
+![Overview — przekrojowy obraz gospodarki USA w sześciu obszarach](docs/screenshots/przeglad.png)
 
 *Przegląd: sześć obszarów gospodarki USA, aktualne i poprzednie odczyty oraz nadchodzące publikacje.*
 
