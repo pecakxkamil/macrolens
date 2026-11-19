@@ -6,37 +6,62 @@ Rozwijam MacroLens z zainteresowania gospodarką, rynkami i analizą danych.
 To samodzielnie stworzone narzędzie do porównywania wskaźników, badania historii
 gospodarki USA oraz śledzenia publikacji makro i wyników spółek.
 
-Python · FastAPI · PostgreSQL · React · TypeScript · Docker
-
-[![MacroLens CI](https://github.com/pecakxkamil/macrolens/actions/workflows/ci.yml/badge.svg)](https://github.com/pecakxkamil/macrolens/actions/workflows/ci.yml)
-
-[Badania](#badania) · [Eksploracja danych](#eksploracja-danych) · [Galeria](#galeria) · [Roadmapa](#roadmapa) · [Dokumentacja](docs/architecture.md) · [Uruchomienie](#uruchomienie-lokalne)
-
 ![Overview — przekrojowy obraz gospodarki USA w sześciu obszarach](docs/screenshots/przeglad.png)
 
-*Przegląd: sześć obszarów gospodarki USA, aktualne i poprzednie odczyty oraz nadchodzące publikacje.*
+<p align="center">
+  <small><em>Przegląd: sześć obszarów gospodarki USA, aktualne i poprzednie odczyty oraz nadchodzące publikacje.</em></small>
+</p>
 
-W jednym miejscu można sprawdzić, co zmieniło się w gospodarce, a następnie
-przejść do historii wskaźnika lub szczegółów publikacji. Strzałki pokazują
-kierunek zmiany liczbowej, a osobne **+/−/± — potencjalny wpływ na USD**.
-To interpretacja względem poprzedniego odczytu, nie sygnał transakcyjny
-ani ocena zaskoczenia względem konsensusu. Roczne CPI ma własny, datowany wiersz;
-ostatni dostępny okres nie jest przedstawiany jako nowsza publikacja.
+Przegląd gospodarki USA pozwala szybko zobaczyć najważniejsze dane z sześciu obszarów: 
+rynku pracy, inflacji, wzrostu gospodarczego, konsumpcji, mieszkalnictwa i warunków finansowych.
+Każdy wskaźnik przedstawia aktualny i poprzedni odczyt, kierunek zmiany oraz jej potencjalny wpływ na dolara. 
+Klikając wybrany wskaźnik, można przejść do szczegółowych danych, wykresów historycznych i analizy zmian w czasie.
 
-## Najciekawsze możliwości analityczne
+## Najważniejsze możliwości analityczne
 
-- **Zestawianie danych:** dwie lub trzy serie na jednym wykresie, wspólne okresy i osie dopasowane do jednostek.
-- **Analiza dynamiki:** poziomy, zmiany m/m i r/r, średnie kroczące oraz inne transformacje dostępne dla wybranego wskaźnika.
-- **Badanie zależności:** korelacja Pearsona, wielkość próby, porównania lead/lag i stabilność korelacji w czasie.
-- **Syntetyczny obraz gospodarki:** eksperymentalny Macro Conditions Index (MCI) z sześcioma subindeksami i jawnym rozkładem składników.
-- **Kontekst publikacji:** Actual/Previous, okres obserwacji, pochodzenie danych, rewizje i zachowane prognozy sprzed wydarzenia.
+- **Porównywanie wskaźników:** zestawianie kilku serii danych na jednym wykresie i obserwowanie ich zmian w czasie.
+- **Analiza trendów:** badanie danych historycznych, zmian miesięcznych i rocznych oraz średnich kroczących.
+- **Analiza zależności:** sprawdzanie korelacji między wskaźnikami, przesunięć czasowych (lead/lag) i zmian tych zależności w różnych okresach.
+- **Ocena kondycji gospodarki:** Macro Conditions Index (MCI) — eksperymentalny wskaźnik łączący sześć obszarów gospodarki w jeden syntetyczny obraz.
 
-## Od publikacji do analizy
+## Kalendarz makroekonomiczny
 
-1. **Przegląd:** sprawdź odczyty w sześciu obszarach i najbliższe wydarzenia.
-2. **Kalendarz:** otwórz publikację, porównaj Actual/Previous i sprawdź okres, źródło oraz rewizje.
-3. **Eksploracja danych:** zobacz dłuższą historię, wybierz miarę lub gotowy zestaw wykresów.
-4. **Badania:** zestaw własne serie i oceń ich współzmienność na jawnie opisanej próbie.
+Kalendarz łączy w jednym miejscu najważniejsze publikacje gospodarcze z USA oraz wyniki finansowe spółek. Pozwala przeglądać nadchodzące i historyczne wydarzenia, wybierać zakres dat oraz porównywać aktualne odczyty z poprzednimi wartościami.
+
+Wydarzenia można filtrować według rodzaju i ważności. Oprócz danych dotyczących inflacji, zatrudnienia czy aktywności gospodarczej dostępne są również raporty spółek, obejmujące m.in. zysk na akcję (EPS), przychody i ich porównanie z wcześniejszymi okresami.
+
+![Kalendarz MacroLens — publikacje gospodarcze i wyniki spółek](docs/screenshots/kalendarz_ogolny.png)
+
+<p align="center">
+  <small><em>Kalendarz publikacji makroekonomicznych i wyników spółek.</em></small>
+</p>
+
+Na zrzucie widoczny jest widok „Wszystko”. Kalendarz oferuje również osobne zakładki „Dane” i „Wyniki”, pozwalające skupić się na wybranej kategorii wydarzeń.
+
+## Eksploracja danych
+
+Moduł Eksploracja danych pozwala przeglądać historię wskaźników gospodarczych USA, analizować ich zmiany w czasie i wybierać różne sposoby prezentacji danych. Obejmuje sześć obszarów gospodarki, m.in. rynek pracy, inflację, konsumpcję i warunki finansowe.
+
+### Wybrane wykresy
+
+Gotowe zestawy wykresów umożliwiają spojrzenie na wybrane zagadnienie gospodarcze z kilku perspektyw. Można przełączać się między kategoriami oraz zmieniać zakres czasowy analizowanych danych.
+
+![Eksploracja danych — wybrane wykresy rynku pracy](docs/screenshots/eksploracja1.png)
+
+<p align="center">
+  <small><em>Przegląd najważniejszych wskaźników rynku pracy USA.</em></small>
+</p>
+
+### Zestawy danych
+
+Biblioteka wskaźników pozwala samodzielnie wyszukiwać i przeglądać poszczególne serie. Dla każdego wskaźnika dostępne są dane historyczne, aktualne i poprzednie wartości, informacje o źródle oraz odpowiednie miary i transformacje, np. zmiany miesięczne, roczne czy średnie kroczące.
+
+![Eksploracja danych — analiza inflacji CPI](docs/screenshots/eksploracja2.png)
+
+<p align="center">
+  <small><em>Analiza historycznej dynamiki inflacji CPI w USA.</em></small>
+</p>
+
 
 ## Badania
 
