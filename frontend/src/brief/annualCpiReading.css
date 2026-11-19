@@ -1,6 +1,2 @@
- .overview-annual-cpi { margin: 0 0 14px; padding: 12px; background: #15212d; border: 1px solid #334759; border-radius: 6px; }
-.overview-annual-cpi-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: .85rem; font-weight: 600; }
-.overview-annual-cpi-value { color: #edf4fc; font-size: 1.5rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.overview-annual-cpi p { margin: 5px 0 0; color: #a8bbce; font-size: .75rem; line-height: 1.5; }
-.overview-annual-cpi .overview-annual-cpi-note { color: #d2ba94; }
-.overview-annual-cpi a { display: inline-block; margin-top: 5px; font-size: .72rem; color: #9bbbdc; }
+.overview-annual-cpi-trend > td { padding: 12px 0; }
+.overview-annual-cpi-trend .macro-insight-trend { width: 100%; }

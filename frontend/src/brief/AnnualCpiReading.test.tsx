@@ -1,5 +1,5 @@
 import {afterEach,expect,it,vi} from 'vitest';
-import {cleanup,render,screen,waitFor} from '@testing-library/react';
+import {cleanup,fireEvent,render,screen,waitFor,within} from '@testing-library/react';
 import {annualCpiReading,AnnualCpiReading} from './AnnualCpiReading';
 import type {CalendarResponse} from '../api/macrolens';
 import {setLanguage} from '../i18n/language';
@@ -32,14 +32,42 @@ it('excludes future and not-yet-released same-day publications',()=>{
 });
 it.each(['en','pl'] as const)('shows annual value, observation month and missing-base explanation in %s',async language=>{
  setLanguage(language);const fetch=vi.fn().mockResolvedValue({ok:true,json:async()=>fixture()});vi.stubGlobal('fetch',fetch);
- render(<AnnualCpiReading revision="test" now={now}/>);
- expect(await screen.findByText(language==='pl'?'3,7%':'3.7%')).toBeInTheDocument();
+ render(<table><tbody><AnnualCpiReading revision="test" now={now}/></tbody></table>);
+ expect(await screen.findByText(language==='pl'?'3,7':'3.7')).toBeInTheDocument();
  expect(document.querySelector('time')).toHaveAttribute('dateTime','2026-09-01');
- expect(screen.getByText(/2025/)).toHaveTextContent(language==='pl'?'brak bazy':'missing comparison base');
- expect(screen.getByRole('link')).toHaveAttribute('href','https://api.bls.gov/publicAPI/v2/timeseries/data/');
+ fireEvent.click(screen.getByRole('button',{name:language==='pl'?'Inflacja CPI r/r':'CPI YoY'}));
+ const explanation=screen.getByRole('button',{name:language==='pl'?'Inflacja CPI r/r':'CPI YoY'}).parentElement!;
+ expect(explanation.querySelector('[role="tooltip"]')).toHaveTextContent(language==='pl'?'brak bazy':'missing comparison base');
+ expect(explanation.querySelector('[role="tooltip"]')).toHaveTextContent('2025');
+ expect(screen.getByRole('link',{name:'BLS'})).toHaveAttribute('href','https://api.bls.gov/publicAPI/v2/timeseries/data/');
  expect(fetch).toHaveBeenCalledTimes(1);const url=new URL(String(fetch.mock.calls[0][0]));expect(url.pathname).toBe('/api/v1/calendar');expect(url.searchParams.get('include_readings')).toBe('true');expect(url.searchParams.get('end_date')).toBe('2026-11-17');
 });
 it('shows an unavailable state on API failure without inventing a number',async()=>{
- vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:false}));render(<AnnualCpiReading revision="test" now={now}/>);
+ vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:false}));render(<table><tbody><AnnualCpiReading revision="test" now={now}/></tbody></table>);
  await waitFor(()=>expect(screen.getByRole('status')).toHaveTextContent('unavailable'));expect(screen.queryByText('3.7%')).toBeNull();
+});
+it('renders the annual reading as a standard three-column row with the preceding month from the same capture',async()=>{
+ vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:true,json:async()=>fixture({cpi_history:{'2026-07-01':'3.4','2026-08-01':'3.4','2026-09-01':'3.7'}})}));
+ render(<table><tbody><AnnualCpiReading revision="test" now={now}/></tbody></table>);
+ const row=screen.getByRole('row',{name:'CPI YoY'});await waitFor(()=>expect(row.querySelector('.overview-value--latest .overview-number')).toHaveTextContent('3.7'));
+ expect(row).toHaveClass('overview-reading-row');expect(within(row).getAllByRole('cell')).toHaveLength(2);
+ const cells=within(row).getAllByRole('cell');expect(cells[0]).toHaveTextContent('3.7%');expect(cells[1]).toHaveTextContent('3.4%');
+ expect(cells[1].querySelector('time')).toHaveAttribute('dateTime','2026-08-01');expect(screen.queryByRole('region',{name:'Annual CPI inflation'})).toBeNull();
+ expect(row.querySelector('.overview-reading-actions > .overview-explanation .info-tooltip__trigger')).toHaveTextContent('i');
+ expect(row.querySelector('.overview-interpretation--favorable')).toHaveTextContent('+');
+});
+it.each([{previous:'3.4',arrow:'↑',marker:true},{previous:'4.0',arrow:'↓',marker:true},{previous:'3.7',arrow:'—',marker:false}])('keeps numerical direction separate from the contextual economic marker: $previous',async({previous,arrow,marker})=>{
+ vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:true,json:async()=>fixture({cpi_history:{'2026-08-01':previous}})}));
+ render(<table><tbody><AnnualCpiReading revision="test" now={now}/></tbody></table>);
+ const row=screen.getByRole('row',{name:'CPI YoY'});await waitFor(()=>expect(row.querySelector('.overview-value--latest .overview-number')).toHaveTextContent('3.7'));
+ expect(row.querySelector('.overview-change')).toHaveTextContent(arrow);
+ expect(!!row.querySelector('.overview-interpretation')).toBe(marker);
+ if(marker)expect(row.querySelector('.overview-interpretation')).toHaveTextContent(arrow==='↑'?'+':'−');
+ if(marker){fireEvent.click(within(row).getByRole('button',{name:/Potential (support for|pressure on) USD/}));expect(row.querySelector('.overview-interpretation [role="tooltip"]')).toHaveTextContent('Fed');}
+});
+it('does not borrow a non-adjacent history month for Previous',async()=>{
+ vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:true,json:async()=>fixture({cpi_history:{'2026-07-01':'3.4'}})}));
+ render(<table><tbody><AnnualCpiReading revision="test" now={now}/></tbody></table>);
+ await screen.findByText('3.7');expect(within(screen.getByRole('row',{name:'CPI YoY'})).getAllByRole('cell')[1]).toHaveTextContent('—');
+ expect(document.querySelector('.overview-interpretation')).toBeNull();
 });

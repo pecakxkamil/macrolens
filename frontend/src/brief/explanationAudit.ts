@@ -1,7 +1,7 @@
 ﻿/** Local audit export using exactly the functions rendered by Overview. */
 import type { EconomyBriefResponse } from "../api/macrolens";
 import { briefModel, timestamp } from "./briefModel";
-import { economicInterpretation, fedDecisionMarkers } from "./economicInterpretation";
+import { usdInterpretation as economicInterpretation, fedUsdDecisionMarkers as fedDecisionMarkers } from "./usdInterpretation";
 import { economicExplanation, fedExplanation } from "./economicExplanations";
 import { getLanguage, tText } from "../i18n/language";
 import { availabilityPresentation, availabilityTime } from "./sourceCheckPresentation";

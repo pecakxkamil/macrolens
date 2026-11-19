@@ -1,6 +1,6 @@
 import { explanationAuditMarkdown } from "./explanationAudit";
 import { economicExplanation } from "./economicExplanations";
-import { economicInterpretation } from "./economicInterpretation";
+import { usdInterpretation as economicInterpretation } from "./usdInterpretation";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import App from "../App";
@@ -48,10 +48,11 @@ function mockApi(data = fixture()) {
 beforeEach(() => { vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date("2026-10-18T10:00:00Z")); });
 afterEach(() => { vi.useRealTimers(); cleanup(); setLanguage("en"); vi.unstubAllGlobals(); vi.restoreAllMocks(); window.location.hash = ""; });
 
-test("Overview prioritizes 21 numeric readings and a Fed target range across six domains and preserves four navigation links", async () => {
+test("Overview keeps 21 original readings plus an annual CPI row and a Fed target range across six domains", async () => {
   const fetch = mockApi(); render(<App />); await screen.findByRole("heading", { name: "Labor" });
   expect(document.querySelectorAll(".overview-domain")).toHaveLength(6);
-  expect(document.querySelectorAll(".overview-reading-row")).toHaveLength(21);
+  expect(document.querySelectorAll(".overview-reading-row")).toHaveLength(22);
+  expect(screen.getByRole('row',{name:'CPI YoY'}).closest('table')).toHaveAttribute('aria-label','Inflation readings');
   for (const card of document.querySelectorAll(".overview-domain")) {
     expect(card.querySelectorAll(":scope > table")).toHaveLength(1); expect(card.querySelector("details")).toBeNull();
     const visible = card.cloneNode(true) as HTMLElement; visible.querySelectorAll("details").forEach(detail => detail.remove());
@@ -280,9 +281,14 @@ test("YoY from another month is never shown next to current MoM", async () => {
 });
 
 test("Fed target block shows bounds, effective date, last rate change and explicit data freshness", async () => {
-  const data = fixture(); mockApi(data); render(<EconomyBrief />); const block = await screen.findByRole("region", { name: "Fed target range" });
+  const data = fixture(); mockApi(data); render(<EconomyBrief />); const block = await screen.findByRole("row", { name: "Fed target range" });
   expect(block).toHaveTextContent("3.75\u20134.00%"); expect(block).toHaveTextContent("Effective sinceSep 17, 2026");
-  expect(block).toHaveTextContent("Last rate change+25 bp"); expect(block).not.toHaveTextContent("Observed through");
+  expect(block).not.toHaveTextContent("+25 bp"); expect(block).not.toHaveTextContent("Observed through");
+  expect(block.querySelector('.overview-target-value')?.parentElement?.querySelector('.overview-reading-markers')).toHaveTextContent('↑');
+  expect(block.querySelector('.overview-target-value')?.parentElement?.querySelector('.overview-interpretation')).toHaveTextContent('+');
+  expect(block.querySelector('.overview-value--latest')).toHaveTextContent('3.75–4.00%');
+  expect(block.querySelector('.overview-value--earlier')).toHaveTextContent('3.50–3.75%');
+  expect(block.closest('table')).toHaveAttribute('aria-label','Financial Conditions readings');
   expect(block).not.toHaveTextContent("Retrieved"); expect(block).not.toHaveTextContent("Last decision");
   expect(block.querySelector("table")).toBeNull();
   expect(within(block).getByRole("link")).toHaveAttribute("href", "#/explore/indicators/DFEDTARL");
@@ -292,10 +298,11 @@ test("Fed target block shows bounds, effective date, last rate change and explic
 
 test("unavailable official bounds never fall back to snapshot DFF", async () => {
   const data = fixture(); data.fed_target = { status: "unavailable", data: null, error: "Unavailable" };
-  mockApi(data); render(<EconomyBrief />); const block = await screen.findByRole("region", { name: "Fed target range" });
+  mockApi(data); render(<EconomyBrief />); const block = await screen.findByRole("row", { name: "Fed target range" });
   expect(block.querySelector(".overview-target-value")).toHaveTextContent("\u2014");
   expect(block).not.toHaveTextContent(String(snapshot.financial_conditions.fed_funds_rate.level));
   expect(prepareFedTarget(data.fed_target).lastChange).toBe("\u2014");
+  expect(prepareFedTarget(data.fed_target).previousRange).toBe('—');
 });
 
 
@@ -571,12 +578,12 @@ test.each(["job_openings", "average_hourly_earnings"])("%s uses numerical direct
   }
 });
 
-test("PPI is a fourth inflation row with numerical direction, exact pp difference and no YoY", async () => {
+test("PPI stays in the inflation table alongside annual CPI with numerical direction, exact pp difference and no YoY", async () => {
   const data = fixture(), ppi = data.reading_comparisons!.data!.find(r => r.series_id === "PPIFIS")!;
   ppi.current!.value = .5; ppi.previous!.value = .2; ppi.change = .3;
   mockApi(data); render(<App />);
   const row = await screen.findByRole("row", {name:"Producer inflation PPI MoM"});
-  expect(row.closest("tbody")!.children).toHaveLength(4);
+  expect(row.closest("tbody")!.children).toHaveLength(5);
   expect(row.querySelector("strong")).toHaveTextContent("0.50%");
   expect(row.querySelectorAll("td")[1]).toHaveTextContent("0.20%");
   expect(row.querySelector(".overview-yoy")).toBeNull();
@@ -694,12 +701,14 @@ test.each(["en", "pl"] as const)("numeric arrows and domain markers remain indep
  expect(badge).toHaveClass("overview-interpretation--favorable");expect(badge).toHaveTextContent("+");
  const button=within(badge as HTMLElement).getByRole("button");button.focus();expect(button).toHaveFocus();
  const tip=document.getElementById(button.getAttribute("aria-describedby")!)!;
- expect(tip).toHaveTextContent(language==="pl"?"ni\u017csza stopa bezrobocia":"lower unemployment");
+ expect(tip).toHaveTextContent(language==="pl"?"Niższe bezrobocie":"Lower unemployment");
+ expect(tip).toHaveTextContent('USD');
  fireEvent.keyDown(button,{key:"Escape"});expect(button).toHaveAttribute("aria-expanded","false");
- expect(document.querySelectorAll(".overview-explanation")).toHaveLength(0);
+ // Annual CPI retains its data-availability note independently of optional economic explanations.
+ expect(document.querySelectorAll(".overview-reading-row:not(.overview-annual-cpi) .overview-explanation")).toHaveLength(0);
  expect(document.querySelectorAll(".overview-symbol-legend")).toHaveLength(1);
  const nfp=screen.getByRole("row",{name:language==="pl"?"Zatrudnienie poza rolnictwem \u2014 NFP":"Nonfarm payrolls (NFP)"});
- expect(nfp.querySelector(".overview-interpretation")).toHaveClass("overview-interpretation--mixed");
+ expect(nfp.querySelector(".overview-interpretation")).toHaveClass("overview-interpretation--unfavorable");
  const missing=screen.getByRole("row",{name:language==="pl"?"Nowe wnioski o zasi\u0142ek":"Initial jobless claims"});
  expect(missing.querySelector(".overview-change")).toHaveTextContent("?");expect(missing.querySelector(".overview-interpretation")).toBeNull();
  const unchanged=screen.getByRole("row",{name:language==="pl"?"Wynagrodzenie godzinowe m/m":"Hourly earnings MoM"});
@@ -718,7 +727,7 @@ test.each(["en", "pl"] as const)("header legend explains symbols beside report c
  expect(within(legend).queryByText(language==="pl"?"Brak por\u00f3wnania":"No comparison")).not.toBeInTheDocument();
  for(const symbol of ["\u2191","\u2193","\u2014","+","\u2212","\u00b1"])expect(within(legend).getByText(symbol)).toBeInTheDocument();
  expect(within(legend).getByRole("group",{name:language==="pl"?"Zmiana odczytu":"Reading change"})).toHaveTextContent(language==="pl"?"Wy\u017cszy ni\u017c poprzednio":"Higher than previous");
- expect(within(legend).getByRole("group",{name:language==="pl"?"Dla obszaru gospodarki":"For the economic area"})).toHaveTextContent(language==="pl"?"Zwykle korzystne":"Usually favorable");
+ expect(within(legend).getByRole("group",{name:language==="pl"?"Potencjalny wpływ na USD":"Potential USD impact"})).toHaveTextContent(language==="pl"?"Wsparcie USD":"USD support");
  const download=screen.getByRole("button",{name:language==="pl"?"Pobierz raport":"Download report"});
  expect(legend.closest("header")).toBe(download.closest("header"));
  expect(legend.compareDocumentPosition(download)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -752,7 +761,7 @@ test.each(["en", "pl"] as const)("Overview keeps only one activated reading popu
  const row=await screen.findByRole("row",{name:language==="pl"?"Stopa bezrobocia":"Unemployment rate"});
  const arrow=within(row.querySelector(".overview-change") as HTMLElement).getByRole("button");
  const marker=within(row.querySelector(".overview-interpretation") as HTMLElement).getByRole("button");
- const note=within(row.querySelector(".overview-explanation") as HTMLElement).getByRole("button");
+ const note=await within(row.querySelector(".overview-explanation") as HTMLElement).findByRole("button");
  for(const button of [arrow,marker,note]) {
   fireEvent.pointerEnter(button,{pointerType:"mouse"});fireEvent.focus(button);
   expect(button).toHaveAttribute("aria-expanded","false");
