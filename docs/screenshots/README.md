@@ -1,53 +1,22 @@
-# Screenshot provenance
+# Pochodzenie zrzutów ekranu
 
-Captured from the real populated local MacroLens instance on 16 November 2026,
-English, desktop viewport 1366 x 1100. Images contain page content only, without
-browser chrome, local filesystem paths, tokens or credentials. All four images
-were visually reviewed before publication.
+Zrzuty przedstawiają rzeczywistą lokalną instancję MacroLens z zapisanymi danymi. Nie podstawiano wartości ani odpowiedzi API. Obrazy pokazują stronę aplikacji, bez paska adresu, ścieżek lokalnych i poświadczeń.
 
-- `overview.png`: six-domain Overview, existing stored publication.
-- `calendar.png`: 6?10 November, the existing Only three-star filter selected.
-- `macro-detail.png`: expanded October CPI MoM reading on 10 November.
-- `earnings.png`: November company results and upcoming events.
+## Odświeżenie galerii — 19 listopada 2026
 
-No API values, source responses or displayed metrics were substituted. The
-screenshot browser used hidden-page visibility to avoid triggering the normal
-automatic POST refresh. This is a capture condition, not a product demo mode.
-Partial-source checks and unavailable readings remain visible. Some Overview
-readings and Calendar readings use different source versions or transformations;
-these screenshots are not evidence of equal precision, current completeness or
-future release coverage. They are a recorded walkthrough, not a hosted demo.
+| Plik | Ustawienia i zakres | Rozmiar | SHA-256 |
+|---|---|---|---|
+| `overview.png` | PL; sześć obszarów, roczne CPI NSA, legenda potencjalnego wpływu na USD i Upcoming events. | 1440 × 1220 | `ea9da792444ac98d89a81cbdd95030bcab8697f2af9c11cb33c0339ed5580973` |
+| `calendar.png` | PL; Dane, 06–10.11.2026; domyślne ważności 2★/3★, Tylko ★★★ wyłączone; bez ręcznego odświeżenia. | 1440 × 1250 | `3e2d6d5e15ba76160aa3b9a8d5ee2267b2aa0df44c9f7be5d754bcd277d2b399` |
+| `explore-data.png` | PL; Wybrane wykresy → Rynek pracy, 5 lat; stopa i liczba bezrobotnych, zmiana NFP, średnia 4-tygodniowa wniosków. | 1440 × 1360 | `edeb2d0bd6804c7ebc12a521c319a494e42f4b253619ceea102cea97b93c27fe` |
+| `research.png` | PL; Porównaj dane, 5 lat, Wartości; NASDAQCOM/CBBTCUSD/UNEMPLOY; oddzielne osie i trzy statystyki par. | 1440 × 1320 | `271124f7f14349e8852a56fcbad9de4256d88deba30de8077a1342590070e9c1` |
 
-The macro-detail screenshot was recaptured on 16 November 2026 after enlarging
-the responsive trend chart, centering its heading, and vertically centering
-the chart against the full event description. It uses the same real
-API/Vite, desktop viewport and read-only capture conditions described above.
-The other three screenshots are unchanged.
+Sesja używała ukrytej widoczności dokumentu, aby nie wywołać automatycznego POST refresh. Żądania inne niż lokalne GET były blokowane; nie wystąpiła próba ich wykonania w finalnych capture. Zachowano komunikaty o częściowej dostępności źródeł i brakujące odczyty. To warunki wykonania zrzutów, nie tryb demonstracyjny produktu.
 
-## Analytics portfolio views — 16 November 2026
+Research pokazuje bieżące zapisane wersje danych i korelacje poziomów. Osobne osie nie oznaczają wspólnej skali ani porównywalnych jednostek. Współzmienność może wynikać z trendów; liczby obserwacji i zakresy par są widoczne. Zachowano atrybucję Nasdaq i Coinbase widoczną w aplikacji.
 
-- `research.png`: real Research / Compare Data view, UNRATE and DFF, 10Y range,
-  original-value scale, visible Pearson correlation, pair count and paired dates.
-- `explore-data.png`: real Explore Data / Curated charts, Inflation category,
-  5Y range, headline/core CPI and PCE plus the beginning of CPI momentum.
+## Zachowane obrazy
 
-Both images are unchanged 1366 x 1100 desktop captures, English, using the
-normal stored dataset and API/Vite. No synthetic values, source refresh or
-authorization change was used. These current-vintage histories can include
-revisions and differ from publication-bound Calendar readings or official
-publisher definitions. They do not establish present-day provider completeness.
-The analytics additions retain the existing screenshots and roadmap, including
-the macro-detail layout update described above.
+`earnings.png` pozostaje bez zmian: prawdziwy angielski widok wyników z 16 listopada 2026, 1366 × 1100. `macro-detail.png` również pozostaje bez zmian: angielski widok szczegółów CPI z powiększonym wykresem, wykonany 16 listopada 2026, 1366 × 1100.
 
-The capture tab used hidden document visibility to avoid automatic refresh;
-non-GET and non-local requests were blocked. No such blocked request occurred
-during the two captures. New screenshots were visually reviewed before publication.
-
-## Overview framing update ? 17 November 2026
-
-`overview.png` was recaptured from the real local API/Vite at 1366 x 1346.
-The taller viewport retains all six domains and the Upcoming events panel,
-including the three-star Advance Monthly Sales for Retail and Food Services
-event on 17 November at 14:30 PL. No event, date, importance or source value
-was edited. Hidden-page visibility and request guards prevented refresh during
-capture; only normal GET responses were observed. Other images are unchanged.
+Starsze zrzuty pozostają dostępne w historii Git. Obrazy dokumentują stan lokalnej instancji, nie gwarantują bieżącej kompletności dostawców ani przyszłej obsługi publikacji. Repozytorium nie zawiera bazy, tokenów ani prywatnych potwierdzeń pobrania.

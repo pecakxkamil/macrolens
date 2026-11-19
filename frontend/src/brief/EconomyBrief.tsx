@@ -1,7 +1,10 @@
+import {IndicatorName} from "./IndicatorName";
+import {AnnualCpiReading} from "./AnnualCpiReading";
+import {et} from '../calendar/earningsPresentation';
 import { useOverviewRefresh } from "./useOverviewRefresh";
 import {BeaEvidence} from '../calendar/BeaEvidence';
 import { SourceCheckStatus } from "./SourceCheckStatus";
-import { economicInterpretation, fedDecisionMarkers } from "./economicInterpretation";
+import { usdInterpretation as economicInterpretation, fedUsdDecisionMarkers as fedDecisionMarkers } from "./usdInterpretation";
 import { InterpretationMarker } from "./InterpretationMarker";
 import { ReadingChartDialog, readingPreview, fedPreview, type PreviewChart } from "./ReadingChartDialog";
 import { ChunkBoundary } from "../navigation/ChunkBoundary";
@@ -37,13 +40,13 @@ export function downloadReport(markdown: string, generatedAt: string) {
 }
 function OverviewLegend() {
   const directions = [["\u2191", "Higher than previous", "positive"], ["\u2193", "Lower than previous", "negative"], ["\u2014", "No visible change", "neutral"]];
-  const interpretations = [["+", "Usually favorable", "favorable"], ["\u2212", "Usually unfavorable", "unfavorable"], ["\u00b1", "Mixed / context-dependent", "mixed"]];
+  const interpretations = [["+", "Potential support for USD", "favorable"], ["\u2212", "Potential pressure on USD", "unfavorable"], ["\u00b1", "Mixed / context-dependent", "mixed"]];
   return <aside className="overview-symbol-legend" aria-label={tLabel("Change legend")}>
     <div role="group" aria-label={tLabel("Reading change")}><span className="overview-legend-heading">{tText("Reading change")}</span>
       <ul>{directions.map(([symbol,label,tone])=><li key={symbol}><span aria-hidden="true" className={`overview-legend-symbol overview-change--${tone}`}>{symbol}</span><span>{tText(label)}</span></li>)}</ul>
     </div>
-    <div role="group" aria-label={tLabel("For the economic area")}><span className="overview-legend-heading">{tText("For the economic area")}</span>
-      <ul>{interpretations.map(([symbol,label,tone])=><li key={symbol}><span aria-hidden="true" className={`overview-legend-symbol overview-interpretation--${tone}`}>{symbol}</span><span>{tText(label)}</span></li>)}</ul>
+    <div role="group" aria-label={et("Potential USD impact","Potencjalny wpływ na USD")}><span className="overview-legend-heading">{et("USD impact","Wpływ na USD")}</span>
+      <ul>{interpretations.map(([symbol,label,tone])=><li key={symbol}><span aria-hidden="true" className={`overview-legend-symbol overview-interpretation--${tone}`}>{symbol}</span><span>{label==="Potential support for USD"?et("USD support","Wsparcie USD"):label==="Potential pressure on USD"?et("USD headwind","Presja na USD"):tText(label)}</span></li>)}</ul>
     </div>
   </aside>;
 }
@@ -53,6 +56,22 @@ function ChartButton({ title, onClick }: {title:string;onClick:()=>void}) {
   </button>;
 }
 function ReadingRow({ reading, onChart, explanations }: { reading: PreparedReading;onChart:()=>void;explanations:boolean }) {
+  const compactLabels:Record<string,[string,string]>={
+    payrolls:['Nonfarm payrolls','Zatrudnienie NFP'],
+    job_openings:['JOLTS job openings','Wakaty JOLTS'],
+    average_hourly_earnings:['Hourly pay MoM','Płace godzinowe m/m'],
+    producer_ppi:['PPI MoM','Inflacja PPI m/m'],
+    real_gdp:['Real GDP QoQ (ann.)','Realny PKB k/k (ann.)'],
+    industrial_production:['Ind. output MoM','Produkcja przem. m/m'],
+    manufacturing_pmi:['ISM Mfg PMI','ISM PMI przemysłu'],
+    real_consumption:['Real spending MoM','Realna konsumpcja m/m'],
+    real_disposable_income:['Real disp. inc. MoM','Realny dochód rozp. m/m'],
+    retail_sales:['Retail sales MoM','Sprzedaż detaliczna m/m'],
+    housing_starts:['Housing starts','Rozpoczęte budowy'],
+    mortgage_rate:['30Y mortgage rate','Hipoteki 30-letnie'],
+    yield_curve_2s10s:['10Y–2Y spread','Spread obligacji 10Y–2Y'],
+  };
+  const compactLabel=compactLabels[reading.key];
   const interpretation = economicInterpretation(reading);
   const directionLabel = ({higher:"Higher reading",lower:"Lower reading",unchanged:"No change in reading",unavailable:"Comparison unavailable"})[reading.comparison];
   const value = (point: PreparedReading["current"]) => {
@@ -62,11 +81,11 @@ function ReadingRow({ reading, onChart, explanations }: { reading: PreparedReadi
     return <strong><span className="overview-number">{point.screenValue}</span>{suffix ? <small className="overview-inline-unit">{reading.raw?.unit === "percentage points" ? suffix : tText(suffix)}</small> : null}</strong>;
   };
   return <tr className={`overview-reading-row${reading.raw?.unit === "index" ? " overview-reading-row--index" : ""}`} aria-label={tLabel(reading.label)}>
-    <th scope="row"><div className="overview-reading-heading"><a href={reading.indicatorHref}>{tText(reading.label)}</a><span className="overview-reading-actions"><ChartButton title={reading.label} onClick={onChart} />{explanations ? <span className="overview-explanation"><ExplanationSlot><ReadingExplanation reading={reading} /></ExplanationSlot></span> : null}</span></div><div className="overview-period"><time dateTime={reading.current.date}>{tText(reading.current.period)}</time></div></th>
-    <td className="overview-value--latest"><div className="overview-value"><div className="overview-reading-number">{value(reading.current)}{reading.current.yoy !== undefined ? <small className="overview-yoy">{tText(reading.current.yoy)}{reading.current.yoy === "\u2014" ? "" : "%"} {tText("YoY")}</small> : null}</div><span className={`overview-change overview-change--${reading.tone}`}>
+    <th scope="row"><div className="overview-reading-heading"><span className="overview-reading-label"><IndicatorName href={reading.indicatorHref} label={compactLabel?et(...compactLabel):tText(reading.label)} fullLabel={tLabel(reading.label)} period={<time dateTime={reading.current.date}>{tText(reading.current.period)}</time>}><span className="overview-reading-actions"><ChartButton title={reading.label} onClick={onChart} />{explanations ? <span className="overview-explanation"><ExplanationSlot><ReadingExplanation reading={reading} /></ExplanationSlot></span> : null}</span></IndicatorName></span></div></th>
+    <td className="overview-value--latest"><div className="overview-value"><div className="overview-reading-number"><span className="overview-reading-primary">{value(reading.current)}<span className="overview-reading-markers"><span className={`overview-change overview-change--${reading.tone}`}>
       <InfoTooltip label={`${reading.label}: ${reading.labels.change} - ${directionLabel}`} description={readingHoverText(reading)} trigger={reading.arrow} closable bounded
         content={<div className="reading-change-details">{readingHoverLines(reading).map((line, index) => <span key={index}>{index > 0 ? " " : ""}{tText(line)}</span>)}{reading.raw?.bea_direct?<BeaEvidence measure={reading.raw.bea_direct}/>:null}</div>} />
-    </span><InterpretationMarker label={reading.label} interpretation={interpretation} /></div></td>
+    </span><InterpretationMarker label={reading.label} interpretation={interpretation} /></span></span>{reading.key !== 'headline_cpi' && reading.current.yoy !== undefined ? <small className="overview-yoy">{tText(reading.current.yoy)}{reading.current.yoy === "\u2014" ? "" : "%"} {tText("YoY")}</small> : null}</div></div></td>
     <td className="overview-value--earlier">{value(reading.previous)}<time dateTime={reading.previous.date}>{tText(reading.previous.period)}</time></td>
   </tr>;
 }
@@ -83,11 +102,11 @@ function EventRow({ event }: { event: CalendarEvent }) {
 
 function FedTargetBlock({ target, onChart, explanations }: { target: PreparedFedTarget;onChart:()=>void;explanations:boolean }) {
   const decision = fedDecisionMarkers(target);
-  return <section className="overview-fed-target" aria-label={tLabel("Fed target range")}>
-    <h3 className="overview-reading-heading"><a href="#/explore/indicators/DFEDTARL">{tText("Fed target range")}</a><span className="overview-reading-actions"><ChartButton title="Fed target range" onClick={onChart} />{explanations ? <span className="overview-explanation"><ExplanationSlot><ReadingExplanation target={target} /></ExplanationSlot></span> : null}</span></h3><strong className="overview-target-value">{tText(target.range)}</strong>
-    <dl><div><dt>{tText("Effective since")}</dt><dd>{tText(target.effective)}</dd></div>
-      <div><dt>{tText("Last rate change")}</dt><dd className="overview-fed-last-change">{tText(target.lastChange)}{decision ? <><span className={`overview-change overview-change--${decision.tone}`} role="img" aria-label={tLabel(`Last recorded rate change: ${decision.tone === "positive" ? "higher" : "lower"} target range`)}>{decision.arrow}</span><InterpretationMarker label="Last recorded rate change" interpretation={decision.interpretation} /></> : null}</dd></div></dl>
-  </section>;
+  return <tr className="overview-fed-target-row" aria-label={tLabel("Fed target range")}>
+    <th scope="row"><div className="overview-reading-heading"><span className="overview-reading-label"><IndicatorName href="#/explore/indicators/DFEDTARL" label={tLabel("Fed target range")} period={<><span className="visually-hidden">{tText("Effective since")}</span><time dateTime={target.raw?.effective_date ?? undefined}>{tText(target.effective)}</time></>}><span className="overview-reading-actions"><ChartButton title="Fed target range" onClick={onChart} />{explanations ? <span className="overview-explanation"><ExplanationSlot><ReadingExplanation target={target} /></ExplanationSlot></span> : null}</span></IndicatorName></span></div></th>
+    <td className="overview-value--latest"><div className="overview-value"><div className="overview-reading-number"><span className="overview-reading-primary"><strong className="overview-target-value">{tText(target.range)}</strong>{decision?<span className="overview-reading-markers"><span className={`overview-change overview-change--${decision.tone}`}><InfoTooltip bounded label={tLabel(`Last recorded rate change: ${decision.tone === "positive" ? "higher" : "lower"} target range`)} description={decision.interpretation.reason} trigger={decision.arrow}/></span><InterpretationMarker label="Last recorded rate change" interpretation={decision.interpretation}/></span>:null}</span></div></div></td>
+    <td className="overview-value--earlier" title={et('Range before the last recorded rate change','Zakres sprzed ostatniej zapisanej zmiany stóp')}><strong className="overview-target-previous">{tText(target.previousRange)}</strong></td>
+  </tr>;
 }
 
 export function EconomyBrief({explanations=false}: {explanations?:boolean} = {}) {
@@ -119,10 +138,9 @@ export function EconomyBrief({explanations=false}: {explanations?:boolean} = {})
       </div>
       <section aria-label={tLabel("Economy across six domains")}><div className="brief-grid">{model.domains.map((domain) => <article key={domain.key} className="domain-card overview-domain" aria-label={tLabel(`${domain.name} brief`)}>
         <h2>{tText(domain.name)}</h2>{domain.freshnessIssues.map(reading => <p role="status" className="market-note" key={reading.key}>{tText(`${reading.label}: Newer stored period ${reading.raw!.latest_stored_observation_date} has no available reading.`)}</p>)}
-        {domain.key === "financial_conditions" ? <FedTargetBlock explanations={explanations} target={model.fedTarget} onChart={()=>setPreview({chart:fedPreview,title:"Fed target range"})} /> : null}
-        <table className="overview-domain-table" aria-label={tLabel(`${domain.name} readings`)}><colgroup><col style={{ width: "41.5%" }} /><col style={{ width: "37%" }} /><col style={{ width: "21.5%" }} /></colgroup>
+        <table className="overview-domain-table" aria-label={tLabel(`${domain.name} readings`)}><colgroup><col style={{ width: "46%" }} /><col style={{ width: "33%" }} /><col style={{ width: "21%" }} /></colgroup>
           <thead><tr><th scope="col">{tText("Indicator")}</th><th scope="col">{tText("Currently")}</th><th scope="col">{tText("Previous")}</th></tr></thead>
-          <tbody>{domain.compact.map(reading => <ReadingRow key={reading.key} explanations={explanations} reading={reading} onChart={()=>setPreview({chart:readingPreview(reading),title:reading.label})} />)}</tbody>
+          <tbody>{domain.key === "financial_conditions" ? <FedTargetBlock explanations={explanations} target={model.fedTarget} onChart={()=>setPreview({chart:fedPreview,title:"Fed target range"})} /> : null}{domain.key === "inflation" ? <AnnualCpiReading revision={data.data_revision ?? data.assembled_at} now={now}/> : null}{domain.compact.map(reading => <ReadingRow key={reading.key} explanations={explanations} reading={reading} onChart={()=>setPreview({chart:readingPreview(reading),title:reading.label})} />)}</tbody>
         </table>
       </article>)}</div></section>
       <section className="market-chart-panel overview-events" aria-labelledby="brief-events">

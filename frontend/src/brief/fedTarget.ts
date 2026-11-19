@@ -9,9 +9,13 @@ export function prepareFedTarget(data: EconomyBriefResponse["fed_target"]) {
   const date = (value: string | null | undefined) => value ? formatObservationDate(value, "daily") : missing;
   const bps = (value: number) => `${value > 0 ? "+" : ""}${readingNumber(value, "bp")} bp`;
   const change = valid ? raw.last_rate_change : null;
+  const previousValid = change && change.effective_date === raw?.effective_date
+    && Number.isFinite(change.previous_lower) && Number.isFinite(change.previous_upper)
+    && change.previous_lower <= change.previous_upper;
   const lastChange = change ? change.change_bps !== null ? bps(change.change_bps) : `Lower: ${bps(change.lower_change_bps)}; upper: ${bps(change.upper_change_bps)}` : missing;
   return {
     range: valid ? `${readingNumber(raw.lower, "percent")}\u2013${readingNumber(raw.upper, "percent")}%` : missing,
+    previousRange: previousValid ? `${readingNumber(change.previous_lower, "percent")}\u2013${readingNumber(change.previous_upper, "percent")}%` : missing,
     effective: date(valid ? raw.effective_date : null), lastChange,
     observed: date(raw?.observation_date), retrieved: date(raw?.retrieved_at ? warsawDate(new Date(raw.retrieved_at)) : null),
     sources: raw?.sources ?? ["DFEDTARL", "DFEDTARU"].map(series_id => ({ series_id, url: `https://fred.stlouisfed.org/series/${series_id}`, observation_date: null, retrieved_at: null })),

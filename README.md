@@ -10,11 +10,18 @@ Python · FastAPI · PostgreSQL · React · TypeScript · Docker
 
 [![MacroLens CI](https://github.com/pecakxkamil/macrolens/actions/workflows/ci.yml/badge.svg)](https://github.com/pecakxkamil/macrolens/actions/workflows/ci.yml)
 
-[Research](#research) · [Explore Data](#explore-data) · [Galeria](#galeria) · [Roadmapa](#roadmapa) · [Dokumentacja](docs/architecture.md) · [Uruchomienie](#uruchomienie-lokalne)
+[Badania](#badania) · [Eksploracja danych](#eksploracja-danych) · [Galeria](#galeria) · [Roadmapa](#roadmapa) · [Dokumentacja](docs/architecture.md) · [Uruchomienie](#uruchomienie-lokalne)
 
 ![Overview — przekrojowy obraz gospodarki USA w sześciu obszarach](docs/screenshots/overview.png)
 
-*Overview: rynek pracy, inflacja, wzrost, konsument, mieszkalnictwo i warunki finansowe — odczyty, poprzednie wartości i kontekst.*
+*Przegląd: sześć obszarów gospodarki USA, aktualne i poprzednie odczyty oraz nadchodzące publikacje.*
+
+W jednym miejscu można sprawdzić, co zmieniło się w gospodarce, a następnie
+przejść do historii wskaźnika lub szczegółów publikacji. Strzałki pokazują
+kierunek zmiany liczbowej, a osobne **+/−/± — potencjalny wpływ na USD**.
+To interpretacja względem poprzedniego odczytu, nie sygnał transakcyjny
+ani ocena zaskoczenia względem konsensusu. Roczne CPI ma własny, datowany wiersz;
+ostatni dostępny okres nie jest przedstawiany jako nowsza publikacja.
 
 ## Najciekawsze możliwości analityczne
 
@@ -24,9 +31,16 @@ Python · FastAPI · PostgreSQL · React · TypeScript · Docker
 - **Syntetyczny obraz gospodarki:** eksperymentalny Macro Conditions Index (MCI) z sześcioma subindeksami i jawnym rozkładem składników.
 - **Kontekst publikacji:** Actual/Previous, okres obserwacji, pochodzenie danych, rewizje i zachowane prognozy sprzed wydarzenia.
 
-## Research
+## Od publikacji do analizy
 
-### Compare Data — własne zestawienia wskaźników
+1. **Przegląd:** sprawdź odczyty w sześciu obszarach i najbliższe wydarzenia.
+2. **Kalendarz:** otwórz publikację, porównaj Actual/Previous i sprawdź okres, źródło oraz rewizje.
+3. **Eksploracja danych:** zobacz dłuższą historię, wybierz miarę lub gotowy zestaw wykresów.
+4. **Badania:** zestaw własne serie i oceń ich współzmienność na jawnie opisanej próbie.
+
+## Badania
+
+### Porównaj dane — własne zestawienia wskaźników
 
 Porównanie **dwóch lub trzech serii** makro lub zapisanych cen Nasdaq i Bitcoina,
 z osobnym wyborem miary i zakresu 1–10 lat albo całej historii.
@@ -46,17 +60,19 @@ indeksowanie nie zmienia danych użytych do korelacji.
 **Korelacja nie oznacza przyczynowości ani zdolności przewidywania rynku.**
 MCI jest eksperymentalnym wskaźnikiem opisowym, nie modelem recesji ani sygnałem inwestycyjnym.
 
-## Explore Data
+## Eksploracja danych
 
-**Data sets:** wyszukiwarka i filtry wskaźników, historia pojedynczego szeregu,
+**Zestawy danych:** wyszukiwarka i filtry wskaźników, historia pojedynczego szeregu,
 aktualna i poprzednia wartość z datami, jednostki, definicja i źródło.
 Do wyboru są dostępne transformacje i zakresy 1–10 lat.
 
-**Curated charts** zawiera gotowe porównania: CPI i Core CPI, PCE i Core PCE,
+**Wybrane wykresy** grupują dane w sześciu obszarach. Zestaw rynku pracy pokazuje
+stopę i liczbę bezrobotnych, miesięczną zmianę zatrudnienia oraz średnią
+czterotygodniową nowych wniosków o zasiłek. Pozostałe zestawy obejmują CPI i Core CPI, PCE i Core PCE,
 realną konsumpcję i dochód, rozpoczęte budowy i pozwolenia oraz rentowności
 obligacji 2Y/10Y. Są też m.in. momentum CPI i spread krzywej dochodowości.
 Interaktywne legendy pozwalają ukrywać serie, a tooltipy odczytywać wartości
-i daty. Własny dobór wielu serii jest dostępny w Research → Compare Data.
+i daty. Własny dobór wielu serii jest dostępny w Badania → Porównaj dane.
 
 ### Co można analizować w MacroLens?
 
@@ -81,23 +97,27 @@ i rewizje. Nowcasty i guidance pozostają odrębne od konsensusu rynkowego.
 Prawdziwe widoki lokalnej aplikacji z zapisanymi danymi. Obrazy są duże i ułożone
 pojedynczo; [pochodzenie i warunki wykonania](docs/screenshots/README.md).
 
-### Research — porównanie dwóch serii
+### Badania — Nasdaq, Bitcoin i liczba bezrobotnych
 
-![Research: bezrobocie i stopa Fed, dziesięcioletnia historia oraz statystyka korelacji](docs/screenshots/research.png)
+![Badania: Nasdaq Composite, Bitcoin i liczba bezrobotnych na wspólnym wykresie z trzema osiami oraz statystykami par](docs/screenshots/research.png)
 
-*Wspólny wykres UNRATE i DFF, wybór zakresu, liczba sparowanych obserwacji i korelacja Pearsona. To opis zapisanej próby, nie wniosek o przyczynowości.*
+*Pięcioletnie porównanie NASDAQCOM, CBBTCUSD i UNEMPLOY. Każda seria ma własną jednostkę; poniżej wykresu widać korelację Pearsona, liczbę obserwacji i zakres dat dla każdej pary. Liczba bezrobotnych to poziom w tysiącach osób, nie stopa bezrobocia.*
 
-### Explore Data — inflacja i jej dynamika
+W tym przykładzie korelacje dotyczą **poziomów** i mogą odzwierciedlać wspólne
+trendy. Różne pary mogą mieć różną liczbę obserwacji. To punkt wyjścia do
+porównania innych miar i zakresów, nie dowód, że bezrobocie wyjaśnia ceny aktywów.
 
-![Explore Data: porównania CPI i Core CPI, PCE i Core PCE oraz momentum inflacji](docs/screenshots/explore-data.png)
+### Eksploracja danych — rynek pracy
 
-*Pięcioletnie wykresy bieżącej zapisanej historii i pochodnych. Ich definicje i wersje nie muszą odpowiadać odczytom przypisanym do publikacji w Calendar.*
+![Eksploracja danych: stopa bezrobocia, liczba bezrobotnych, miesięczna zmiana zatrudnienia i czterotygodniowa średnia wniosków o zasiłek](docs/screenshots/explore-data.png)
+
+*Jeden zestaw, cztery perspektywy rynku pracy i pięcioletnia historia. Każdy wykres zachowuje własną definicję, jednostkę i częstotliwość. Bieżące wersje historii mogą zawierać rewizje i różnić się od wersji przypisanych do publikacji w kalendarzu.*
 
 ### Calendar — publikacje i odczyty
 
 ![Kalendarz publikacji makro z wartościami Actual i Previous](docs/screenshots/calendar.png)
 
-*Employment i CPI: okresy, godziny, aktualne i poprzednie odczyty oraz jawne braki.*
+*Widok „Dane”, zakres 6–10 listopada 2026. Filtr „Tylko ★★★” jest wyłączony; pozostają domyślne poziomy ważności 2★ i 3★. Employment i CPI pokazują okresy, godziny, prognozy tam, gdzie są dostępne, oraz Actual/Previous. Braki pozostają jawne.*
 
 ### Earnings — wyniki spółek
 
@@ -167,6 +187,10 @@ i redystrybucji wydawców.
 [Pełne zasady, historia i wzory](docs/methodology.md).
 
 ## Testy i CI
+
+Zmiany Przeglądu obejmują testy odczytu rocznego CPI, reguł wpływu na USD,
+obsługi braków i zgodności widoków PL/EN. Dokładne wyniki dotyczą konkretnego
+commita i są dostępne w uruchomieniach CI.
 
 GitHub Actions sprawdza backend pytest, frontend Vitest, TypeScript/build,
 20 etapów integracji na odrębnym PostgreSQL 17 oraz integralność F1 V6
